@@ -13,7 +13,7 @@ namespace MissionPlanner.Mavlink
     public class MAVAuthKeys
     {
         private static readonly ILog log =
-    LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         static string keyfile = Settings.GetUserDataDirectory() + "authkeys.xml";
 
