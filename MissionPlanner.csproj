@@ -1174,6 +1174,9 @@
 
   </ItemGroup>
   <ItemGroup>
+    <None Remove="dron_model_params.json" />
+  </ItemGroup>
+  <ItemGroup>
     <Compile Include="SikRadio\ISikRadioForm.cs" />
     <Compile Include="SikRadio\RFD900.cs" />
     <Compile Include="SikRadio\RFDLib\Array.cs" />
@@ -1183,5 +1186,10 @@
     <Compile Include="SikRadio\RFDLib\IO\SerialPort\SerialPort.cs" />
     <Compile Include="SikRadio\RFDLib\RFDLib.cs" />
     <Compile Include="SikRadio\RFDLib\Text.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="dron_model_params.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 </Project>

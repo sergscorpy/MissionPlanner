@@ -1,4 +1,14 @@
 ﻿using System.Windows.Forms;
+using System.Drawing;
+using static IronPython.Modules._ast;
+using System.Collections.Generic;
+using MissionPlanner.Controls;
+using System;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using Newtonsoft.Json;
+using BruTile.Wmts.Generated;
 
 namespace MissionPlanner.GCSViews
 {
@@ -253,7 +263,9 @@ namespace MissionPlanner.GCSViews
             this.contextMenuStripQuickView.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceQuickTab)).BeginInit();
             this.tabActions.SuspendLayout();
+            //this.tabEngineer.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
+            //this.tableLayoutPanelEngineer.SuspendLayout();
             this.tabPagemessages.SuspendLayout();
             this.tabActionsSimple.SuspendLayout();
             this.tabPagePreFlight.SuspendLayout();
@@ -292,6 +304,11 @@ namespace MissionPlanner.GCSViews
             ((System.ComponentModel.ISupportInitialize)(this.Zoomlevel)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceStatusTab)).BeginInit();
             this.SuspendLayout();
+
+            InitializeComponentEngineer();
+            LoadDeafoultParameters();
+            LoadCustomParameters();
+
             // 
             // MainH
             // 
@@ -566,6 +583,7 @@ namespace MissionPlanner.GCSViews
             this.tabControlactions.ContextMenuStrip = this.contextMenuStripactionstab;
             this.tabControlactions.Controls.Add(this.tabQuick);
             this.tabControlactions.Controls.Add(this.tabActions);
+            this.tabControlactions.Controls.Add(this.tabEngineer);
             this.tabControlactions.Controls.Add(this.tabPagemessages);
             this.tabControlactions.Controls.Add(this.tabActionsSimple);
             this.tabControlactions.Controls.Add(this.tabPagePreFlight);
@@ -732,6 +750,8 @@ namespace MissionPlanner.GCSViews
             resources.ApplyResources(this.tabActions, "tabActions");
             this.tabActions.Name = "tabActions";
             this.tabActions.UseVisualStyleBackColor = true;
+
+
             // 
             // tableLayoutPanel1
             // 
@@ -782,6 +802,8 @@ namespace MissionPlanner.GCSViews
             this.toolTip1.SetToolTip(this.BUT_abortland, resources.GetString("BUT_abortland.ToolTip"));
             this.BUT_abortland.UseVisualStyleBackColor = true;
             this.BUT_abortland.Click += new System.EventHandler(this.BUT_abortland_Click);
+
+
             // 
             // modifyandSetLoiterRad
             // 
@@ -2843,8 +2865,11 @@ namespace MissionPlanner.GCSViews
             this.contextMenuStripQuickView.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceQuickTab)).EndInit();
             this.tabActions.ResumeLayout(false);
+            this.tabEngineer.ResumeLayout(false);
             this.tableLayoutPanel1.ResumeLayout(false);
+            this.tableLayoutPanelEngineer.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();
+            this.tableLayoutPanelEngineer.PerformLayout();
             this.tabPagemessages.ResumeLayout(false);
             this.tabPagemessages.PerformLayout();
             this.tabActionsSimple.ResumeLayout(false);
@@ -2897,8 +2922,430 @@ namespace MissionPlanner.GCSViews
 
         }
 
-  
+        private void InitializeComponentEngineer()
+        {
+            this.labelCurrHYaw = new System.Windows.Forms.Label();
+            this.labelCurrRtlAlt = new System.Windows.Forms.Label();
+            this.labelRtlAlt = new System.Windows.Forms.Label();
+            this.labelHomeYaw = new System.Windows.Forms.Label();
+            this.labelDroneModel = new System.Windows.Forms.Label();
+            this.tabEngineer = new System.Windows.Forms.TabPage();
+            this.tableLayoutPanelEngineer = new System.Windows.Forms.TableLayoutPanel();
+            this.butSetRtlAlt = new System.Windows.Forms.Button();
+            this.butArmDisarm = new System.Windows.Forms.Button();
+            this.but_setmode = new System.Windows.Forms.Button();
+            this.comboBoxDronModel = new System.Windows.Forms.ComboBox();
+            this.comBoBox_FlyModes = new System.Windows.Forms.ComboBox();
+            this.ListButtonsMods = new List<Button>();
+            this.dataGridView = new DataGridView();
+            this.numericRtlAlt = new System.Windows.Forms.NumericUpDown();
+            this.numericHomeYaw = new System.Windows.Forms.NumericUpDown();
+            this.setHomeYawButton = new System.Windows.Forms.Button();
+            this.butGPS1on = new Button();
+            this.butGPS2on = new Button();
+            this.butLoiter = new Button();
+            this.butRTL = new Button();
+            this.butAltHold = new Button();
+            this.isActiveRC = new CheckBox();
 
+            this._comboItems = new List<KeyValuePair<string, string>>
+                {
+                    new KeyValuePair<string, string>("Вампір", "vampire"),
+                    new KeyValuePair<string, string>("Петрович", "petrovych")
+                };
+
+
+            // 
+            // tabEngineer
+            // 
+            this.tabEngineer.Controls.Add(this.tableLayoutPanelEngineer); 
+            ///resources.ApplyResources(this.tabEngineer, "tabEngineer");
+            this.tabEngineer.Name = "tabEngineer";
+            this.tabEngineer.Text = "Copter";
+            this.tabEngineer.UseVisualStyleBackColor = true;
+            // 
+            // tableLayoutPanelEngineer
+            // 
+            ///resources.ApplyResources(this.tableLayoutPanelEngineer, "tableLayoutPanelEngineer");
+            this.tableLayoutPanelEngineer.Name = "tableLayoutPanelEngineer";
+            int columnCount = 4;        //Кількість стовпців
+            int rowCount = 15;          //Кількість рядків
+            int rowHeight = 32;         //Висота рядка
+            float columnWidth = 100 / columnCount;      //Віднносна ширина стовпця в відсотках
+            int sizeHeight = rowHeight * rowCount;      //Загальна висота таблиці
+            this.tableLayoutPanelEngineer.RowCount = rowCount;
+            this.tableLayoutPanelEngineer.ColumnCount = columnCount;
+            for (int i = 0; i < columnCount; i++)
+                this.tableLayoutPanelEngineer.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, columnWidth));
+            for (int i = 0; i < rowCount; i++)
+                this.tableLayoutPanelEngineer.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, rowHeight));
+            this.tableLayoutPanelEngineer.RowStyles[2].Height = 96F;
+            this.tableLayoutPanelEngineer.Location = new System.Drawing.Point(3, 3);
+            this.tableLayoutPanelEngineer.Dock = System.Windows.Forms.DockStyle.Top;
+            this.tableLayoutPanelEngineer.Size = new System.Drawing.Size(300, sizeHeight);
+            this.tableLayoutPanelEngineer.Margin = new System.Windows.Forms.Padding(0);
+            this.tableLayoutPanelEngineer.Padding = new System.Windows.Forms.Padding(4);
+
+
+            //
+            // comboBoxDronModel
+            //
+            ///resources.ApplyResources(this.comboBoxDronModel, "comboBoxDronModel");
+            this.tableLayoutPanelEngineer.Controls.Add(this.comboBoxDronModel, 2, 0);
+            this.tableLayoutPanelEngineer.SetColumnSpan(this.comboBoxDronModel, 2);
+            this.comboBoxDronModel.DataSource = _comboItems;
+            this.comboBoxDronModel.DisplayMember = "Key";
+            this.comboBoxDronModel.ValueMember = "Value";
+            this.comboBoxDronModel.DropDownStyle = ComboBoxStyle.DropDownList;
+            this.comboBoxDronModel.DropDownWidth = 100;
+            this.comboBoxDronModel.FormattingEnabled = true;
+            this.comboBoxDronModel.Dock = DockStyle.Fill;
+            this.comboBoxDronModel.Font = fontNuveric;
+            this.comboBoxDronModel.Margin = new System.Windows.Forms.Padding(3);
+            this.comboBoxDronModel.SelectedIndexChanged += comboBoxDronModel_SelectedIndexChanged;
+            //
+            // comBoBox_FlyModes ^^CMB_modes
+            //
+            ///resources.ApplyResources(this.comBoBox_FlyModes, "comBoBox_FlyModes");
+            this.tableLayoutPanelEngineer.Controls.Add(this.comBoBox_FlyModes, 0, 5);
+            this.tableLayoutPanelEngineer.SetColumnSpan(this.comBoBox_FlyModes, 2);
+            this.comBoBox_FlyModes.DropDownWidth = 150;
+            this.comBoBox_FlyModes.Name = "comBoBox_FlyModes";
+            this.comBoBox_FlyModes.DisplayMember = "Key";
+            this.comBoBox_FlyModes.ValueMember = "Value";
+            this.comBoBox_FlyModes.DropDownStyle = ComboBoxStyle.DropDownList;
+            this.comBoBox_FlyModes.FormattingEnabled = true;
+            this.comBoBox_FlyModes.Dock = DockStyle.Fill;
+            this.comBoBox_FlyModes.Font = fontNuveric;
+            this.comBoBox_FlyModes.Margin = new System.Windows.Forms.Padding(3);
+            this.comBoBox_FlyModes.Click += new System.EventHandler(this.comBoBox_FlyModes_Click);
+            // 
+            // but_setmode : BUT_setmode
+            // 
+            ///resources.ApplyResources(this.but_setmode, "but_setmode");
+            this.but_setmode.Text = "Set Mode";
+            this.but_setmode.Font = fontBut;
+            this.but_setmode.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.but_setmode.Enabled = true;
+            this.but_setmode.UseVisualStyleBackColor = false;
+            this.but_setmode.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.but_setmode.FlatAppearance.BorderSize = 1;
+            this.but_setmode.FlatAppearance.BorderColor = colorDis;
+            this.but_setmode.BackColor = colorDis;
+            this.but_setmode.Name = "but_setmode";
+            this.tableLayoutPanelEngineer.Controls.Add(this.but_setmode, 2, 5);
+            this.but_setmode.Click += new System.EventHandler(this.but_setmode_Click);
+            // 
+            // labelDroneModel
+            // 
+            ///resources.ApplyResources(this.labelDroneModel, "labelDroneModel");
+            this.tableLayoutPanelEngineer.Controls.Add(this.labelDroneModel, 0, 0);
+            this.tableLayoutPanelEngineer.SetColumnSpan(this.labelDroneModel, 2);
+            this.labelDroneModel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.labelDroneModel.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F);
+            this.labelDroneModel.Location = new System.Drawing.Point(0, 0);
+            this.labelDroneModel.Margin = new System.Windows.Forms.Padding(0);
+            this.labelDroneModel.Name = "labelDroneModel";
+            this.labelDroneModel.Size = new System.Drawing.Size(254, 45);
+            this.labelDroneModel.Text = "Drone Model";
+            this.labelDroneModel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            //
+            // Mods Buttons Eco Sport Normal Custom
+            //
+            AddButton("Eco", 1, 1);
+            AddButton("Sport", 0, 1);
+            AddButton("Normal", 2, 1);
+            AddButton("Custom", 3, 1);
+            //
+            // dataGridView
+            // 
+            this.tableLayoutPanelEngineer.SetColumnSpan(this.dataGridView, 4);
+            this.tableLayoutPanelEngineer.SetRowSpan(this.dataGridView, 1);
+            this.tableLayoutPanelEngineer.Controls.Add(this.dataGridView, 0, 2);
+            this.dataGridView.AllowUserToAddRows = false;
+            this.dataGridView.RowHeadersVisible = false;
+            this.dataGridView.AllowUserToResizeColumns = false;
+            this.dataGridView.AllowUserToResizeRows = false;
+            this.dataGridView.ColumnCount = 3;
+            this.dataGridView.ScrollBars = ScrollBars.None;
+            this.dataGridView.BackgroundColor = Color.FromArgb(30, 30, 30);
+            this.dataGridView.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
+            this.dataGridView.EditMode = DataGridViewEditMode.EditOnEnter;
+            this.dataGridView.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.dataGridView.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
+            this.dataGridView.Columns[0].Name = "Param";
+            this.dataGridView.Columns[1].Name = "Custom";
+            this.dataGridView.Columns[2].Name = "Current";
+            this.dataGridView.Columns[2].ReadOnly = true;
+            this.dataGridView.Columns[0].ReadOnly = true;
+
+            this.dataGridView.DefaultCellStyle.BackColor = Color.FromArgb(45, 45, 45);
+            this.dataGridView.DefaultCellStyle.ForeColor = Color.White;
+            this.dataGridView.DefaultCellStyle.SelectionBackColor = Color.FromArgb(70, 70, 70);
+            this.dataGridView.DefaultCellStyle.SelectionForeColor = Color.White;
+
+            this.dataGridView.Rows.Add("Angle Max", 0, 0);
+            this.dataGridView.Rows.Add("Loit Speed", 0, 0);
+            this.dataGridView.Rows.Add("Mission Speed", 0, 0);
+
+            foreach (DataGridViewColumn column in this.dataGridView.Columns)
+            {
+                column.SortMode = DataGridViewColumnSortMode.NotSortable;
+            }
+
+            foreach (DataGridViewRow row in this.dataGridView.Rows)
+            {
+                decimal minValue, maxValue;
+
+                if (row.Cells[0].Value.ToString() == "Angle Max")
+                {
+                    minValue = 1000;
+                    maxValue = 8000;
+                }
+                else if (row.Cells[0].Value.ToString() == "Loit Speed")
+                {
+                    minValue = 20;
+                    maxValue = 3500;
+                }
+                else if (row.Cells[0].Value.ToString() == "Mission Speed")
+                {
+                    minValue = 10;
+                    maxValue = 2000;
+                }
+                else
+                {
+                    minValue = 0;
+                    maxValue = 0;
+                }
+
+                var cell = new DataGridViewNumericUpDownCell
+                {
+                    Value = row.Cells[1].Value,
+                    Minimum = minValue,
+                    Maximum = maxValue
+                };
+
+                row.Cells[1] = cell;
+            }
+            this.dataGridView.RowTemplate.Height = 35;
+            this.dataGridView.EditingControlShowing += DataGridView_EditingControlShowing;
+            // 
+            // labelHomeYaw
+            // 
+            ///resources.ApplyResources(this.labelHomeYaw, "labelHomeYaw");
+            this.labelHomeYaw.Name = "labelHomeYaw";
+            this.labelHomeYaw.Text = "Home Y";
+            this.labelHomeYaw.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.labelHomeYaw.Font = fontLabel;
+            this.labelHomeYaw.Margin = new System.Windows.Forms.Padding(0);
+            this.labelHomeYaw.TextAlign = ContentAlignment.MiddleCenter;
+            this.tableLayoutPanelEngineer.Controls.Add(this.labelHomeYaw, 0, 3);
+            //
+            // numericHomeYaw
+            //
+            ///resources.ApplyResources(this.numericHomeYaw, "numericHomeYaw");
+            this.numericHomeYaw.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.numericHomeYaw.Enabled = true;
+            this.numericHomeYaw.BackColor = colorDis;
+            this.numericHomeYaw.Minimum = 0;
+            this.numericHomeYaw.Maximum = 359;
+            this.numericHomeYaw.Font = fontNuveric;
+            this.numericHomeYaw.Margin = new System.Windows.Forms.Padding(3);
+            this.tableLayoutPanelEngineer.Controls.Add(this.numericHomeYaw, 2, 3);
+            // 
+            // setHomeYawButton
+            // 
+            this.setHomeYawButton.Name = "setHomeYawButton";
+            this.setHomeYawButton.Text = "Home Yaw";
+            this.setHomeYawButton.Font = fontBut;
+            this.setHomeYawButton.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.setHomeYawButton.Enabled = true;
+            this.setHomeYawButton.UseVisualStyleBackColor = false;
+            this.setHomeYawButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.setHomeYawButton.FlatAppearance.BorderSize = 1;
+            this.setHomeYawButton.FlatAppearance.BorderColor = colorDis;
+            this.setHomeYawButton.BackColor = colorDis;
+            this.tableLayoutPanelEngineer.Controls.Add(this.setHomeYawButton, 3, 3);
+            this.setHomeYawButton.Click += new System.EventHandler(this.HomeYaw_Click);
+            // 
+            // labelCurrHYaw
+            // 
+            ///resources.ApplyResources(this.labelCurrHYaw, "labelCurrHYaw");
+            this.tableLayoutPanelEngineer.Controls.Add(this.labelCurrHYaw, 1, 3);
+            this.labelCurrHYaw.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.labelCurrHYaw.Font = fontLabel;
+            this.labelCurrHYaw.Location = new System.Drawing.Point(0, 45);
+            this.labelCurrHYaw.Margin = new System.Windows.Forms.Padding(0);
+            this.labelCurrHYaw.Name = "labelCurrHYaw";
+            this.labelCurrHYaw.Size = new System.Drawing.Size(127, 45);
+            this.labelCurrHYaw.Text = "_____";
+            this.labelCurrHYaw.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // butSetRtlAlt
+            // 
+            ///resources.ApplyResources(this.butSetRtlAlt, "butSetRtlAlt");
+            this.butSetRtlAlt.Name = "butSetRtlAlt";
+            this.butSetRtlAlt.Text = "Rtl Alt";
+            this.butSetRtlAlt.Font = fontBut;
+            this.butSetRtlAlt.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.butSetRtlAlt.Enabled = true;
+            this.butSetRtlAlt.UseVisualStyleBackColor = false;
+            this.butSetRtlAlt.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.butSetRtlAlt.FlatAppearance.BorderSize = 1;
+            this.butSetRtlAlt.FlatAppearance.BorderColor = colorDis;
+            this.butSetRtlAlt.BackColor = colorDis;
+            this.tableLayoutPanelEngineer.Controls.Add(this.butSetRtlAlt, 3, 4);
+            this.butSetRtlAlt.Click += new EventHandler(RtlAltClick);
+            //
+            // labelRtlAlt
+            // 
+            ///resources.ApplyResources(this.labelRtlAlt, "labelRtlAlt");
+            this.tableLayoutPanelEngineer.Controls.Add(this.labelRtlAlt, 0, 4);
+            this.labelRtlAlt.AutoSize = true;
+            this.labelRtlAlt.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.labelRtlAlt.Font = fontLabel;
+            this.labelRtlAlt.Location = new System.Drawing.Point(0, 45);
+            this.labelRtlAlt.Margin = new System.Windows.Forms.Padding(0);
+            this.labelRtlAlt.Name = "labelRtlAlt";
+            this.labelRtlAlt.Size = new System.Drawing.Size(127, 45);
+            this.labelRtlAlt.TabIndex = 13;
+            this.labelRtlAlt.Text = "Rtl Alt :";
+            this.labelRtlAlt.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // labelCurrRtlAlt
+            // 
+            ///resources.ApplyResources(this.labelCurrRtlAlt, "labelCurrRtlAlt");
+            this.tableLayoutPanelEngineer.Controls.Add(this.labelCurrRtlAlt, 1, 4);
+            this.labelCurrRtlAlt.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.labelCurrRtlAlt.Font = fontLabel;
+            this.labelCurrRtlAlt.Location = new System.Drawing.Point(0, 45);
+            this.labelCurrRtlAlt.Margin = new System.Windows.Forms.Padding(0);
+            this.labelCurrRtlAlt.Name = "labelCurrRtlAlt";
+            this.labelCurrRtlAlt.Size = new System.Drawing.Size(127, 45);
+            this.labelCurrRtlAlt.Text = "_____";
+            this.labelCurrRtlAlt.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            //
+            // numericRtlAlt
+            //
+            ///resources.ApplyResources(this.numericRtlAlt, "numericRtlAlt");
+            this.tableLayoutPanelEngineer.Controls.Add(this.numericRtlAlt, 2, 4);
+            this.numericRtlAlt.Minimum = 1;
+            this.numericRtlAlt.Maximum = 3000;
+            this.numericRtlAlt.Dock = DockStyle.Fill;
+            this.numericRtlAlt.Font = fontNuveric;
+            this.numericRtlAlt.Margin = new System.Windows.Forms.Padding(3);
+            // 
+            // butGPS1on
+            // 
+            this.butGPS1on.Name = "butGPS1on";
+            this.butGPS1on.Text = "GPS 1";
+            this.butGPS1on.Font = fontBut;
+            this.butGPS1on.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.butGPS1on.Enabled = false;
+            this.butGPS1on.UseVisualStyleBackColor = false;
+            this.butGPS1on.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.butGPS1on.FlatAppearance.BorderSize = 1;
+            this.butGPS1on.FlatAppearance.BorderColor = colorDis;
+            this.butGPS1on.BackColor = colorDis;
+            //this.tableLayoutPanelEngineer.Controls.Add(this.butGPS1on, 0, 5);
+            this.butGPS1on.Click += new System.EventHandler(this.butGPS1on_Click);
+            // 
+            // butGPS2on
+            // 
+            this.butGPS2on.Name = "butGPS2on";
+            this.butGPS2on.Text = "GPS 2";
+            this.butGPS2on.Font = fontBut;
+            this.butGPS2on.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.butGPS2on.Enabled = false;
+            this.butGPS2on.UseVisualStyleBackColor = false;
+            this.butGPS2on.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.butGPS2on.FlatAppearance.BorderSize = 1;
+            this.butGPS2on.FlatAppearance.BorderColor = colorDis;
+            this.butGPS2on.BackColor = colorDis;
+            //this.tableLayoutPanelEngineer.Controls.Add(this.butGPS2on, 1, 5);
+            this.butGPS2on.Click += new System.EventHandler(this.butGPS2on_Click);
+            // 
+            // butArmDisarm
+            // 
+            this.butArmDisarm.Name = "butArmDisarm";
+            this.butArmDisarm.Text = "Arm/ Dis";
+            this.butArmDisarm.Font = fontBut;
+            this.butArmDisarm.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.butArmDisarm.Enabled = true;
+            this.butArmDisarm.UseVisualStyleBackColor = false;
+            this.butArmDisarm.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.butArmDisarm.FlatAppearance.BorderSize = 1;
+            this.butArmDisarm.FlatAppearance.BorderColor = colorDis;
+            this.butArmDisarm.BackColor = colorDis;
+            this.tableLayoutPanelEngineer.Controls.Add(this.butArmDisarm, 1, 6);
+            this.butArmDisarm.Click += new System.EventHandler(this.BUT_ARM_Click);
+            // 
+            // butLoiter
+            // 
+            this.butLoiter.Name = "butLoiter";
+            this.butLoiter.Text = "Loiter";
+            this.butLoiter.Font = fontBut;
+            this.butLoiter.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.butLoiter.Enabled = true;
+            this.butLoiter.UseVisualStyleBackColor = false;
+            this.butLoiter.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.butLoiter.FlatAppearance.BorderSize = 1;
+            this.butLoiter.FlatAppearance.BorderColor = colorDis;
+            this.butLoiter.BackColor = colorDis;
+            this.tableLayoutPanelEngineer.Controls.Add(this.butLoiter, 2, 6);
+            this.butLoiter.Click += new System.EventHandler(this.BUT_quickmanual_Click);
+            // 
+            // butRTL
+            // 
+            this.butRTL.Name = "butRTL";
+            this.butRTL.Text = "RTL";
+            this.butRTL.Font = fontBut;
+            this.butRTL.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.butRTL.Enabled = true;
+            this.butRTL.UseVisualStyleBackColor = false;
+            this.butRTL.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.butRTL.FlatAppearance.BorderSize = 1;
+            this.butRTL.FlatAppearance.BorderColor = colorDis;
+            this.butRTL.BackColor = colorDis;
+            this.tableLayoutPanelEngineer.Controls.Add(this.butRTL, 3, 6);
+            this.butRTL.Click += new System.EventHandler(this.BUT_quickrtl_Click);
+            // 
+            // butAltHold
+            // 
+            this.butAltHold.Name = "butAltHold";
+            this.butAltHold.Text = "Alt Hold";
+            
+            this.butAltHold.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.butAltHold.Enabled = true;
+            this.butAltHold.UseVisualStyleBackColor = false;
+            this.butAltHold.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.butAltHold.FlatAppearance.BorderSize = 1;
+            this.butAltHold.FlatAppearance.BorderColor = colorDis;
+            this.butAltHold.BackColor = colorDis;
+            this.butAltHold.Click += new System.EventHandler(this.butAltHold_Click);
+            this.tableLayoutPanelEngineer.Controls.Add(this.butAltHold, 3, 5);
+            // 
+            // isActiveRC
+            //
+            this.isActiveRC.Dock = DockStyle.Fill;
+            this.isActiveRC.Appearance = Appearance.Button;
+            this.isActiveRC.TextAlign = ContentAlignment.MiddleCenter;
+            this.isActiveRC.FlatStyle = FlatStyle.Flat;
+            this.isActiveRC.FlatAppearance.BorderSize = 0;
+            this.isActiveRC.Text = "Скид";
+            this.isActiveRC.Font = fontBut;
+            this.isActiveRC.BackColor = colorDis;
+            this.isActiveRC.ForeColor = Color.White;
+            this.isActiveRC.Checked = false;
+            this.isActiveRC.Enabled = false;
+            this.isActiveRC.Visible = true;
+            this.tableLayoutPanelEngineer.Controls.Add(this.isActiveRC, 0, 6);
+
+            //StartMessageProcessing();
+        }
+
+
+        private int _checkFrequency;
         private System.Windows.Forms.BindingSource bindingSource1;
         private System.Windows.Forms.Timer ZedGraphTimer;
         private System.Windows.Forms.SplitContainer MainH;
@@ -2928,11 +3375,13 @@ namespace MissionPlanner.GCSViews
         public System.Windows.Forms.TabControl tabControlactions;
         public System.Windows.Forms.TabPage tabGauges;
         public System.Windows.Forms.TabPage tabStatus;
+        public System.Windows.Forms.TabPage tabEngineer;
         public System.Windows.Forms.TabPage tabActions;
         public System.Windows.Forms.TabPage tabTLogs;
         private System.Windows.Forms.ComboBox CMB_modes;
         private Controls.MyButton BUT_setmode;
         private System.Windows.Forms.ComboBox CMB_setwp;
+        private System.Windows.Forms.ComboBox comboBoxDronModel;
         private Controls.MyButton BUT_setwp;
         private Controls.MyButton BUT_quickmanual;
         private Controls.MyButton BUT_quickrtl;
@@ -3015,6 +3464,7 @@ namespace MissionPlanner.GCSViews
         private MissionPlanner.Controls.Coords coords1;
         private Controls.MyButton BUT_matlab;
         private System.Windows.Forms.ComboBox CMB_mountmode;
+        private System.Windows.Forms.ComboBox comBoBox_FlyModes;
         private Controls.MyButton BUT_mountmode;
         public Controls.WindDir windDir1;
         private Controls.MyButton but_bintolog;
@@ -3083,6 +3533,7 @@ namespace MissionPlanner.GCSViews
         private System.Windows.Forms.ToolStripMenuItem poiatcoordsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem flyToCoordsToolStripMenuItem;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
+        private System.Windows.Forms.TableLayoutPanel tableLayoutPanelEngineer;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel2;
         private System.Windows.Forms.ToolStripMenuItem setBatteryCellCountToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem undockToolStripMenuItem;
@@ -3091,6 +3542,7 @@ namespace MissionPlanner.GCSViews
         private System.Windows.Forms.Button ON_btn;
         private System.Windows.Forms.CheckedListBox Mode_clb;
         private System.Windows.Forms.NumericUpDown Squawk_nud;
+        private System.Windows.Forms.NumericUpDown numericRtlAlt;
         private System.Windows.Forms.Label Squawk_label;
         private System.Windows.Forms.Label FlightID_label;
         private System.Windows.Forms.TextBox FlightID_tb;
@@ -3126,5 +3578,77 @@ namespace MissionPlanner.GCSViews
         private Controls.RelayOptions relayOptions14;
         private Controls.RelayOptions relayOptions15;
         private Controls.RelayOptions relayOptions16;
+
+        public class Params
+        {
+            public float ANGLE_MAX { get; set; }
+            public float LOIT_SPEED { get; set; }
+            public float WPNAV_SPEED { get; set; }
+        }
+        public class Mode
+        {
+            public string Name { get; set; }
+            public Params Params { get; set; }
+        }
+        public class ModeList
+        {
+            public List<Mode> Modes { get; set; }
+        }
+        public class RootObject
+        {
+            public float RTL_ALT { get; set; }
+            public string selectedDroneModel { get; set; }
+            public ModeList vampire { get; set; }
+            public ModeList petrovych { get; set; }
+        }
+
+        private System.Windows.Forms.Label labelDroneModel;
+        private System.Windows.Forms.Label labelRtlAlt;
+        private System.Windows.Forms.Label labelCurrHYaw;
+        private System.Windows.Forms.Label labelCurrRtlAlt;
+        private System.Windows.Forms.Label labelHomeYaw;
+        private Button butSetRtlAlt;
+        private Button butArmDisarm;
+        private List<Button> ListButtonsMods;
+        private readonly Dictionary<string, Dictionary<string, float>> _parameters =
+            new Dictionary<string, Dictionary<string, float>>();
+        private DataGridView dataGridView;
+        private List<KeyValuePair<string, string>> _comboItems;
+        private string _selectedDroneModel;
+        private ModeList _petrovychParams;
+        private ModeList _vampireParams;
+        private float _rtlAlt;
+        private RootObject _rootObject;
+        private string _jsonFileData;
+        private static readonly string PathCustom_params =
+            System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "dron_model_params.json");
+        private NumericUpDown numericHomeYaw;
+
+        private Button setHomeYawButton;
+
+        private Button butGPS1on;
+        private Button butGPS2on;
+        private Button butLoiter;
+        private Button butRTL;
+        private Button butAltHold;
+        private Button but_setmode;
+
+        private CheckBox isActiveRC;
+        private ushort ch10in;
+
+        private readonly string GPS_1_Key = "GPS_TYPE";
+        private readonly string GPS_2_Key = "GPS_TYPE2";
+
+        private readonly Color colorOn = Color.YellowGreen;
+        private readonly Color colorOff = Color.DarkGreen;
+        private readonly Color colorDis = Color.SlateGray;
+        private readonly Font fontBut = new Font("Microsoft Sans Serif", 10F);
+        private readonly Font fontLabel = new Font("Microsoft Sans Serif", 10F);
+        private readonly Font fontNuveric = new Font("Microsoft Sans Serif", 11F);
+
+        private bool dataGridViewVisible;
+        private string lastModelText = "";
+
+
     }
 }

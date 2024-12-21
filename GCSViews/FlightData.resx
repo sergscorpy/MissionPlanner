@@ -651,7 +651,7 @@
   <data name="BUT_abortland.Text" xml:space="preserve">
     <value>Abort Landing</value>
   </data>
-  <data name="BUT_abortland.ToolTip" xml:space="preserve">
+	<data name="BUT_abortland.ToolTip" xml:space="preserve">
     <value>Plane only</value>
   </data>
   <data name="&gt;&gt;BUT_abortland.Name" xml:space="preserve">
@@ -666,7 +666,66 @@
   <data name="&gt;&gt;BUT_abortland.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-  <data name="modifyandSetLoiterRad.AutoSize" type="System.Boolean, mscorlib">
+	<!--.........................Tab Інженерка..............................................--><!--
+    <data name="BUT_Engineer.Text" xml:space="preserve">
+  <value>Ура!</value>
+  </data>
+	<data name="BUT_Engineer.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+		<value>Fill</value>
+	</data>
+	<data name="BUT_Engineer1.Text" xml:space="preserve">
+  <value>Ура!1</value>
+  </data>
+	<data name="BUT_Engineer1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+		<value>Fill</value>
+	</data>
+	<data name="BUT_Engineer2.Text" xml:space="preserve">
+  <value>Ура!2</value>
+  </data>
+	<data name="BUT_Engineer2.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+		<value>Fill</value>
+	</data>
+	<data name="BUT_Engineer3.Text" xml:space="preserve">
+  <value>Ура!3</value>
+  </data>
+	<data name="BUT_Engineer3.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+		<value>Fill</value>
+	</data>
+	<data name="BUT_Engineer4.Text" xml:space="preserve">
+  <value>Ура!4</value>
+  </data>
+	<data name="BUT_Engineer4.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+		<value>Fill</value>
+	</data>
+	<data name="BUT_Engineer5.Text" xml:space="preserve">
+  <value>Ура!5</value>
+  </data>
+	<data name="BUT_Engineer5.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+		<value>Fill</value>
+	</data>
+	<data name="tabEngineer.Text" xml:space="preserve">
+    <value>Інженерка</value>
+  </data>
+	<data name="tableLayoutPanelEngineer.Dock" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+		<value>Top</value>
+	</data>
+	<data name="tableLayoutPanelEngineer.Location" type="System.Drawing.Point, System.Drawing">
+		<value>0, 0</value>
+	</data>
+	<data name="tableLayoutPanelEngineer.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+		<value>Top, Left, Right</value>
+	</data>
+	<data name="tableLayoutPanelEngineer.Size" type="System.Drawing.Size, System.Drawing">
+		<value>287, 181</value>
+	</data>
+
+
+	--><!--<data name="tableLayoutPanelEngineer.AutoSize" type="System.Boolean, mscorlib">
+		<value>True</value>
+	</data>--><!--
+	--><!--.........................Tab Інженерка..............................................-->
+
+	<data name="modifyandSetLoiterRad.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="modifyandSetLoiterRad.AutoSizeMode" type="System.Windows.Forms.AutoSizeMode, System.Windows.Forms">
@@ -1390,6 +1449,9 @@
     <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;tabActions.Parent" xml:space="preserve">
+    <value>tabControlactions</value>
+  </data>
+	<data name="&gt;&gt;tabEngineer.Parent" xml:space="preserve">
     <value>tabControlactions</value>
   </data>
   <data name="&gt;&gt;tabActions.ZOrder" xml:space="preserve">

@@ -286,7 +286,6 @@ namespace MissionPlanner.Utilities
                 return _GetRunningDirectory;
 
             var ass = Assembly.GetEntryAssembly();
-
             if (ass == null)
             {
                 if (CustomUserDataDirectory != "")

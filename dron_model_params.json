@@ -1,0 +1,76 @@
+{
+  "RTL_ALT": 3600.0,
+  "selectedDroneModel": "petrovych",
+  "vampire": {
+    "Modes": [
+      {
+        "Name": "Sport",
+        "Params": {
+          "ANGLE_MAX": 1850.0,
+          "LOIT_SPEED": 2000.0,
+          "WPNAV_SPEED": 2000.0
+        }
+      },
+      {
+        "Name": "Eco",
+        "Params": {
+          "ANGLE_MAX": 1200.0,
+          "LOIT_SPEED": 1500.0,
+          "WPNAV_SPEED": 1500.0
+        }
+      },
+      {
+        "Name": "Normal",
+        "Params": {
+          "ANGLE_MAX": 1700.0,
+          "LOIT_SPEED": 1700.0,
+          "WPNAV_SPEED": 1700.0
+        }
+      },
+      {
+        "Name": "Custom",
+        "Params": {
+          "ANGLE_MAX": 1775.0,
+          "LOIT_SPEED": 1774.0,
+          "WPNAV_SPEED": 1773.0
+        }
+      }
+    ]
+  },
+  "petrovych": {
+    "Modes": [
+      {
+        "Name": "Sport",
+        "Params": {
+          "ANGLE_MAX": 2000.0,
+          "LOIT_SPEED": 2200.0,
+          "WPNAV_SPEED": 2000.0
+        }
+      },
+      {
+        "Name": "Eco",
+        "Params": {
+          "ANGLE_MAX": 1100.0,
+          "LOIT_SPEED": 1500.0,
+          "WPNAV_SPEED": 1500.0
+        }
+      },
+      {
+        "Name": "Normal",
+        "Params": {
+          "ANGLE_MAX": 1500.0,
+          "LOIT_SPEED": 1500.0,
+          "WPNAV_SPEED": 1500.0
+        }
+      },
+      {
+        "Name": "Custom",
+        "Params": {
+          "ANGLE_MAX": 1996.0,
+          "LOIT_SPEED": 1997.0,
+          "WPNAV_SPEED": 1996.0
+        }
+      }
+    ]
+  }
+}
