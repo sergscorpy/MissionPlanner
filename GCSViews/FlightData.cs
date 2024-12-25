@@ -703,9 +703,9 @@ namespace MissionPlanner.GCSViews
 
             TabListDisplay.Add(tabPagePreFlight.Name, MainV2.DisplayConfiguration.displayPreFlightTab);
 
-            TabListDisplay.Add(tabActions.Name, MainV2.DisplayConfiguration.displayAdvActionsTab);
+            TabListDisplay.Add(tabCopter.Name, MainV2.DisplayConfiguration.displayAdvCopterTab);
 
-            TabListDisplay.Add(tabEngineer.Name, MainV2.DisplayConfiguration.displayAdvEngineerTab);
+            TabListDisplay.Add(tabActions.Name, MainV2.DisplayConfiguration.displayAdvActionsTab);
 
             TabListDisplay.Add(tabActionsSimple.Name, MainV2.DisplayConfiguration.displaySimpleActionsTab);
 
@@ -6476,7 +6476,7 @@ namespace MissionPlanner.GCSViews
         private void AddButton(string name, int column, int row)
         {
             var button = CreateButton(name);
-            tableLayoutPanelEngineer.Controls.Add(button, column, row);
+            tableLayoutPanelCopter.Controls.Add(button, column, row);
             ListButtonsMods.Add(button);
         }
         private Button CreateButton(string name)
@@ -6513,19 +6513,19 @@ namespace MissionPlanner.GCSViews
                 if (button.Name == "Custom")
                 {
                     CheckCustom(button.Name);
-                    if (!this.tableLayoutPanelEngineer.Controls.Contains(this.dataGridView))
+                    if (!this.tableLayoutPanelCopter.Controls.Contains(this.dataGridView))
                     {
-                        this.tableLayoutPanelEngineer.Controls.Add(this.dataGridView, 0, 2);
-                        this.tableLayoutPanelEngineer.RowStyles[2].Height = 96F;
+                        this.tableLayoutPanelCopter.Controls.Add(this.dataGridView, 0, 2);
+                        this.tableLayoutPanelCopter.RowStyles[2].Height = 96F;
                     }
                 }
                 else
                 {
                     Check(button.Name);
-                    if (this.tableLayoutPanelEngineer.Controls.Contains(this.dataGridView))
+                    if (this.tableLayoutPanelCopter.Controls.Contains(this.dataGridView))
                     {
-                        this.tableLayoutPanelEngineer.Controls.Remove(this.dataGridView);
-                        this.tableLayoutPanelEngineer.RowStyles[2].Height = 0F;
+                        this.tableLayoutPanelCopter.Controls.Remove(this.dataGridView);
+                        this.tableLayoutPanelCopter.RowStyles[2].Height = 0F;
                     }
                 }
             }
@@ -6549,16 +6549,16 @@ namespace MissionPlanner.GCSViews
                         var buttTrue = FindButtonByName(key0);
                         buttTrue.AutoSize = true;
                         comboBoxDronModel.SelectedIndex = 0;
-                        this.tableLayoutPanelEngineer.Controls.Remove(this.dataGridView);
-                        this.tableLayoutPanelEngineer.RowStyles[2].Height = 0F;
+                        this.tableLayoutPanelCopter.Controls.Remove(this.dataGridView);
+                        this.tableLayoutPanelCopter.RowStyles[2].Height = 0F;
                     }
                     else if (key1 != null && key1 != "Custom")
                     {
                         var buttTrue = FindButtonByName(key1);
                         buttTrue.AutoSize = true;
                         comboBoxDronModel.SelectedIndex = 1;
-                        this.tableLayoutPanelEngineer.Controls.Remove(this.dataGridView);
-                        this.tableLayoutPanelEngineer.RowStyles[2].Height = 0F;
+                        this.tableLayoutPanelCopter.Controls.Remove(this.dataGridView);
+                        this.tableLayoutPanelCopter.RowStyles[2].Height = 0F;
                     }
                     else
                     {
@@ -6769,8 +6769,8 @@ namespace MissionPlanner.GCSViews
                     Check(buttonActive.Name);
                 }
                 if (comboBoxDronModel.Text == "Петрович")
-                    this.tableLayoutPanelEngineer.Controls.Add(isActiveRC, 0, 6);
-                else this.tableLayoutPanelEngineer.Controls.Remove(isActiveRC);
+                    this.tableLayoutPanelCopter.Controls.Add(isActiveRC, 0, 6);
+                else this.tableLayoutPanelCopter.Controls.Remove(isActiveRC);
             }
             else
             {
@@ -7210,9 +7210,9 @@ namespace MissionPlanner.GCSViews
                             lastModelText = comboBoxDronModel.Text;
 
                             if (lastModelText == "Петрович")
-                                this.tableLayoutPanelEngineer.Controls.Add(isActiveRC, 0, 6);
+                                this.tableLayoutPanelCopter.Controls.Add(isActiveRC, 0, 6);
                             else
-                                this.tableLayoutPanelEngineer.Controls.Remove(isActiveRC);
+                                this.tableLayoutPanelCopter.Controls.Remove(isActiveRC);
                         }
                         break;
                     }

@@ -51,7 +51,7 @@ namespace MissionPlanner.Utilities
         public Boolean displayQuickTab { get; set; }
         public Boolean displayPreFlightTab { get; set; }
         public Boolean displayAdvActionsTab { get; set; }
-        public Boolean displayAdvEngineerTab { get; set; }
+        public Boolean displayAdvCopterTab { get; set; }
         public Boolean displaySimpleActionsTab { get; set; }
         public Boolean displayGaugesTab { get; set; }
         public Boolean displayStatusTab { get; set; }
@@ -147,7 +147,7 @@ namespace MissionPlanner.Utilities
             displayQuickTab = true;
             displayPreFlightTab = true;
             displayAdvActionsTab = false;
-            displayAdvEngineerTab = true;
+            displayAdvCopterTab = true;
             displaySimpleActionsTab = true;
             displayGaugesTab = true;
             displayStatusTab = false;
@@ -281,7 +281,7 @@ namespace MissionPlanner.Utilities
                 displayQuickTab = true,
                 displayPreFlightTab = true,
                 displayAdvActionsTab = false,
-                displayAdvEngineerTab = true,
+                displayAdvCopterTab = true,
                 displaySimpleActionsTab = true,
                 displayGaugesTab = true,
                 displayStatusTab = false,
@@ -369,7 +369,7 @@ namespace MissionPlanner.Utilities
                 displayQuickTab = true,
                 displayPreFlightTab = true,
                 displayAdvActionsTab = true,
-                displayAdvEngineerTab = true,
+                displayAdvCopterTab = true,
                 displaySimpleActionsTab = false,
                 displayGaugesTab = true,
                 displayStatusTab = true,

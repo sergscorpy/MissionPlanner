@@ -263,9 +263,9 @@ namespace MissionPlanner.GCSViews
             this.contextMenuStripQuickView.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceQuickTab)).BeginInit();
             this.tabActions.SuspendLayout();
-            //this.tabEngineer.SuspendLayout();
+            //this.tabCopter.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
-            //this.tableLayoutPanelEngineer.SuspendLayout();
+            //this.tableLayoutPanelCopter.SuspendLayout();
             this.tabPagemessages.SuspendLayout();
             this.tabActionsSimple.SuspendLayout();
             this.tabPagePreFlight.SuspendLayout();
@@ -305,7 +305,7 @@ namespace MissionPlanner.GCSViews
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceStatusTab)).BeginInit();
             this.SuspendLayout();
 
-            InitializeComponentEngineer();
+            InitializeComponentCopter();
             LoadDeafoultParameters();
             LoadCustomParameters();
 
@@ -582,8 +582,8 @@ namespace MissionPlanner.GCSViews
             // 
             this.tabControlactions.ContextMenuStrip = this.contextMenuStripactionstab;
             this.tabControlactions.Controls.Add(this.tabQuick);
+            this.tabControlactions.Controls.Add(this.tabCopter);
             this.tabControlactions.Controls.Add(this.tabActions);
-            this.tabControlactions.Controls.Add(this.tabEngineer);
             this.tabControlactions.Controls.Add(this.tabPagemessages);
             this.tabControlactions.Controls.Add(this.tabActionsSimple);
             this.tabControlactions.Controls.Add(this.tabPagePreFlight);
@@ -2865,11 +2865,11 @@ namespace MissionPlanner.GCSViews
             this.contextMenuStripQuickView.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceQuickTab)).EndInit();
             this.tabActions.ResumeLayout(false);
-            this.tabEngineer.ResumeLayout(false);
+            this.tabCopter.ResumeLayout(false);
             this.tableLayoutPanel1.ResumeLayout(false);
-            this.tableLayoutPanelEngineer.ResumeLayout(false);
+            this.tableLayoutPanelCopter.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();
-            this.tableLayoutPanelEngineer.PerformLayout();
+            this.tableLayoutPanelCopter.PerformLayout();
             this.tabPagemessages.ResumeLayout(false);
             this.tabPagemessages.PerformLayout();
             this.tabActionsSimple.ResumeLayout(false);
@@ -2922,15 +2922,15 @@ namespace MissionPlanner.GCSViews
 
         }
 
-        private void InitializeComponentEngineer()
+        private void InitializeComponentCopter()
         {
             this.labelCurrHYaw = new System.Windows.Forms.Label();
             this.labelCurrRtlAlt = new System.Windows.Forms.Label();
             this.labelRtlAlt = new System.Windows.Forms.Label();
             this.labelHomeYaw = new System.Windows.Forms.Label();
             this.labelDroneModel = new System.Windows.Forms.Label();
-            this.tabEngineer = new System.Windows.Forms.TabPage();
-            this.tableLayoutPanelEngineer = new System.Windows.Forms.TableLayoutPanel();
+            this.tabCopter = new System.Windows.Forms.TabPage();
+            this.tableLayoutPanelCopter = new System.Windows.Forms.TableLayoutPanel();
             this.butSetRtlAlt = new System.Windows.Forms.Button();
             this.butArmDisarm = new System.Windows.Forms.Button();
             this.but_setmode = new System.Windows.Forms.Button();
@@ -2956,43 +2956,43 @@ namespace MissionPlanner.GCSViews
 
 
             // 
-            // tabEngineer
+            // tabCopter
             // 
-            this.tabEngineer.Controls.Add(this.tableLayoutPanelEngineer); 
-            ///resources.ApplyResources(this.tabEngineer, "tabEngineer");
-            this.tabEngineer.Name = "tabEngineer";
-            this.tabEngineer.Text = "Copter";
-            this.tabEngineer.UseVisualStyleBackColor = true;
+            this.tabCopter.Controls.Add(this.tableLayoutPanelCopter);
+            ///resources.ApplyResources(this.tabCopter, "tabCopter");
+            this.tabCopter.Name = "tabCopter";
+            this.tabCopter.Text = "Copter";
+            this.tabCopter.UseVisualStyleBackColor = true;
             // 
-            // tableLayoutPanelEngineer
+            // tableLayoutPanelCopter
             // 
-            ///resources.ApplyResources(this.tableLayoutPanelEngineer, "tableLayoutPanelEngineer");
-            this.tableLayoutPanelEngineer.Name = "tableLayoutPanelEngineer";
+            ///resources.ApplyResources(this.tableLayoutPanelCopter, "tableLayoutPanelCopter");
+            this.tableLayoutPanelCopter.Name = "tableLayoutPanelCopter";
             int columnCount = 4;        //Кількість стовпців
             int rowCount = 15;          //Кількість рядків
             int rowHeight = 32;         //Висота рядка
             float columnWidth = 100 / columnCount;      //Віднносна ширина стовпця в відсотках
             int sizeHeight = rowHeight * rowCount;      //Загальна висота таблиці
-            this.tableLayoutPanelEngineer.RowCount = rowCount;
-            this.tableLayoutPanelEngineer.ColumnCount = columnCount;
+            this.tableLayoutPanelCopter.RowCount = rowCount;
+            this.tableLayoutPanelCopter.ColumnCount = columnCount;
             for (int i = 0; i < columnCount; i++)
-                this.tableLayoutPanelEngineer.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, columnWidth));
+                this.tableLayoutPanelCopter.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, columnWidth));
             for (int i = 0; i < rowCount; i++)
-                this.tableLayoutPanelEngineer.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, rowHeight));
-            this.tableLayoutPanelEngineer.RowStyles[2].Height = 96F;
-            this.tableLayoutPanelEngineer.Location = new System.Drawing.Point(3, 3);
-            this.tableLayoutPanelEngineer.Dock = System.Windows.Forms.DockStyle.Top;
-            this.tableLayoutPanelEngineer.Size = new System.Drawing.Size(300, sizeHeight);
-            this.tableLayoutPanelEngineer.Margin = new System.Windows.Forms.Padding(0);
-            this.tableLayoutPanelEngineer.Padding = new System.Windows.Forms.Padding(4);
+                this.tableLayoutPanelCopter.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, rowHeight));
+            this.tableLayoutPanelCopter.RowStyles[2].Height = 96F;
+            this.tableLayoutPanelCopter.Location = new System.Drawing.Point(3, 3);
+            this.tableLayoutPanelCopter.Dock = System.Windows.Forms.DockStyle.Top;
+            this.tableLayoutPanelCopter.Size = new System.Drawing.Size(300, sizeHeight);
+            this.tableLayoutPanelCopter.Margin = new System.Windows.Forms.Padding(0);
+            this.tableLayoutPanelCopter.Padding = new System.Windows.Forms.Padding(4);
 
 
             //
             // comboBoxDronModel
             //
             ///resources.ApplyResources(this.comboBoxDronModel, "comboBoxDronModel");
-            this.tableLayoutPanelEngineer.Controls.Add(this.comboBoxDronModel, 2, 0);
-            this.tableLayoutPanelEngineer.SetColumnSpan(this.comboBoxDronModel, 2);
+            this.tableLayoutPanelCopter.Controls.Add(this.comboBoxDronModel, 2, 0);
+            this.tableLayoutPanelCopter.SetColumnSpan(this.comboBoxDronModel, 2);
             this.comboBoxDronModel.DataSource = _comboItems;
             this.comboBoxDronModel.DisplayMember = "Key";
             this.comboBoxDronModel.ValueMember = "Value";
@@ -3007,8 +3007,8 @@ namespace MissionPlanner.GCSViews
             // comBoBox_FlyModes ^^CMB_modes
             //
             ///resources.ApplyResources(this.comBoBox_FlyModes, "comBoBox_FlyModes");
-            this.tableLayoutPanelEngineer.Controls.Add(this.comBoBox_FlyModes, 0, 5);
-            this.tableLayoutPanelEngineer.SetColumnSpan(this.comBoBox_FlyModes, 2);
+            this.tableLayoutPanelCopter.Controls.Add(this.comBoBox_FlyModes, 0, 5);
+            this.tableLayoutPanelCopter.SetColumnSpan(this.comBoBox_FlyModes, 2);
             this.comBoBox_FlyModes.DropDownWidth = 150;
             this.comBoBox_FlyModes.Name = "comBoBox_FlyModes";
             this.comBoBox_FlyModes.DisplayMember = "Key";
@@ -3033,14 +3033,14 @@ namespace MissionPlanner.GCSViews
             this.but_setmode.FlatAppearance.BorderColor = colorDis;
             this.but_setmode.BackColor = colorDis;
             this.but_setmode.Name = "but_setmode";
-            this.tableLayoutPanelEngineer.Controls.Add(this.but_setmode, 2, 5);
+            this.tableLayoutPanelCopter.Controls.Add(this.but_setmode, 2, 5);
             this.but_setmode.Click += new System.EventHandler(this.but_setmode_Click);
             // 
             // labelDroneModel
             // 
             ///resources.ApplyResources(this.labelDroneModel, "labelDroneModel");
-            this.tableLayoutPanelEngineer.Controls.Add(this.labelDroneModel, 0, 0);
-            this.tableLayoutPanelEngineer.SetColumnSpan(this.labelDroneModel, 2);
+            this.tableLayoutPanelCopter.Controls.Add(this.labelDroneModel, 0, 0);
+            this.tableLayoutPanelCopter.SetColumnSpan(this.labelDroneModel, 2);
             this.labelDroneModel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.labelDroneModel.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F);
             this.labelDroneModel.Location = new System.Drawing.Point(0, 0);
@@ -3059,9 +3059,9 @@ namespace MissionPlanner.GCSViews
             //
             // dataGridView
             // 
-            this.tableLayoutPanelEngineer.SetColumnSpan(this.dataGridView, 4);
-            this.tableLayoutPanelEngineer.SetRowSpan(this.dataGridView, 1);
-            this.tableLayoutPanelEngineer.Controls.Add(this.dataGridView, 0, 2);
+            this.tableLayoutPanelCopter.SetColumnSpan(this.dataGridView, 4);
+            this.tableLayoutPanelCopter.SetRowSpan(this.dataGridView, 1);
+            this.tableLayoutPanelCopter.Controls.Add(this.dataGridView, 0, 2);
             this.dataGridView.AllowUserToAddRows = false;
             this.dataGridView.RowHeadersVisible = false;
             this.dataGridView.AllowUserToResizeColumns = false;
@@ -3139,7 +3139,7 @@ namespace MissionPlanner.GCSViews
             this.labelHomeYaw.Font = fontLabel;
             this.labelHomeYaw.Margin = new System.Windows.Forms.Padding(0);
             this.labelHomeYaw.TextAlign = ContentAlignment.MiddleCenter;
-            this.tableLayoutPanelEngineer.Controls.Add(this.labelHomeYaw, 0, 3);
+            this.tableLayoutPanelCopter.Controls.Add(this.labelHomeYaw, 0, 3);
             //
             // numericHomeYaw
             //
@@ -3151,7 +3151,7 @@ namespace MissionPlanner.GCSViews
             this.numericHomeYaw.Maximum = 359;
             this.numericHomeYaw.Font = fontNuveric;
             this.numericHomeYaw.Margin = new System.Windows.Forms.Padding(3);
-            this.tableLayoutPanelEngineer.Controls.Add(this.numericHomeYaw, 2, 3);
+            this.tableLayoutPanelCopter.Controls.Add(this.numericHomeYaw, 2, 3);
             // 
             // setHomeYawButton
             // 
@@ -3165,13 +3165,13 @@ namespace MissionPlanner.GCSViews
             this.setHomeYawButton.FlatAppearance.BorderSize = 1;
             this.setHomeYawButton.FlatAppearance.BorderColor = colorDis;
             this.setHomeYawButton.BackColor = colorDis;
-            this.tableLayoutPanelEngineer.Controls.Add(this.setHomeYawButton, 3, 3);
+            this.tableLayoutPanelCopter.Controls.Add(this.setHomeYawButton, 3, 3);
             this.setHomeYawButton.Click += new System.EventHandler(this.HomeYaw_Click);
             // 
             // labelCurrHYaw
             // 
             ///resources.ApplyResources(this.labelCurrHYaw, "labelCurrHYaw");
-            this.tableLayoutPanelEngineer.Controls.Add(this.labelCurrHYaw, 1, 3);
+            this.tableLayoutPanelCopter.Controls.Add(this.labelCurrHYaw, 1, 3);
             this.labelCurrHYaw.Dock = System.Windows.Forms.DockStyle.Fill;
             this.labelCurrHYaw.Font = fontLabel;
             this.labelCurrHYaw.Location = new System.Drawing.Point(0, 45);
@@ -3194,13 +3194,13 @@ namespace MissionPlanner.GCSViews
             this.butSetRtlAlt.FlatAppearance.BorderSize = 1;
             this.butSetRtlAlt.FlatAppearance.BorderColor = colorDis;
             this.butSetRtlAlt.BackColor = colorDis;
-            this.tableLayoutPanelEngineer.Controls.Add(this.butSetRtlAlt, 3, 4);
+            this.tableLayoutPanelCopter.Controls.Add(this.butSetRtlAlt, 3, 4);
             this.butSetRtlAlt.Click += new EventHandler(RtlAltClick);
             //
             // labelRtlAlt
             // 
             ///resources.ApplyResources(this.labelRtlAlt, "labelRtlAlt");
-            this.tableLayoutPanelEngineer.Controls.Add(this.labelRtlAlt, 0, 4);
+            this.tableLayoutPanelCopter.Controls.Add(this.labelRtlAlt, 0, 4);
             this.labelRtlAlt.AutoSize = true;
             this.labelRtlAlt.Dock = System.Windows.Forms.DockStyle.Fill;
             this.labelRtlAlt.Font = fontLabel;
@@ -3215,7 +3215,7 @@ namespace MissionPlanner.GCSViews
             // labelCurrRtlAlt
             // 
             ///resources.ApplyResources(this.labelCurrRtlAlt, "labelCurrRtlAlt");
-            this.tableLayoutPanelEngineer.Controls.Add(this.labelCurrRtlAlt, 1, 4);
+            this.tableLayoutPanelCopter.Controls.Add(this.labelCurrRtlAlt, 1, 4);
             this.labelCurrRtlAlt.Dock = System.Windows.Forms.DockStyle.Fill;
             this.labelCurrRtlAlt.Font = fontLabel;
             this.labelCurrRtlAlt.Location = new System.Drawing.Point(0, 45);
@@ -3228,7 +3228,7 @@ namespace MissionPlanner.GCSViews
             // numericRtlAlt
             //
             ///resources.ApplyResources(this.numericRtlAlt, "numericRtlAlt");
-            this.tableLayoutPanelEngineer.Controls.Add(this.numericRtlAlt, 2, 4);
+            this.tableLayoutPanelCopter.Controls.Add(this.numericRtlAlt, 2, 4);
             this.numericRtlAlt.Minimum = 1;
             this.numericRtlAlt.Maximum = 3000;
             this.numericRtlAlt.Dock = DockStyle.Fill;
@@ -3247,7 +3247,7 @@ namespace MissionPlanner.GCSViews
             this.butGPS1on.FlatAppearance.BorderSize = 1;
             this.butGPS1on.FlatAppearance.BorderColor = colorDis;
             this.butGPS1on.BackColor = colorDis;
-            //this.tableLayoutPanelEngineer.Controls.Add(this.butGPS1on, 0, 5);
+            //this.tableLayoutPanelCopter.Controls.Add(this.butGPS1on, 0, 5);
             this.butGPS1on.Click += new System.EventHandler(this.butGPS1on_Click);
             // 
             // butGPS2on
@@ -3262,7 +3262,7 @@ namespace MissionPlanner.GCSViews
             this.butGPS2on.FlatAppearance.BorderSize = 1;
             this.butGPS2on.FlatAppearance.BorderColor = colorDis;
             this.butGPS2on.BackColor = colorDis;
-            //this.tableLayoutPanelEngineer.Controls.Add(this.butGPS2on, 1, 5);
+            //this.tableLayoutPanelCopter.Controls.Add(this.butGPS2on, 1, 5);
             this.butGPS2on.Click += new System.EventHandler(this.butGPS2on_Click);
             // 
             // butArmDisarm
@@ -3277,7 +3277,7 @@ namespace MissionPlanner.GCSViews
             this.butArmDisarm.FlatAppearance.BorderSize = 1;
             this.butArmDisarm.FlatAppearance.BorderColor = colorDis;
             this.butArmDisarm.BackColor = colorDis;
-            this.tableLayoutPanelEngineer.Controls.Add(this.butArmDisarm, 1, 6);
+            this.tableLayoutPanelCopter.Controls.Add(this.butArmDisarm, 1, 6);
             this.butArmDisarm.Click += new System.EventHandler(this.BUT_ARM_Click);
             // 
             // butLoiter
@@ -3292,7 +3292,7 @@ namespace MissionPlanner.GCSViews
             this.butLoiter.FlatAppearance.BorderSize = 1;
             this.butLoiter.FlatAppearance.BorderColor = colorDis;
             this.butLoiter.BackColor = colorDis;
-            this.tableLayoutPanelEngineer.Controls.Add(this.butLoiter, 2, 6);
+            this.tableLayoutPanelCopter.Controls.Add(this.butLoiter, 2, 6);
             this.butLoiter.Click += new System.EventHandler(this.BUT_quickmanual_Click);
             // 
             // butRTL
@@ -3307,7 +3307,7 @@ namespace MissionPlanner.GCSViews
             this.butRTL.FlatAppearance.BorderSize = 1;
             this.butRTL.FlatAppearance.BorderColor = colorDis;
             this.butRTL.BackColor = colorDis;
-            this.tableLayoutPanelEngineer.Controls.Add(this.butRTL, 3, 6);
+            this.tableLayoutPanelCopter.Controls.Add(this.butRTL, 3, 6);
             this.butRTL.Click += new System.EventHandler(this.BUT_quickrtl_Click);
             // 
             // butAltHold
@@ -3323,7 +3323,7 @@ namespace MissionPlanner.GCSViews
             this.butAltHold.FlatAppearance.BorderColor = colorDis;
             this.butAltHold.BackColor = colorDis;
             this.butAltHold.Click += new System.EventHandler(this.butAltHold_Click);
-            this.tableLayoutPanelEngineer.Controls.Add(this.butAltHold, 3, 5);
+            this.tableLayoutPanelCopter.Controls.Add(this.butAltHold, 3, 5);
             // 
             // isActiveRC
             //
@@ -3339,7 +3339,7 @@ namespace MissionPlanner.GCSViews
             this.isActiveRC.Checked = false;
             this.isActiveRC.Enabled = false;
             this.isActiveRC.Visible = true;
-            this.tableLayoutPanelEngineer.Controls.Add(this.isActiveRC, 0, 6);
+            this.tableLayoutPanelCopter.Controls.Add(this.isActiveRC, 0, 6);
 
             //StartMessageProcessing();
         }
@@ -3375,7 +3375,7 @@ namespace MissionPlanner.GCSViews
         public System.Windows.Forms.TabControl tabControlactions;
         public System.Windows.Forms.TabPage tabGauges;
         public System.Windows.Forms.TabPage tabStatus;
-        public System.Windows.Forms.TabPage tabEngineer;
+        public System.Windows.Forms.TabPage tabCopter;
         public System.Windows.Forms.TabPage tabActions;
         public System.Windows.Forms.TabPage tabTLogs;
         private System.Windows.Forms.ComboBox CMB_modes;
@@ -3533,7 +3533,7 @@ namespace MissionPlanner.GCSViews
         private System.Windows.Forms.ToolStripMenuItem poiatcoordsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem flyToCoordsToolStripMenuItem;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
-        private System.Windows.Forms.TableLayoutPanel tableLayoutPanelEngineer;
+        private System.Windows.Forms.TableLayoutPanel tableLayoutPanelCopter;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel2;
         private System.Windows.Forms.ToolStripMenuItem setBatteryCellCountToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem undockToolStripMenuItem;
