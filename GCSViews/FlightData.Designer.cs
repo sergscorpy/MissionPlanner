@@ -306,8 +306,6 @@ namespace MissionPlanner.GCSViews
             this.SuspendLayout();
 
             InitializeComponentCopter();
-            LoadDeafoultParameters();
-            LoadCustomParameters();
 
             // 
             // MainH
@@ -2865,11 +2863,11 @@ namespace MissionPlanner.GCSViews
             this.contextMenuStripQuickView.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceQuickTab)).EndInit();
             this.tabActions.ResumeLayout(false);
-            this.tabCopter.ResumeLayout(false);
+            //this.tabCopter.ResumeLayout(false);
             this.tableLayoutPanel1.ResumeLayout(false);
-            this.tableLayoutPanelCopter.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();
-            this.tableLayoutPanelCopter.PerformLayout();
+            //this.tableLayoutPanelCopter.ResumeLayout(false);
+            //this.tableLayoutPanelCopter.PerformLayout();
             this.tabPagemessages.ResumeLayout(false);
             this.tabPagemessages.PerformLayout();
             this.tabActionsSimple.ResumeLayout(false);
@@ -2934,6 +2932,8 @@ namespace MissionPlanner.GCSViews
             this.butSetRtlAlt = new System.Windows.Forms.Button();
             this.butArmDisarm = new System.Windows.Forms.Button();
             this.but_setmode = new System.Windows.Forms.Button();
+            this.chBox_ExpMod = new System.Windows.Forms.CheckBox();
+            this.chBox_X9 = new System.Windows.Forms.CheckBox();
             this.comboBoxDronModel = new System.Windows.Forms.ComboBox();
             this.comBoBox_FlyModes = new System.Windows.Forms.ComboBox();
             this.ListButtonsMods = new List<Button>();
@@ -2943,15 +2943,21 @@ namespace MissionPlanner.GCSViews
             this.setHomeYawButton = new System.Windows.Forms.Button();
             this.butGPS1on = new Button();
             this.butGPS2on = new Button();
+            this.butGPSon = new Button();
+            this.butGPSAuxOnOff = new Button();
+            this.butForceLand = new Button();
             this.butLoiter = new Button();
             this.butRTL = new Button();
+            this.butGnGPS = new Button();
             this.butAltHold = new Button();
-            this.isActiveRC = new CheckBox();
+            this.IsActiveRC_Petr = new Button();
+            this.IsActRCVamp_1 = new Button();
+            this.IsActRCVamp_2 = new Button();
 
             this._comboItems = new List<KeyValuePair<string, string>>
                 {
                     new KeyValuePair<string, string>("Вампір", "vampire"),
-                    new KeyValuePair<string, string>("Петрович", "petrovych")
+                    new KeyValuePair<string, string>("Воробєй", "sparrow")
                 };
 
 
@@ -2992,7 +2998,7 @@ namespace MissionPlanner.GCSViews
             //
             ///resources.ApplyResources(this.comboBoxDronModel, "comboBoxDronModel");
             this.tableLayoutPanelCopter.Controls.Add(this.comboBoxDronModel, 2, 0);
-            this.tableLayoutPanelCopter.SetColumnSpan(this.comboBoxDronModel, 2);
+            //this.tableLayoutPanelCopter.SetColumnSpan(this.comboBoxDronModel, 2);
             this.comboBoxDronModel.DataSource = _comboItems;
             this.comboBoxDronModel.DisplayMember = "Key";
             this.comboBoxDronModel.ValueMember = "Value";
@@ -3003,46 +3009,46 @@ namespace MissionPlanner.GCSViews
             this.comboBoxDronModel.Font = fontNuveric;
             this.comboBoxDronModel.Margin = new System.Windows.Forms.Padding(3);
             this.comboBoxDronModel.SelectedIndexChanged += comboBoxDronModel_SelectedIndexChanged;
-            //
-            // comBoBox_FlyModes ^^CMB_modes
-            //
-            ///resources.ApplyResources(this.comBoBox_FlyModes, "comBoBox_FlyModes");
-            this.tableLayoutPanelCopter.Controls.Add(this.comBoBox_FlyModes, 0, 5);
-            this.tableLayoutPanelCopter.SetColumnSpan(this.comBoBox_FlyModes, 2);
-            this.comBoBox_FlyModes.DropDownWidth = 150;
-            this.comBoBox_FlyModes.Name = "comBoBox_FlyModes";
-            this.comBoBox_FlyModes.DisplayMember = "Key";
-            this.comBoBox_FlyModes.ValueMember = "Value";
-            this.comBoBox_FlyModes.DropDownStyle = ComboBoxStyle.DropDownList;
-            this.comBoBox_FlyModes.FormattingEnabled = true;
-            this.comBoBox_FlyModes.Dock = DockStyle.Fill;
-            this.comBoBox_FlyModes.Font = fontNuveric;
-            this.comBoBox_FlyModes.Margin = new System.Windows.Forms.Padding(3);
-            this.comBoBox_FlyModes.Click += new System.EventHandler(this.comBoBox_FlyModes_Click);
             // 
-            // but_setmode : BUT_setmode
+            // chBox_ExpMod
             // 
-            ///resources.ApplyResources(this.but_setmode, "but_setmode");
-            this.but_setmode.Text = "Set Mode";
-            this.but_setmode.Font = fontBut;
-            this.but_setmode.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.but_setmode.Enabled = true;
-            this.but_setmode.UseVisualStyleBackColor = false;
-            this.but_setmode.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.but_setmode.FlatAppearance.BorderSize = 1;
-            this.but_setmode.FlatAppearance.BorderColor = colorDis;
-            this.but_setmode.BackColor = colorDis;
-            this.but_setmode.Name = "but_setmode";
-            this.tableLayoutPanelCopter.Controls.Add(this.but_setmode, 2, 5);
-            this.but_setmode.Click += new System.EventHandler(this.but_setmode_Click);
+            this.tableLayoutPanelCopter.Controls.Add(this.chBox_ExpMod, 0, 0);
+            this.chBox_ExpMod.Appearance = System.Windows.Forms.Appearance.Button;
+            this.chBox_ExpMod.CheckAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.chBox_ExpMod.Margin = new System.Windows.Forms.Padding(10,2,10,2);
+            this.chBox_ExpMod.AutoSize = true;
+            this.chBox_ExpMod.Checked = false;
+            this.chBox_ExpMod.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.chBox_ExpMod.Name = "chBox_ExpMod";
+            this.chBox_ExpMod.Text = "Exp Mod";
+            this.chBox_ExpMod.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F);
+            this.chBox_ExpMod.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.chBox_ExpMod.UseVisualStyleBackColor = true;
+            this.chBox_ExpMod.CheckedChanged += new System.EventHandler(this.chBox_ExpMod_CheckedChanged);
+            //
+            // chBox_X9
+            // 
+            this.tableLayoutPanelCopter.Controls.Add(this.chBox_X9, 3, 0);
+            this.chBox_X9.Appearance = System.Windows.Forms.Appearance.Button;
+            this.chBox_X9.CheckAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.chBox_X9.Margin = new System.Windows.Forms.Padding(10,2,10,2);
+            this.chBox_X9.AutoSize = true;
+            this.chBox_X9.Checked = false;
+            this.chBox_X9.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.chBox_X9.Name = "chBox_X9";
+            this.chBox_X9.Text = "X9";
+            this.chBox_X9.Font = fontBut;
+            this.chBox_X9.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.chBox_X9.UseVisualStyleBackColor = true;
+            this.chBox_X9.CheckedChanged += new System.EventHandler(this.chBox_X9_CheckedChanged);
             // 
             // labelDroneModel
             // 
             ///resources.ApplyResources(this.labelDroneModel, "labelDroneModel");
-            this.tableLayoutPanelCopter.Controls.Add(this.labelDroneModel, 0, 0);
-            this.tableLayoutPanelCopter.SetColumnSpan(this.labelDroneModel, 2);
+            this.tableLayoutPanelCopter.Controls.Add(this.labelDroneModel, 1, 0);
+            //this.tableLayoutPanelCopter.SetColumnSpan(this.labelDroneModel, 2);
             this.labelDroneModel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.labelDroneModel.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F);
+            this.labelDroneModel.Font = fontLabel;
             this.labelDroneModel.Location = new System.Drawing.Point(0, 0);
             this.labelDroneModel.Margin = new System.Windows.Forms.Padding(0);
             this.labelDroneModel.Name = "labelDroneModel";
@@ -3129,6 +3135,38 @@ namespace MissionPlanner.GCSViews
             }
             this.dataGridView.RowTemplate.Height = 35;
             this.dataGridView.EditingControlShowing += DataGridView_EditingControlShowing;
+            //
+            // comBoBox_FlyModes ^^CMB_modes
+            //
+            ///resources.ApplyResources(this.comBoBox_FlyModes, "comBoBox_FlyModes");
+            //this.tableLayoutPanelCopter.SetColumnSpan(this.comBoBox_FlyModes, 2);
+            this.comBoBox_FlyModes.DropDownWidth = 150;
+            this.comBoBox_FlyModes.Name = "comBoBox_FlyModes";
+            this.comBoBox_FlyModes.DisplayMember = "Key";
+            this.comBoBox_FlyModes.ValueMember = "Value";
+            this.comBoBox_FlyModes.DropDownStyle = ComboBoxStyle.DropDownList;
+            this.comBoBox_FlyModes.FormattingEnabled = true;
+            this.comBoBox_FlyModes.Dock = DockStyle.Fill;
+            this.comBoBox_FlyModes.Font = fontNuveric;
+            this.comBoBox_FlyModes.Margin = new System.Windows.Forms.Padding(3);
+            //this.tableLayoutPanelCopter.Controls.Add(this.comBoBox_FlyModes, 0, 5);
+            this.comBoBox_FlyModes.Click += new System.EventHandler(this.comBoBox_FlyModes_Click);
+            // 
+            // but_setmode : BUT_setmode
+            // 
+            ///resources.ApplyResources(this.but_setmode, "but_setmode");
+            this.but_setmode.Text = "Set Mode";
+            this.but_setmode.Font = fontBut;
+            this.but_setmode.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.but_setmode.Enabled = true;
+            this.but_setmode.UseVisualStyleBackColor = false;
+            this.but_setmode.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.but_setmode.FlatAppearance.BorderSize = 1;
+            this.but_setmode.FlatAppearance.BorderColor = colorDis;
+            this.but_setmode.BackColor = colorDis;
+            this.but_setmode.Name = "but_setmode";
+            //this.tableLayoutPanelCopter.Controls.Add(this.but_setmode, 1, 5);
+            this.but_setmode.Click += new System.EventHandler(this.but_setmode_Click);
             // 
             // labelHomeYaw
             // 
@@ -3247,7 +3285,7 @@ namespace MissionPlanner.GCSViews
             this.butGPS1on.FlatAppearance.BorderSize = 1;
             this.butGPS1on.FlatAppearance.BorderColor = colorDis;
             this.butGPS1on.BackColor = colorDis;
-            //this.tableLayoutPanelCopter.Controls.Add(this.butGPS1on, 0, 5);
+            //this.tableLayoutPanelCopter.Controls.Add(this.butGPS1on, 0, 6);
             this.butGPS1on.Click += new System.EventHandler(this.butGPS1on_Click);
             // 
             // butGPS2on
@@ -3262,8 +3300,53 @@ namespace MissionPlanner.GCSViews
             this.butGPS2on.FlatAppearance.BorderSize = 1;
             this.butGPS2on.FlatAppearance.BorderColor = colorDis;
             this.butGPS2on.BackColor = colorDis;
-            //this.tableLayoutPanelCopter.Controls.Add(this.butGPS2on, 1, 5);
+            //this.tableLayoutPanelCopter.Controls.Add(this.butGPS2on, 0, 7);
             this.butGPS2on.Click += new System.EventHandler(this.butGPS2on_Click);
+            // 
+            // butGPSon
+            // 
+            this.butGPSon.Name = "butGPSon";
+            this.butGPSon.Text = "GPS on/off";
+            this.butGPSon.Font = fontBut;
+            this.butGPSon.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.butGPSon.Enabled = false;
+            this.butGPSon.UseVisualStyleBackColor = false;
+            this.butGPSon.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.butGPSon.FlatAppearance.BorderSize = 1;
+            this.butGPSon.FlatAppearance.BorderColor = colorDis;
+            this.butGPSon.BackColor = colorDis;
+            //this.tableLayoutPanelCopter.Controls.Add(this.butGPSon, 0, 6);
+            this.butGPSon.Click += new System.EventHandler(this.butGPSon_Click);
+            // 
+            // butGPSAuxOnOff
+            // 
+            this.butGPSAuxOnOff.Name = "butGPSAuxOnOff";
+            this.butGPSAuxOnOff.Text = "GPS on/off";
+            this.butGPSAuxOnOff.Font = fontBut;
+            this.butGPSAuxOnOff.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.butGPSAuxOnOff.Enabled = true;
+            this.butGPSAuxOnOff.UseVisualStyleBackColor = false;
+            this.butGPSAuxOnOff.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.butGPSAuxOnOff.FlatAppearance.BorderSize = 1;
+            this.butGPSAuxOnOff.FlatAppearance.BorderColor = colorDis;
+            this.butGPSAuxOnOff.BackColor = colorOn;
+            this.tableLayoutPanelCopter.Controls.Add(this.butGPSAuxOnOff, 3, 6);
+            this.butGPSAuxOnOff.Click += new System.EventHandler(this.butGPSAuxOnOff_Click);
+            // 
+            // butForceLand
+            // 
+            this.butForceLand.Name = "butForceLand";
+            this.butForceLand.Text = "Force Land";
+            this.butForceLand.Font = fontBut;
+            this.butForceLand.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.butForceLand.Enabled = true;
+            this.butForceLand.UseVisualStyleBackColor = false;
+            this.butForceLand.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.butForceLand.FlatAppearance.BorderSize = 1;
+            this.butForceLand.FlatAppearance.BorderColor = colorDis;
+            this.butForceLand.BackColor = colorOn;
+            this.tableLayoutPanelCopter.Controls.Add(this.butForceLand, 1, 6);
+            this.butForceLand.Click += new System.EventHandler(this.butForceLand_Click);
             // 
             // butArmDisarm
             // 
@@ -3274,10 +3357,10 @@ namespace MissionPlanner.GCSViews
             this.butArmDisarm.Enabled = true;
             this.butArmDisarm.UseVisualStyleBackColor = false;
             this.butArmDisarm.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.butArmDisarm.FlatAppearance.BorderSize = 1;
-            this.butArmDisarm.FlatAppearance.BorderColor = colorDis;
+            this.butArmDisarm.FlatAppearance.BorderSize = 2;
+            this.butArmDisarm.FlatAppearance.BorderColor = Color.OrangeRed;
             this.butArmDisarm.BackColor = colorDis;
-            this.tableLayoutPanelCopter.Controls.Add(this.butArmDisarm, 1, 6);
+            this.tableLayoutPanelCopter.Controls.Add(this.butArmDisarm, 0, 6);
             this.butArmDisarm.Click += new System.EventHandler(this.BUT_ARM_Click);
             // 
             // butLoiter
@@ -3292,7 +3375,7 @@ namespace MissionPlanner.GCSViews
             this.butLoiter.FlatAppearance.BorderSize = 1;
             this.butLoiter.FlatAppearance.BorderColor = colorDis;
             this.butLoiter.BackColor = colorDis;
-            this.tableLayoutPanelCopter.Controls.Add(this.butLoiter, 2, 6);
+            this.tableLayoutPanelCopter.Controls.Add(this.butLoiter, 1, 5);
             this.butLoiter.Click += new System.EventHandler(this.BUT_quickmanual_Click);
             // 
             // butRTL
@@ -3307,14 +3390,29 @@ namespace MissionPlanner.GCSViews
             this.butRTL.FlatAppearance.BorderSize = 1;
             this.butRTL.FlatAppearance.BorderColor = colorDis;
             this.butRTL.BackColor = colorDis;
-            this.tableLayoutPanelCopter.Controls.Add(this.butRTL, 3, 6);
+            this.tableLayoutPanelCopter.Controls.Add(this.butRTL, 0, 5);
             this.butRTL.Click += new System.EventHandler(this.BUT_quickrtl_Click);
+            // 
+            // butGnGPS
+            // 
+            this.butGnGPS.Name = "butGnGPS";
+            this.butGnGPS.Text = "GNoGPS";
+            this.butGnGPS.Font = fontBut;
+            this.butGnGPS.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.butGnGPS.Enabled = true;
+            this.butGnGPS.UseVisualStyleBackColor = false;
+            this.butGnGPS.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.butGnGPS.FlatAppearance.BorderSize = 1;
+            this.butGnGPS.FlatAppearance.BorderColor = colorDis;
+            this.butGnGPS.BackColor = colorDis;
+            this.tableLayoutPanelCopter.Controls.Add(this.butGnGPS, 2, 5);
+            this.butGnGPS.Click += new System.EventHandler(this.BUT_GnGPS_Click);
             // 
             // butAltHold
             // 
             this.butAltHold.Name = "butAltHold";
             this.butAltHold.Text = "Alt Hold";
-            
+            this.butAltHold.Font = fontBut;
             this.butAltHold.Dock = System.Windows.Forms.DockStyle.Fill;
             this.butAltHold.Enabled = true;
             this.butAltHold.UseVisualStyleBackColor = false;
@@ -3325,21 +3423,51 @@ namespace MissionPlanner.GCSViews
             this.butAltHold.Click += new System.EventHandler(this.butAltHold_Click);
             this.tableLayoutPanelCopter.Controls.Add(this.butAltHold, 3, 5);
             // 
-            // isActiveRC
+            // IsActiveRC_Petr
             //
-            this.isActiveRC.Dock = DockStyle.Fill;
-            this.isActiveRC.Appearance = Appearance.Button;
-            this.isActiveRC.TextAlign = ContentAlignment.MiddleCenter;
-            this.isActiveRC.FlatStyle = FlatStyle.Flat;
-            this.isActiveRC.FlatAppearance.BorderSize = 0;
-            this.isActiveRC.Text = "Скид";
-            this.isActiveRC.Font = fontBut;
-            this.isActiveRC.BackColor = colorDis;
-            this.isActiveRC.ForeColor = Color.White;
-            this.isActiveRC.Checked = false;
-            this.isActiveRC.Enabled = false;
-            this.isActiveRC.Visible = true;
-            this.tableLayoutPanelCopter.Controls.Add(this.isActiveRC, 0, 6);
+            this.IsActiveRC_Petr.Dock = DockStyle.Fill;
+            this.IsActiveRC_Petr.TextAlign = ContentAlignment.MiddleCenter;
+            this.IsActiveRC_Petr.FlatStyle = FlatStyle.Flat;
+            this.IsActiveRC_Petr.FlatAppearance.BorderSize = 0;
+            this.IsActiveRC_Petr.Text = "Скид";
+            this.IsActiveRC_Petr.Font = fontBut;
+            this.IsActiveRC_Petr.BackColor = colorDis2;
+            this.IsActiveRC_Petr.ForeColor = Color.White;
+            this.IsActiveRC_Petr.Enabled = false;
+            this.IsActiveRC_Petr.Visible = true;
+            //this.tableLayoutPanelCopter.Controls.Add(this.IsActiveRC_Petr, 0, 7);
+            // 
+            // IsActRCVamp_1
+            //
+            this.IsActRCVamp_1.Dock = DockStyle.Fill;
+            this.IsActRCVamp_1.TextAlign = ContentAlignment.MiddleCenter;
+            this.IsActRCVamp_1.FlatStyle = FlatStyle.Flat;
+            this.IsActRCVamp_1.FlatAppearance.BorderSize = 0;
+            this.IsActRCVamp_1.Text = "Скид 1";
+            this.IsActRCVamp_1.Font = fontBut;
+            this.IsActRCVamp_1.BackColor = colorDis2;
+            this.IsActRCVamp_1.ForeColor = Color.White;
+            this.IsActRCVamp_1.Enabled = false;
+            this.IsActRCVamp_1.Visible = true;
+            //this.tableLayoutPanelCopter.Controls.Add(this.IsActRCVamp_1, 1, 7);
+            // 
+            // IsActRCVamp_2
+            //
+            this.IsActRCVamp_2.Dock = DockStyle.Fill;
+            this.IsActRCVamp_2.TextAlign = ContentAlignment.MiddleCenter;
+            this.IsActRCVamp_2.FlatStyle = FlatStyle.Flat;
+            this.IsActRCVamp_2.FlatAppearance.BorderSize = 0;
+            this.IsActRCVamp_2.Text = "Скид 2";
+            this.IsActRCVamp_2.Font = fontBut;
+            this.IsActRCVamp_2.BackColor = colorDis2;
+            this.IsActRCVamp_2.ForeColor = Color.White;
+            this.IsActRCVamp_2.Enabled = false;
+            this.IsActRCVamp_2.Visible = true;
+            //this.tableLayoutPanelCopter.Controls.Add(this.IsActRCVamp_2, 2, 7);
+
+            MainV2.comPort.OnPacketReceived -= UpdateIsActiveRC;
+            MainV2.comPort.OnPacketReceived += UpdateIsActiveRC;
+
 
             //StartMessageProcessing();
         }
@@ -3628,26 +3756,36 @@ namespace MissionPlanner.GCSViews
 
         private Button butGPS1on;
         private Button butGPS2on;
+        private Button butGPSon;
+        private Button butGPSAuxOnOff;
+        private Button butForceLand;
         private Button butLoiter;
         private Button butRTL;
+        private Button butGnGPS;
         private Button butAltHold;
         private Button but_setmode;
 
-        private CheckBox isActiveRC;
+        private Button IsActiveRC_Petr;
+        private Button IsActRCVamp_1;
+        private Button IsActRCVamp_2;
+        private ushort ch7in;
+        private ushort ch6in;
         private ushort ch10in;
 
-        private readonly string GPS_1_Key = "GPS_TYPE";
-        private readonly string GPS_2_Key = "GPS_TYPE2";
+        private string GPS1 = "1";
+        private string GPS2 = "2";
 
         private readonly Color colorOn = Color.YellowGreen;
         private readonly Color colorOff = Color.DarkGreen;
         private readonly Color colorDis = Color.SlateGray;
+        private readonly Color colorDis2 = Color.YellowGreen;
         private readonly Font fontBut = new Font("Microsoft Sans Serif", 10F);
         private readonly Font fontLabel = new Font("Microsoft Sans Serif", 10F);
         private readonly Font fontNuveric = new Font("Microsoft Sans Serif", 11F);
 
         private bool dataGridViewVisible;
-        private string lastModelText = "";
+        private System.Windows.Forms.CheckBox chBox_ExpMod;
+        private System.Windows.Forms.CheckBox chBox_X9;
 
 
     }

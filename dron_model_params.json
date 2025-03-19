@@ -1,6 +1,6 @@
 {
-  "RTL_ALT": 3600.0,
-  "selectedDroneModel": "petrovych",
+  "RTL_ALT": 5000.0,
+  "selectedDroneModel": "sparrow",
   "vampire": {
     "Modes": [
       {
@@ -30,9 +30,9 @@
       {
         "Name": "Custom",
         "Params": {
-          "ANGLE_MAX": 1775.0,
-          "LOIT_SPEED": 1774.0,
-          "WPNAV_SPEED": 1773.0
+          "ANGLE_MAX": 1777.0,
+          "LOIT_SPEED": 1777.0,
+          "WPNAV_SPEED": 1777.0
         }
       }
     ]
@@ -66,9 +66,9 @@
       {
         "Name": "Custom",
         "Params": {
-          "ANGLE_MAX": 1996.0,
-          "LOIT_SPEED": 1997.0,
-          "WPNAV_SPEED": 1996.0
+          "ANGLE_MAX": 2000.0,
+          "LOIT_SPEED": 2000.0,
+          "WPNAV_SPEED": 2000.0
         }
       }
     ]

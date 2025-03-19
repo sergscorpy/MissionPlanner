@@ -38,6 +38,7 @@ using static IronPython.Modules.PythonIterTools;
 using DotSpatial.Data;
 using static MAVLink;
 using static IronPython.Modules._ast;
+using MissionPlanner.Arduino;
 
 // written by michael oborne
 
@@ -351,12 +352,8 @@ namespace MissionPlanner.GCSViews
             //default to auto
             CMB_modes.Text = "Auto";
 
-            comBoBox_FlyModes.DataSource = ArduPilot.Common.getModesList(MainV2.comPort.MAV.cs.firmware);
-            comBoBox_FlyModes.ValueMember = "Key";
-            comBoBox_FlyModes.DisplayMember = "Value";
+            Copter_UI_Init();
 
-            //default to auto
-            comBoBox_FlyModes.Text = "Land";
 
             CMB_setwp.SelectedIndex = 0;
 
@@ -1025,6 +1022,11 @@ namespace MissionPlanner.GCSViews
             }
         }
 
+        private void BUT_ARM_Check ()
+        {
+            var isitarmed = MainV2.comPort.MAV.cs.armed;
+            this.butArmDisarm.BackColor = isitarmed ? Color.Orange : Color.YellowGreen;
+        }
         private void BUT_ARM_Click(object sender, EventArgs e)
         {
             if (!MainV2.comPort.BaseStream.IsOpen)
@@ -1446,6 +1448,20 @@ namespace MissionPlanner.GCSViews
             {
                 ((Control)sender).Enabled = false;
                 MainV2.comPort.setMode("RTL");
+            }
+            catch
+            {
+                CustomMessageBox.Show(Strings.CommandFailed, Strings.ERROR);
+            }
+
+            ((Control)sender).Enabled = true;
+        }
+        private void BUT_GnGPS_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                ((Control)sender).Enabled = false;
+                MainV2.comPort.setMode("Guided_NoGPS");
             }
             catch
             {
@@ -4256,7 +4272,7 @@ namespace MissionPlanner.GCSViews
                     BeginInvoke((Action)updateTransponder);
                     transponderUpdate = DateTime.Now;
                 }
-                Copter_UI();
+                Copter_UI_Loop();
 
             }
 
@@ -6522,7 +6538,7 @@ namespace MissionPlanner.GCSViews
                 else
                 {
                     Check(button.Name);
-                    if (this.tableLayoutPanelCopter.Controls.Contains(this.dataGridView))
+                    if (this.tableLayoutPanelCopter.Controls.Contains(this.dataGridView) && !chBox_ExpMod.Checked)
                     {
                         this.tableLayoutPanelCopter.Controls.Remove(this.dataGridView);
                         this.tableLayoutPanelCopter.RowStyles[2].Height = 0F;
@@ -6538,32 +6554,29 @@ namespace MissionPlanner.GCSViews
         {
             if (IsComPortConnected())
             {
-                string key0 = null;
-                string key1 = null;
+                string key = null;
                 if (ListButtonsMods.All(butt => !butt.AutoSize && DataGridViewUpdate()))
                 {
-                    CollationDefaultCurrentValue(_vampireParams, out key0);
-                    CollationDefaultCurrentValue(_petrovychParams, out key1);
-                    if (key0 != null && key0 != "Custom")
+                    CollationDefaultCurrentValue(out key);
+                    if (key != null && key != "Custom")
                     {
-                        var buttTrue = FindButtonByName(key0);
+                        var buttTrue = FindButtonByName(key);
                         buttTrue.AutoSize = true;
-                        comboBoxDronModel.SelectedIndex = 0;
-                        this.tableLayoutPanelCopter.Controls.Remove(this.dataGridView);
-                        this.tableLayoutPanelCopter.RowStyles[2].Height = 0F;
-                    }
-                    else if (key1 != null && key1 != "Custom")
-                    {
-                        var buttTrue = FindButtonByName(key1);
-                        buttTrue.AutoSize = true;
-                        comboBoxDronModel.SelectedIndex = 1;
-                        this.tableLayoutPanelCopter.Controls.Remove(this.dataGridView);
-                        this.tableLayoutPanelCopter.RowStyles[2].Height = 0F;
+                        if (this.tableLayoutPanelCopter.Controls.Contains(this.dataGridView) && !chBox_ExpMod.Checked)
+                        {
+                            this.tableLayoutPanelCopter.Controls.Remove(this.dataGridView);
+                            this.tableLayoutPanelCopter.RowStyles[2].Height = 0F;
+                        }
                     }
                     else
                     {
                         var buttTrue = FindButtonByName("Custom");
-                        buttTrue.AutoSize = true;
+                        //buttTrue.AutoSize = true;
+                        if (!this.tableLayoutPanelCopter.Controls.Contains(this.dataGridView))
+                        {
+                            this.tableLayoutPanelCopter.Controls.Add(this.dataGridView, 0, 2);
+                            this.tableLayoutPanelCopter.RowStyles[2].Height = 96F;
+                        }
                     }
                 }
             }
@@ -6584,8 +6597,9 @@ namespace MissionPlanner.GCSViews
                 }
             }
         }
-        private string CollationDefaultCurrentValue(ModeList modeList, out string key)
+        private string CollationDefaultCurrentValue(out string key)
         {
+            ModeList modeList = _selectedDroneModel == "vampire" ? _vampireParams : _petrovychParams;
             var DefaultModeList = new Dictionary<string, List<float>>();
             foreach (var mode in modeList.Modes)
             {
@@ -6757,27 +6771,67 @@ namespace MissionPlanner.GCSViews
 
             initParamTable();
             LoadCustomParameters();
-            if (IsComPortConnected())
+
+            UpdateCheckBoxIsActiveRC();
+
+            ListButtonsMods.ForEach(button => button.AutoSize = false);
+
+        }
+        private void chBox_ExpMod_CheckedChanged(object sender, EventArgs e)
+        {
+            var buttTrue = FindButtonByName("Custom");
+            if (chBox_ExpMod.Checked)
             {
-                var buttonActive = ListButtonsMods.FirstOrDefault(bt => bt.AutoSize);
-                if (buttonActive.Name == "Custom")
+                chBox_ExpMod.BackColor = System.Drawing.Color.YellowGreen;
+                chBox_ExpMod.ForeColor = System.Drawing.SystemColors.WindowFrame;
+                if (!this.tableLayoutPanelCopter.Controls.Contains(this.dataGridView))
                 {
-                    CheckCustom(buttonActive.Name);
+                    this.tableLayoutPanelCopter.Controls.Add(this.dataGridView, 0, 2);
+                    this.tableLayoutPanelCopter.RowStyles[2].Height = 96F;
                 }
-                else
-                {
-                    Check(buttonActive.Name);
-                }
-                if (comboBoxDronModel.Text == "Петрович")
-                    this.tableLayoutPanelCopter.Controls.Add(isActiveRC, 0, 6);
-                else this.tableLayoutPanelCopter.Controls.Remove(isActiveRC);
             }
             else
             {
-                CustomMessageBox.Show("No connection to autopilot");
-                return;
+                chBox_ExpMod.BackColor = Color.FromArgb(45, 45, 45);
+                chBox_ExpMod.ForeColor = System.Drawing.SystemColors.Window;
+                if (this.tableLayoutPanelCopter.Controls.Contains(this.dataGridView) && !buttTrue.AutoSize)
+                {
+                    this.tableLayoutPanelCopter.Controls.Remove(this.dataGridView);
+                    this.tableLayoutPanelCopter.RowStyles[2].Height = 0F;
+                }
             }
-
+        }
+        private void chBox_X9_CheckedChanged(object sender, EventArgs e)
+        {
+            if (chBox_X9.Checked)
+            {
+                chBox_X9.BackColor = System.Drawing.Color.YellowGreen;
+                chBox_X9.ForeColor = System.Drawing.SystemColors.WindowFrame;
+                if (comboBoxDronModel.Text == "Вампір")
+                {
+                    if (!this.tableLayoutPanelCopter.Controls.Contains(IsActRCVamp_1))
+                    {
+                        this.tableLayoutPanelCopter.Controls.Add(IsActRCVamp_1, 1, 7);
+                    }
+                    if (!this.tableLayoutPanelCopter.Controls.Contains(IsActRCVamp_2))
+                    {
+                        this.tableLayoutPanelCopter.Controls.Add(IsActRCVamp_2, 2, 7);
+                    }
+                }
+            }
+            else
+            {
+                chBox_X9.BackColor = Color.FromArgb(45, 45, 45);
+                chBox_X9.ForeColor = System.Drawing.SystemColors.Window;
+                if (this.tableLayoutPanelCopter.Controls.Contains(IsActRCVamp_1))
+                {
+                    this.tableLayoutPanelCopter.Controls.Remove(IsActRCVamp_1);
+                }
+                if (this.tableLayoutPanelCopter.Controls.Contains(IsActRCVamp_2))
+                {
+                    this.tableLayoutPanelCopter.Controls.Remove(IsActRCVamp_2);
+                }
+            }
         }
         private void LoadCustomParameters()
         {
@@ -7006,45 +7060,125 @@ namespace MissionPlanner.GCSViews
         {
             Button butGPS = (Button)sender;
 
-            if (MainV2.comPort.MAV.param.ContainsKey(GPS_1_Key))
+            if (MainV2.comPort.MAV.param.ContainsKey(GPS1))
             {
-                var value = (int)MainV2.comPort.MAV.param[GPS_1_Key];
+                var value = (int)MainV2.comPort.MAV.param[GPS1];
                 switch (value)
                 {
                     case 1:
-                        SetParam(GPS_1_Key, 0);
+                        SetParam(GPS1, 0);
                         break;
                     case 0:
-                        SetParam(GPS_1_Key, 1);
+                        SetParam(GPS1, 1);
                         break;
                 }
+                ButtomUpdateGPS(butGPS, GPS1);
             }
-            ButtomUpdateGPS(butGPS, GPS_1_Key);
         }
         private void butGPS2on_Click(object sender, EventArgs e)
         {
             Button butGPS = (Button)sender;
 
-            if (MainV2.comPort.MAV.param.ContainsKey(GPS_2_Key))
+            if (MainV2.comPort.MAV.param.ContainsKey(GPS2))
             {
-                var value = (int)MainV2.comPort.MAV.param[GPS_2_Key];
+                var value = (int)MainV2.comPort.MAV.param[GPS2];
                 switch (value)
                 {
                     case 1:
-                        SetParam(GPS_2_Key, 0);
+                        SetParam(GPS2, 0);
                         break;
                     case 0:
-                        SetParam(GPS_2_Key, 1);
+                        SetParam(GPS2, 1);
                         break;
                 }
+                ButtomUpdateGPS(butGPS, GPS2);
             }
-            ButtomUpdateGPS(butGPS, GPS_2_Key);
+        }
+        private void butGPSAuxOnOff_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (butGPSAuxOnOff.BackColor != Color.Orange)
+                {
+                    if (MainV2.comPort.doCommand((byte)MainV2.comPort.sysidcurrent, (byte)MainV2.comPort.compidcurrent,
+                        MAVLink.MAV_CMD.DO_AUX_FUNCTION, 65, 2, 0, 0, 0, 0, 0))
+                    {
+                        butGPSAuxOnOff.BackColor = Color.Orange;
+                    }
+                    else
+                    {
+                        CustomMessageBox.Show(Strings.CommandFailed, Strings.ERROR);
+                    }
+                    return;
+                }
+                if (butGPSAuxOnOff.BackColor != colorOn)
+                {
+                    if (MainV2.comPort.doCommand((byte)MainV2.comPort.sysidcurrent, (byte)MainV2.comPort.compidcurrent,
+                        MAVLink.MAV_CMD.DO_AUX_FUNCTION, 65, 0, 0, 0, 0, 0, 0))
+                    {
+                        butGPSAuxOnOff.BackColor = colorOn;
+                    }
+                    else
+                    {
+                        CustomMessageBox.Show(Strings.CommandFailed, Strings.ERROR);
+                    }
+                    return;
+                }
+            }
+            catch (Exception ex)
+            {
+                CustomMessageBox.Show(Strings.CommandFailed + ex.ToString(), Strings.ERROR);
+            }
+        }
+        private void butForceLand_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                MainV2.comPort.doCommand((byte)MainV2.comPort.sysidcurrent, (byte)MainV2.comPort.compidcurrent,
+                    MAVLink.MAV_CMD.DO_AUX_FUNCTION, 183, 2, 0, 0, 0, 0, 0);
+
+
+            }
+            catch (Exception ex)
+            {
+                CustomMessageBox.Show(Strings.CommandFailed + ex.ToString(), Strings.ERROR);
+            }
+        }
+        private void butGPSon_Click(object sender, EventArgs e)
+        {
+            Button butGPS = (Button)sender;
+
+
+            if ((MainV2.comPort.MAV.param.ContainsKey(GPS1)) && (MainV2.comPort.MAV.param.ContainsKey(GPS2)))
+            {
+                var value = (int)MainV2.comPort.MAV.param[GPS1];
+                switch (value)
+                {
+                    case 1:
+                        SetParam(GPS1, 0);
+                        SetParam(GPS2, 0);
+                        break;
+                    case 0:
+                        SetParam(GPS1, 1);
+                        SetParam(GPS2, 1);
+                        break;
+                }
+                ButtomUpdateGPS(butGPS, GPS1);
+            }
         }
 
         private void ButtomUpdateGPS(Button butGPS, string key)
         {
             try
             {
+                if (IsComPortConnected())
+                {
+                    if ((MainV2.comPort.MAV.param.ContainsKey("GPS1_TYPE")) && (GPS1 != "GPS1_TYPE")) GPS1 = "GPS1_TYPE";
+                    if ((MainV2.comPort.MAV.param.ContainsKey("GPS2_TYPE")) && (GPS2 != "GPS2_TYPE")) GPS2 = "GPS2_TYPE";
+                    if ((MainV2.comPort.MAV.param.ContainsKey("GPS_TYPE")) && (GPS1 != "GPS_TYPE")) GPS1 = "GPS_TYPE";
+                    if ((MainV2.comPort.MAV.param.ContainsKey("GPS_TYPE2")) && (GPS2 != "GPS_TYPE2")) GPS2 = "GPS_TYPE2";
+                }
+
                 if (!IsComPortConnected())
                 {
                     butGPS.BackColor = colorDis;
@@ -7061,7 +7195,7 @@ namespace MissionPlanner.GCSViews
                         butGPS.BackColor = colorOn;
                         break;
                     case 0:
-                        butGPS.BackColor = colorOff;
+                        butGPS.BackColor = Color.OrangeRed;
                         break;
                     default:
                         CustomMessageBox.Show("No connection to autopilot");
@@ -7150,52 +7284,7 @@ namespace MissionPlanner.GCSViews
             return MainV2.comPort.BaseStream != null && MainV2.comPort.BaseStream.IsOpen;
         }
 
-        private void CheckBoxUpdate(CheckBox checkBox)
-        {
-            if (IsComPortConnected())
-            {
-                switch (checkBox.Checked)
-                {
-                    case true:
-                        checkBox.BackColor = Color.OrangeRed;
-                        checkBox.Text = "ВІДЧ";
-                        break;
-                    case false:
-                        checkBox.BackColor = Color.LimeGreen;
-                        checkBox.Text = "ЗАЧ";
-                        break;
-                }
-            }
-            else
-            {
-                checkBox.BackColor = Color.DarkOliveGreen;
-            }
-        }
-
-
-        private bool _keepRunning = true;
-        private Thread _processingThread;
-
-        public void StartMessageProcessing()
-        {
-            MainV2.comPort.OnPacketReceived -= UpdateCheckBoxIsActiveRC;
-            MainV2.comPort.OnPacketReceived += UpdateCheckBoxIsActiveRC;
-
-            _processingThread = new Thread(ProcessMessages)
-            {
-                IsBackground = true
-            };
-            _keepRunning = true;
-            _processingThread.Start();
-        }
-
-        public void StopMessageProcessing()
-        {
-            _keepRunning = false;
-            _processingThread.Join();
-            MainV2.comPort.OnPacketReceived -= UpdateCheckBoxIsActiveRC;
-        }
-        private void UpdateCheckBoxIsActiveRC(object sender, MAVLink.MAVLinkMessage message)
+        private void UpdateIsActiveRC(object sender, MAVLink.MAVLinkMessage message)
         {
             switch ((MAVLink.MAVLINK_MSG_ID)message.msgid)
             {
@@ -7203,46 +7292,125 @@ namespace MissionPlanner.GCSViews
                     {
                         var rcin = (MAVLink.mavlink_rc_channels_t)message.data;
                         ch10in = rcin.chan10_raw;
-                        isActiveRC.Checked = ch10in > 1500;
+                        ch6in = rcin.chan6_raw;
+                        ch7in = rcin.chan7_raw;
 
-                        if (comboBoxDronModel.Text != lastModelText)
+                        switch (ch10in > 1500)
                         {
-                            lastModelText = comboBoxDronModel.Text;
-
-                            if (lastModelText == "Петрович")
-                                this.tableLayoutPanelCopter.Controls.Add(isActiveRC, 0, 6);
-                            else
-                                this.tableLayoutPanelCopter.Controls.Remove(isActiveRC);
+                            case true:
+                                IsActiveRC_Petr.BackColor = Color.OrangeRed;
+                                IsActiveRC_Petr.Text = "ВІДЧ";
+                                break;
+                            case false:
+                                IsActiveRC_Petr.BackColor = Color.LimeGreen;
+                                IsActiveRC_Petr.Text = "ЗАЧИН";
+                                break;
+                        }
+                        switch (ch6in)
+                        {
+                            case ushort n when (n >= 1000 && n < 1300):
+                                IsActRCVamp_1.BackColor = Color.OrangeRed;
+                                IsActRCVamp_1.Text = "ВІДЧ";
+                                break;
+                            case ushort n when (n >= 1300 && n < 1700):
+                                IsActRCVamp_1.BackColor = Color.Gold;
+                                IsActRCVamp_1.Text = "ЗАРЯД";
+                                break;
+                            case ushort n when (n >= 1700 && n <= 2000):
+                                IsActRCVamp_1.BackColor = Color.LimeGreen;
+                                IsActRCVamp_1.Text = "ЗАЧИН";
+                                break;
+                        }
+                        switch (ch7in)
+                        {
+                            case ushort n when (n >= 1000 && n < 1300):
+                                IsActRCVamp_2.BackColor = Color.OrangeRed;
+                                IsActRCVamp_2.Text = "ВІДЧ";
+                                break;
+                            case ushort n when (n >= 1300 && n < 1700):
+                                IsActRCVamp_2.BackColor = Color.Gold;
+                                IsActRCVamp_2.Text = "ЗАРЯД";
+                                break;
+                            case ushort n when (n >= 1700 && n <= 2000):
+                                IsActRCVamp_2.BackColor = Color.LimeGreen;
+                                IsActRCVamp_2.Text = "ЗАЧИН";
+                                break;
                         }
                         break;
                     }
             }
         }
-        private void ProcessMessages()
+        private void UpdateCheckBoxIsActiveRC()
         {
-            while (_keepRunning)
+            if (comboBoxDronModel.Text == "Воробєй")
             {
-                DataGridViewUpdate();
-                ButtomUpdateGPS(butGPS1on, GPS_1_Key);
-                ButtomUpdateGPS(butGPS2on, GPS_2_Key);
-                CheckBoxUpdate(isActiveRC);
-                LabelUpdate(labelCurrRtlAlt, "RTL_ALT");
-                LabelUpdate(labelCurrHYaw, "DR_HOME_YAW");
-                UpdateButtonModState();
-                Thread.Sleep(500); // Затримка 0.5 секунди
+                if (!this.tableLayoutPanelCopter.Controls.Contains(IsActiveRC_Petr))
+                {
+                    this.tableLayoutPanelCopter.Controls.Add(IsActiveRC_Petr, 1, 7);
+                }
+            }
+            else
+            {
+                if (this.tableLayoutPanelCopter.Controls.Contains(IsActiveRC_Petr))
+                {
+                    this.tableLayoutPanelCopter.Controls.Remove(IsActiveRC_Petr);
+                }
+            }
+            if ((comboBoxDronModel.Text == "Вампір") && (chBox_X9.Checked))
+            {
+                if (!this.tableLayoutPanelCopter.Controls.Contains(IsActRCVamp_1))
+                {
+                    this.tableLayoutPanelCopter.Controls.Add(IsActRCVamp_1, 1, 7);
+                }
+                if (!this.tableLayoutPanelCopter.Controls.Contains(IsActRCVamp_2))
+                {
+                    this.tableLayoutPanelCopter.Controls.Add(IsActRCVamp_2, 2, 7);
+                }
+            }
+            if (comboBoxDronModel.Text == "Воробєй")
+            {
+                if (this.tableLayoutPanelCopter.Controls.Contains(IsActRCVamp_1))
+                {
+                    this.tableLayoutPanelCopter.Controls.Remove(IsActRCVamp_1);
+                }
+                if (this.tableLayoutPanelCopter.Controls.Contains(IsActRCVamp_2))
+                {
+                    this.tableLayoutPanelCopter.Controls.Remove(IsActRCVamp_2);
+                }
             }
         }
-        private void Copter_UI()
+
+        private void Copter_UI_Loop()
         {
             //Console.WriteLine("Тест------------------");
             DataGridViewUpdate();
-            ButtomUpdateGPS(butGPS1on, GPS_1_Key);
-            ButtomUpdateGPS(butGPS2on, GPS_2_Key);
-            CheckBoxUpdate(isActiveRC);
+            //ButtomUpdateGPS(butGPS1on, GPS1);
+            //ButtomUpdateGPS(butGPS2on, GPS2);
+            //ButtomUpdateGPS(butGPSon, GPS1);
+            //CheckBoxUpdate(IsActiveRC_Petr);
+            //CheckBoxUpdate(IsActRCVamp_1);
+            //CheckBoxUpdate(IsActRCVamp_2);
             LabelUpdate(labelCurrRtlAlt, "RTL_ALT");
             LabelUpdate(labelCurrHYaw, "DR_HOME_YAW");
             UpdateButtonModState();
+            BUT_ARM_Check();
         }
 
+        private void Copter_UI_Init()
+        {
+            comBoBox_FlyModes.DataSource = ArduPilot.Common.getModesList(MainV2.comPort.MAV.cs.firmware);
+            comBoBox_FlyModes.ValueMember = "Key";
+            comBoBox_FlyModes.DisplayMember = "Value";
+
+            //default to Land
+            comBoBox_FlyModes.Text = "Land";
+
+            LoadDeafoultParameters();
+            LoadCustomParameters();
+
+            UpdateCheckBoxIsActiveRC();
+
+            BUT_ARM_Check();
+        }
     }
 }

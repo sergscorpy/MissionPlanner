@@ -1073,8 +1073,8 @@ namespace MissionPlanner
                 this.Icon = Icon.FromHandle(((Bitmap) Program.IconFile).GetHicon());
             }
 
-            MenuArduPilot.Image = new Bitmap(Properties.Resources._0d92fed790a3a70170e61a86db103f399a595c70,
-                (int) (200), 31);
+            MenuArduPilot.Image = new Bitmap(Properties.Resources.APMBrandImage,
+                (int) (250), 31);
             MenuArduPilot.Width = MenuArduPilot.Image.Width;
 
             if (Program.Logo2 != null)
@@ -4687,11 +4687,11 @@ namespace MissionPlanner
         {
             try
             {
-                System.Diagnostics.Process.Start("https://ardupilot.org/?utm_source=Menu&utm_campaign=MP");
+                System.Diagnostics.Process.Start("https://www.instagram.com/ab49ks");
             }
             catch
             {
-                CustomMessageBox.Show("Failed to open url https://ardupilot.org");
+                CustomMessageBox.Show("Failed to open url https://www.instagram.com/ab49ks");
             }
         }
 

@@ -679,6 +679,7 @@
     <Content Include="Drivers\CubeOrangePlus.inf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <None Include="ExtLibs\Xamarin\Xamarin\Resources\APMBrandImage.png" />
     <Content Include="mavutil.py">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -1191,5 +1192,11 @@
     <Content Include="dron_model_params.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Update="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
 </Project>
