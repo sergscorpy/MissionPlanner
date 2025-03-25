@@ -581,6 +581,7 @@ namespace MissionPlanner.GCSViews
             this.tabControlactions.ContextMenuStrip = this.contextMenuStripactionstab;
             this.tabControlactions.Controls.Add(this.tabQuick);
             this.tabControlactions.Controls.Add(this.tabCopter);
+            this.tabControlactions.Controls.Add(this.tabPlane);
             this.tabControlactions.Controls.Add(this.tabActions);
             this.tabControlactions.Controls.Add(this.tabPagemessages);
             this.tabControlactions.Controls.Add(this.tabActionsSimple);
@@ -2928,7 +2929,9 @@ namespace MissionPlanner.GCSViews
             this.labelHomeYaw = new System.Windows.Forms.Label();
             this.labelDroneModel = new System.Windows.Forms.Label();
             this.tabCopter = new System.Windows.Forms.TabPage();
+            this.tabPlane = new System.Windows.Forms.TabPage();
             this.tableLayoutPanelCopter = new System.Windows.Forms.TableLayoutPanel();
+            this.tableLayoutPanelPlane = new System.Windows.Forms.TableLayoutPanel();
             this.butSetRtlAlt = new System.Windows.Forms.Button();
             this.butArmDisarm = new System.Windows.Forms.Button();
             this.but_setmode = new System.Windows.Forms.Button();
@@ -2959,8 +2962,42 @@ namespace MissionPlanner.GCSViews
                     new KeyValuePair<string, string>("Вампір", "vampire"),
                     new KeyValuePair<string, string>("Воробєй", "sparrow")
                 };
-
-
+            
+            int columnCount = 4;                    //Кількість стовпців
+            int rowCount = 15;                      //Кількість рядків
+            int rowHeight = 32;                     //Висота рядка
+            float columnWidth = 100 / columnCount;  //Віднносна ширина стовпця в відсотках
+            int sizeHeight = rowHeight * rowCount;  //Загальна висота таблиці
+            
+            // 
+            // tabPlane
+            // 
+            this.tabPlane.Controls.Add(this.tableLayoutPanelPlane);
+            this.tabPlane.Name = "tabPlane";
+            this.tabPlane.Text = "Plane";
+            this.tabPlane.UseVisualStyleBackColor = true;
+            
+            // 
+            // tableLayoutPanelPlane
+            // 
+            this.tableLayoutPanelPlane.Name = "tableLayoutPanelPlane";
+            this.tableLayoutPanelPlane.RowCount = rowCount;
+            this.tableLayoutPanelPlane.ColumnCount = columnCount;
+            for (int i = 0; i < columnCount; i++)
+            {
+                this.tableLayoutPanelPlane.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, columnWidth));
+            }
+            for (int i = 0; i < rowCount; i++)
+            {
+                this.tableLayoutPanelPlane.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, rowHeight));
+            }
+            this.tableLayoutPanelPlane.RowStyles[2].Height = 96F;
+            this.tableLayoutPanelPlane.Location = new System.Drawing.Point(3, 3);
+            this.tableLayoutPanelPlane.Dock = System.Windows.Forms.DockStyle.Top;
+            this.tableLayoutPanelPlane.Size = new System.Drawing.Size(300, sizeHeight);
+            this.tableLayoutPanelPlane.Margin = new System.Windows.Forms.Padding(0);
+            this.tableLayoutPanelPlane.Padding = new System.Windows.Forms.Padding(4);
+            
             // 
             // tabCopter
             // 
@@ -2969,16 +3006,11 @@ namespace MissionPlanner.GCSViews
             this.tabCopter.Name = "tabCopter";
             this.tabCopter.Text = "Copter";
             this.tabCopter.UseVisualStyleBackColor = true;
+            
             // 
             // tableLayoutPanelCopter
             // 
-            ///resources.ApplyResources(this.tableLayoutPanelCopter, "tableLayoutPanelCopter");
             this.tableLayoutPanelCopter.Name = "tableLayoutPanelCopter";
-            int columnCount = 4;        //Кількість стовпців
-            int rowCount = 15;          //Кількість рядків
-            int rowHeight = 32;         //Висота рядка
-            float columnWidth = 100 / columnCount;      //Віднносна ширина стовпця в відсотках
-            int sizeHeight = rowHeight * rowCount;      //Загальна висота таблиці
             this.tableLayoutPanelCopter.RowCount = rowCount;
             this.tableLayoutPanelCopter.ColumnCount = columnCount;
             for (int i = 0; i < columnCount; i++)
@@ -2991,7 +3023,6 @@ namespace MissionPlanner.GCSViews
             this.tableLayoutPanelCopter.Size = new System.Drawing.Size(300, sizeHeight);
             this.tableLayoutPanelCopter.Margin = new System.Windows.Forms.Padding(0);
             this.tableLayoutPanelCopter.Padding = new System.Windows.Forms.Padding(4);
-
 
             //
             // comboBoxDronModel
@@ -3504,6 +3535,7 @@ namespace MissionPlanner.GCSViews
         public System.Windows.Forms.TabPage tabGauges;
         public System.Windows.Forms.TabPage tabStatus;
         public System.Windows.Forms.TabPage tabCopter;
+        public System.Windows.Forms.TabPage tabPlane;
         public System.Windows.Forms.TabPage tabActions;
         public System.Windows.Forms.TabPage tabTLogs;
         private System.Windows.Forms.ComboBox CMB_modes;
@@ -3662,6 +3694,7 @@ namespace MissionPlanner.GCSViews
         private System.Windows.Forms.ToolStripMenuItem flyToCoordsToolStripMenuItem;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanelCopter;
+        private System.Windows.Forms.TableLayoutPanel tableLayoutPanelPlane;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel2;
         private System.Windows.Forms.ToolStripMenuItem setBatteryCellCountToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem undockToolStripMenuItem;

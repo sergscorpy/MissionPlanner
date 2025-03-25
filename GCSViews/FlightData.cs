@@ -701,6 +701,8 @@ namespace MissionPlanner.GCSViews
             TabListDisplay.Add(tabPagePreFlight.Name, MainV2.DisplayConfiguration.displayPreFlightTab);
 
             TabListDisplay.Add(tabCopter.Name, MainV2.DisplayConfiguration.displayAdvCopterTab);
+            
+            TabListDisplay.Add(tabPlane.Name, MainV2.DisplayConfiguration.displayAdvPlaneTab);
 
             TabListDisplay.Add(tabActions.Name, MainV2.DisplayConfiguration.displayAdvActionsTab);
 
