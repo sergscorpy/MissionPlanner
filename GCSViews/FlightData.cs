@@ -1485,6 +1485,21 @@ namespace MissionPlanner.GCSViews
             }
 
             ((Control)sender).Enabled = true;
+        }        
+        
+        private void butQStabilize_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                ((Control)sender).Enabled = false;
+                MainV2.comPort.setMode("QSTABILIZE"); // TODO нужно найти как правильно называется мод
+            }
+            catch
+            {
+                CustomMessageBox.Show(Strings.CommandFailed, Strings.ERROR);
+            }
+
+            ((Control)sender).Enabled = true;
         }
 
         private void BUT_RAWSensor_Click(object sender, EventArgs e)

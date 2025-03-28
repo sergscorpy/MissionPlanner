@@ -166,6 +166,8 @@ namespace MissionPlanner.GCSViews
             this.bindingSourcePayloadTab = new System.Windows.Forms.BindingSource(this.components);
             this.trackBarRoll = new System.Windows.Forms.TrackBar();
             this.groupBoxYaw = new System.Windows.Forms.GroupBox();
+            this.groupBoxPlaneVertical = new System.Windows.Forms.GroupBox();
+            this.groupBoxPlaneHorizontal = new System.Windows.Forms.GroupBox();
             this.TXT_gimbalYawPos = new System.Windows.Forms.TextBox();
             this.trackBarYaw = new System.Windows.Forms.TrackBar();
             this.BUT_resetGimbalPos = new MissionPlanner.Controls.MyButton();
@@ -283,6 +285,8 @@ namespace MissionPlanner.GCSViews
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourcePayloadTab)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.trackBarRoll)).BeginInit();
             this.groupBoxYaw.SuspendLayout();
+            this.groupBoxPlaneVertical.SuspendLayout();
+            this.groupBoxPlaneHorizontal.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.trackBarYaw)).BeginInit();
             this.groupBoxPitch.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.trackBarPitch)).BeginInit();
@@ -2890,7 +2894,11 @@ namespace MissionPlanner.GCSViews
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourcePayloadTab)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.trackBarRoll)).EndInit();
             this.groupBoxYaw.ResumeLayout(false);
-            this.groupBoxYaw.PerformLayout();
+            this.groupBoxYaw.PerformLayout();            
+            this.groupBoxPlaneVertical.ResumeLayout(false);
+            this.groupBoxPlaneVertical.PerformLayout();            
+            this.groupBoxPlaneHorizontal.ResumeLayout(false);
+            this.groupBoxPlaneHorizontal.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.trackBarYaw)).EndInit();
             this.groupBoxPitch.ResumeLayout(false);
             this.groupBoxPitch.PerformLayout();
@@ -2932,6 +2940,8 @@ namespace MissionPlanner.GCSViews
             this.tabPlane = new System.Windows.Forms.TabPage();
             this.tableLayoutPanelCopter = new System.Windows.Forms.TableLayoutPanel();
             this.tableLayoutPanelPlane = new System.Windows.Forms.TableLayoutPanel();
+            this.buttonsLayoutPlaneVertical = new System.Windows.Forms.TableLayoutPanel();
+            this.buttonsLayoutPlaneHorizontal = new System.Windows.Forms.TableLayoutPanel();
             this.butSetRtlAlt = new System.Windows.Forms.Button();
             this.butArmDisarm = new System.Windows.Forms.Button();
             this.but_setmode = new System.Windows.Forms.Button();
@@ -2956,67 +2966,294 @@ namespace MissionPlanner.GCSViews
             this.IsActiveRC_Petr = new Button();
             this.IsActRCVamp_1 = new Button();
             this.IsActRCVamp_2 = new Button();
+            
+            /****************************************Plane*************************************************************/
 
-            this._comboItems = new List<KeyValuePair<string, string>>
-                {
-                    new KeyValuePair<string, string>("Вампір", "vampire"),
-                    new KeyValuePair<string, string>("Воробєй", "sparrow")
-                };
+            /*
+             * Buttons Init
+             */
+            this.butQLoiter = new Button();
+            this.butQHover = new Button();
+            this.butQLand = new Button();
+            this.butCRUISE = new Button();
+            this.butFBWA = new Button();
+            this.butFBWB = new Button();
+            this.butLOITER = new Button();
+            this.butAUTO = new Button();
+            this.btnRTL = new Button();
             
-            int columnCount = 4;                    //Кількість стовпців
-            int rowCount = 15;                      //Кількість рядків
-            int rowHeight = 32;                     //Висота рядка
-            float columnWidth = 100 / columnCount;  //Віднносна ширина стовпця в відсотках
-            int sizeHeight = rowHeight * rowCount;  //Загальна висота таблиці
-            
-            // 
-            // tabPlane
-            // 
+            /*
+             * Tab Plane
+             */
             this.tabPlane.Controls.Add(this.tableLayoutPanelPlane);
             this.tabPlane.Name = "tabPlane";
             this.tabPlane.Text = "Plane";
             this.tabPlane.UseVisualStyleBackColor = true;
             
-            // 
-            // tableLayoutPanelPlane
-            // 
+            /*
+             * Table Layout Panel Plane
+             */
             this.tableLayoutPanelPlane.Name = "tableLayoutPanelPlane";
-            this.tableLayoutPanelPlane.RowCount = rowCount;
-            this.tableLayoutPanelPlane.ColumnCount = columnCount;
-            for (int i = 0; i < columnCount; i++)
-            {
-                this.tableLayoutPanelPlane.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, columnWidth));
-            }
-            for (int i = 0; i < rowCount; i++)
-            {
-                this.tableLayoutPanelPlane.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, rowHeight));
-            }
-            this.tableLayoutPanelPlane.RowStyles[2].Height = 96F;
-            this.tableLayoutPanelPlane.Location = new System.Drawing.Point(3, 3);
-            this.tableLayoutPanelPlane.Dock = System.Windows.Forms.DockStyle.Top;
-            this.tableLayoutPanelPlane.Size = new System.Drawing.Size(300, sizeHeight);
-            this.tableLayoutPanelPlane.Margin = new System.Windows.Forms.Padding(0);
-            this.tableLayoutPanelPlane.Padding = new System.Windows.Forms.Padding(4);
+            this.tableLayoutPanelPlane.Dock = DockStyle.Fill;
+            this.tableLayoutPanelPlane.ColumnCount = 2;
+            this.tableLayoutPanelPlane.RowCount = 4;
+            this.tableLayoutPanelPlane.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25));
+            this.tableLayoutPanelPlane.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
+            this.tableLayoutPanelPlane.RowStyles.Add(new RowStyle(SizeType.Absolute, 150));
+            this.tableLayoutPanelPlane.RowStyles.Add(new RowStyle(SizeType.Absolute, 150));
+            this.tableLayoutPanelPlane.Controls.Add(this.groupBoxPlaneVertical);
+            this.tableLayoutPanelPlane.Controls.Add(this.groupBoxPlaneHorizontal);
             
-            // 
-            // tabCopter
-            // 
+            /*
+             * Group Box Vertical
+             */
+            this.groupBoxPlaneVertical.Text = "Vertical";
+            this.groupBoxPlaneVertical.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.groupBoxPlaneVertical.TabStop = false;
+            this.groupBoxPlaneVertical.Controls.Add(this.buttonsLayoutPlaneVertical);
+            
+            /*
+             * Buttons Layout Plane Vertical
+             */
+            this.buttonsLayoutPlaneVertical.Name = "buttonsLayoutPlaneVertical";
+            this.buttonsLayoutPlaneVertical.Dock = DockStyle.Fill;
+            this.buttonsLayoutPlaneVertical.ColumnCount = 1;
+            this.buttonsLayoutPlaneVertical.RowCount = 3;
+            this.buttonsLayoutPlaneVertical.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+            for (int i = 0; i < this.buttonsLayoutPlaneVertical.RowCount; i++)
+            {
+                this.buttonsLayoutPlaneVertical.RowStyles.Add(new RowStyle(SizeType.Percent,
+                    100f / this.buttonsLayoutPlaneVertical.RowCount));
+            }
+            this.buttonsLayoutPlaneVertical.Controls.Add(this.butQLoiter, 0, 0);
+            this.buttonsLayoutPlaneVertical.Controls.Add(this.butQHover, 0, 1);
+            this.buttonsLayoutPlaneVertical.Controls.Add(this.butQLand, 0, 2);
+            
+            /*
+             * Button QLoiter
+             */
+            this.butQLoiter.Name = "butQLoiter";
+            this.butQLoiter.Text = "QLOITER";
+            this.butQLoiter.Width = 100;
+            this.butQLoiter.Height = 30;
+            this.butQLoiter.Font = fontBut;
+            this.butQLoiter.Anchor = AnchorStyles.None;
+            this.butQLoiter.Enabled = true;
+            this.butQLoiter.UseVisualStyleBackColor = false;
+            this.butQLoiter.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.butQLoiter.FlatAppearance.BorderSize = 1;
+            this.butQLoiter.FlatAppearance.BorderColor = colorDis;
+            this.butQLoiter.BackColor = colorDis;
+            this.butQLoiter.Click += new System.EventHandler(this.butQStabilize_Click); // TODO need to fix
+                                                                                           
+            /*
+             * Button QHover
+             */
+            this.butQHover.Name = "butQHover";
+            this.butQHover.Text = "QHover";
+            this.butQHover.Width = 100;
+            this.butQHover.Height = 30;
+            this.butQHover.Font = fontBut;
+            this.butQHover.Anchor = AnchorStyles.None;
+            this.butQHover.Enabled = true;
+            this.butQHover.UseVisualStyleBackColor = false;
+            this.butQHover.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.butQHover.FlatAppearance.BorderSize = 1;
+            this.butQHover.FlatAppearance.BorderColor = colorDis;
+            this.butQHover.BackColor = colorDis;
+            this.butQHover.Click += new System.EventHandler(this.butQStabilize_Click); // TODO need to fix
+            
+            /*
+             * Button QLand
+             */
+            this.butQLand.Name = "butQLand";
+            this.butQLand.Text = "QHover";
+            this.butQLand.Width = 100;
+            this.butQLand.Height = 30;
+            this.butQLand.Font = fontBut;
+            this.butQLand.Anchor = AnchorStyles.None;
+            this.butQLand.Enabled = true;
+            this.butQLand.UseVisualStyleBackColor = false;
+            this.butQLand.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.butQLand.FlatAppearance.BorderSize = 1;
+            this.butQLand.FlatAppearance.BorderColor = colorDis;
+            this.butQLand.BackColor = colorDis;
+            this.butQLand.Click += new System.EventHandler(this.butQStabilize_Click); // TODO need to fix
+            
+            /*
+             * Group Box Horizontal
+             */
+            this.groupBoxPlaneHorizontal.Text = "Horizontal";
+            this.groupBoxPlaneHorizontal.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.groupBoxPlaneHorizontal.TabStop = false;
+            this.groupBoxPlaneHorizontal.Controls.Add(this.buttonsLayoutPlaneHorizontal);
+            
+            /*
+             * Buttons Layout Plane Horizontal
+             */
+            this.buttonsLayoutPlaneHorizontal.Name = "buttonsLayoutPlaneHorizontal";
+            this.buttonsLayoutPlaneHorizontal.Dock = DockStyle.Fill;
+            this.buttonsLayoutPlaneHorizontal.ColumnCount = 2;
+            this.buttonsLayoutPlaneHorizontal.RowCount = 3;
+            this.buttonsLayoutPlaneHorizontal.ColumnStyles.Clear();
+            this.buttonsLayoutPlaneHorizontal.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            this.buttonsLayoutPlaneHorizontal.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            this.buttonsLayoutPlaneHorizontal.RowStyles.Clear();
+            for (int i = 0; i < this.buttonsLayoutPlaneHorizontal.RowCount; i++)
+            {
+                this.buttonsLayoutPlaneHorizontal.RowStyles.Add(
+                    new RowStyle(SizeType.Percent, 100f / this.buttonsLayoutPlaneHorizontal.RowCount)
+                );
+            }
+            this.buttonsLayoutPlaneHorizontal.Controls.Add(this.butCRUISE, 0, 0);
+            this.buttonsLayoutPlaneHorizontal.Controls.Add(this.butFBWA, 0, 1);
+            this.buttonsLayoutPlaneHorizontal.Controls.Add(this.butFBWB, 0, 2);
+            this.buttonsLayoutPlaneHorizontal.Controls.Add(this.butLOITER, 1, 0);
+            this.buttonsLayoutPlaneHorizontal.Controls.Add(this.butAUTO, 1, 1);
+            this.buttonsLayoutPlaneHorizontal.Controls.Add(this.btnRTL, 1, 2);
+            
+            /*
+             * Button Cruise
+             */
+            this.butCRUISE.Name = "butCRUISE";
+            this.butCRUISE.Text = "CRUISE";
+            this.butCRUISE.Width = 100;
+            this.butCRUISE.Height = 30;
+            this.butCRUISE.Font = fontBut;
+            this.butCRUISE.Anchor = AnchorStyles.None;
+            this.butCRUISE.Enabled = true;
+            this.butCRUISE.UseVisualStyleBackColor = false;
+            this.butCRUISE.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.butCRUISE.FlatAppearance.BorderSize = 1;
+            this.butCRUISE.FlatAppearance.BorderColor = colorDis;
+            this.butCRUISE.BackColor = colorDis;
+            this.butCRUISE.Click += new System.EventHandler(this.butQStabilize_Click); // TODO need to fix
+            
+            /*
+             * Button FBWA
+             */
+            this.butFBWA.Name = "butFBWA";
+            this.butFBWA.Text = "FBWA";
+            this.butFBWA.Width = 100;
+            this.butFBWA.Height = 30;
+            this.butFBWA.Font = fontBut;
+            this.butFBWA.Anchor = AnchorStyles.None;
+            this.butFBWA.Enabled = true;
+            this.butFBWA.UseVisualStyleBackColor = false;
+            this.butFBWA.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.butFBWA.FlatAppearance.BorderSize = 1;
+            this.butFBWA.FlatAppearance.BorderColor = colorDis;
+            this.butFBWA.BackColor = colorDis;
+            this.butFBWA.Click += new System.EventHandler(this.butQStabilize_Click); // TODO need to fix
+            
+            /*
+             * Button FBWB
+             */
+            this.butFBWB.Name = "butFBWB";
+            this.butFBWB.Text = "FBWB";
+            this.butFBWB.Width = 100;
+            this.butFBWB.Height = 30;
+            this.butFBWB.Font = fontBut;
+            this.butFBWB.Anchor = AnchorStyles.None;
+            this.butFBWB.Enabled = true;
+            this.butFBWB.UseVisualStyleBackColor = false;
+            this.butFBWB.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.butFBWB.FlatAppearance.BorderSize = 1;
+            this.butFBWB.FlatAppearance.BorderColor = colorDis;
+            this.butFBWB.BackColor = colorDis;
+            this.butFBWB.Click += new System.EventHandler(this.butQStabilize_Click); // TODO need to fix
+            
+            /*
+             * Button Loiter
+             */
+            this.butLOITER.Name = "butLOITER";
+            this.butLOITER.Text = "LOITER";
+            this.butLOITER.Width = 100;
+            this.butLOITER.Height = 30;
+            this.butLOITER.Font = fontBut;
+            this.butLOITER.Anchor = AnchorStyles.None;
+            this.butLOITER.Enabled = true;
+            this.butLOITER.UseVisualStyleBackColor = false;
+            this.butLOITER.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.butLOITER.FlatAppearance.BorderSize = 1;
+            this.butLOITER.FlatAppearance.BorderColor = colorDis;
+            this.butLOITER.BackColor = colorDis;
+            this.butLOITER.Click += new System.EventHandler(this.butQStabilize_Click); // TODO need to fix
+            
+            /*
+             * Button Auto
+             */
+            this.butAUTO.Name = "butAUTO";
+            this.butAUTO.Text = "AUTO";
+            this.butAUTO.Width = 100;
+            this.butAUTO.Height = 30;
+            this.butAUTO.Font = fontBut;
+            this.butAUTO.Anchor = AnchorStyles.None;
+            this.butAUTO.Enabled = true;
+            this.butAUTO.UseVisualStyleBackColor = false;
+            this.butAUTO.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.butAUTO.FlatAppearance.BorderSize = 1;
+            this.butAUTO.FlatAppearance.BorderColor = colorDis;
+            this.butAUTO.BackColor = colorDis;
+            this.butAUTO.Click += new System.EventHandler(this.butQStabilize_Click); // TODO need to fix
+            
+            /*
+             * Button RTL
+             */
+            this.btnRTL.Name = "btnRTL";
+            this.btnRTL.Text = "RTL";
+            this.btnRTL.Width = 100;
+            this.btnRTL.Height = 30;
+            this.btnRTL.Font = fontBut;
+            this.btnRTL.Anchor = AnchorStyles.None;
+            this.btnRTL.Enabled = true;
+            this.btnRTL.UseVisualStyleBackColor = false;
+            this.btnRTL.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnRTL.FlatAppearance.BorderSize = 1;
+            this.btnRTL.FlatAppearance.BorderColor = colorDis;
+            this.btnRTL.BackColor = colorDis;
+            this.btnRTL.Click += new System.EventHandler(this.butQStabilize_Click); // TODO need to fix
+            
+            /****************************************Plane End*********************************************************/
+            
+            /****************************************Copter************************************************************/
+            
+            this._comboItems = new List<KeyValuePair<string, string>>
+            {
+                new KeyValuePair<string, string>("Вампір", "vampire"),
+                new KeyValuePair<string, string>("Воробєй", "sparrow")
+            };
+            
+            int columnCount = 4;                    // Кількість стовпців
+            int rowCount = 15;                      // Кількість рядків
+            int rowHeight = 32;                     // Висота рядка
+            float columnWidth = 100 / columnCount;  // Віднносна ширина стовпця в відсотках
+            int sizeHeight = rowHeight * rowCount;  // Загальна висота таблиці
+            
+            /*
+             * Tab Copter
+             */
             this.tabCopter.Controls.Add(this.tableLayoutPanelCopter);
-            ///resources.ApplyResources(this.tabCopter, "tabCopter");
             this.tabCopter.Name = "tabCopter";
             this.tabCopter.Text = "Copter";
             this.tabCopter.UseVisualStyleBackColor = true;
             
-            // 
-            // tableLayoutPanelCopter
-            // 
+            /*
+             * Table Layout Panel Copter 
+             */
             this.tableLayoutPanelCopter.Name = "tableLayoutPanelCopter";
             this.tableLayoutPanelCopter.RowCount = rowCount;
             this.tableLayoutPanelCopter.ColumnCount = columnCount;
             for (int i = 0; i < columnCount; i++)
-                this.tableLayoutPanelCopter.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, columnWidth));
+            {
+                this.tableLayoutPanelCopter.ColumnStyles.Add(
+                    new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, columnWidth));
+            }
             for (int i = 0; i < rowCount; i++)
-                this.tableLayoutPanelCopter.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, rowHeight));
+            {
+                this.tableLayoutPanelCopter.RowStyles.Add(
+                    new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, rowHeight));
+            }
             this.tableLayoutPanelCopter.RowStyles[2].Height = 96F;
             this.tableLayoutPanelCopter.Location = new System.Drawing.Point(3, 3);
             this.tableLayoutPanelCopter.Dock = System.Windows.Forms.DockStyle.Top;
@@ -3024,12 +3261,10 @@ namespace MissionPlanner.GCSViews
             this.tableLayoutPanelCopter.Margin = new System.Windows.Forms.Padding(0);
             this.tableLayoutPanelCopter.Padding = new System.Windows.Forms.Padding(4);
 
-            //
-            // comboBoxDronModel
-            //
-            ///resources.ApplyResources(this.comboBoxDronModel, "comboBoxDronModel");
+            /*
+             * Combo Box Drone Model
+             */
             this.tableLayoutPanelCopter.Controls.Add(this.comboBoxDronModel, 2, 0);
-            //this.tableLayoutPanelCopter.SetColumnSpan(this.comboBoxDronModel, 2);
             this.comboBoxDronModel.DataSource = _comboItems;
             this.comboBoxDronModel.DisplayMember = "Key";
             this.comboBoxDronModel.ValueMember = "Value";
@@ -3040,9 +3275,10 @@ namespace MissionPlanner.GCSViews
             this.comboBoxDronModel.Font = fontNuveric;
             this.comboBoxDronModel.Margin = new System.Windows.Forms.Padding(3);
             this.comboBoxDronModel.SelectedIndexChanged += comboBoxDronModel_SelectedIndexChanged;
-            // 
-            // chBox_ExpMod
-            // 
+            
+            /*
+             * Checkbox ExpMod
+             */
             this.tableLayoutPanelCopter.Controls.Add(this.chBox_ExpMod, 0, 0);
             this.chBox_ExpMod.Appearance = System.Windows.Forms.Appearance.Button;
             this.chBox_ExpMod.CheckAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -3056,9 +3292,10 @@ namespace MissionPlanner.GCSViews
             this.chBox_ExpMod.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.chBox_ExpMod.UseVisualStyleBackColor = true;
             this.chBox_ExpMod.CheckedChanged += new System.EventHandler(this.chBox_ExpMod_CheckedChanged);
-            //
-            // chBox_X9
-            // 
+            
+            /*
+             * Checkbox X9
+             */
             this.tableLayoutPanelCopter.Controls.Add(this.chBox_X9, 3, 0);
             this.chBox_X9.Appearance = System.Windows.Forms.Appearance.Button;
             this.chBox_X9.CheckAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -3072,12 +3309,11 @@ namespace MissionPlanner.GCSViews
             this.chBox_X9.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.chBox_X9.UseVisualStyleBackColor = true;
             this.chBox_X9.CheckedChanged += new System.EventHandler(this.chBox_X9_CheckedChanged);
-            // 
-            // labelDroneModel
-            // 
-            ///resources.ApplyResources(this.labelDroneModel, "labelDroneModel");
+            
+            /*
+             * Label Drone Model
+             */
             this.tableLayoutPanelCopter.Controls.Add(this.labelDroneModel, 1, 0);
-            //this.tableLayoutPanelCopter.SetColumnSpan(this.labelDroneModel, 2);
             this.labelDroneModel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.labelDroneModel.Font = fontLabel;
             this.labelDroneModel.Location = new System.Drawing.Point(0, 0);
@@ -3086,16 +3322,18 @@ namespace MissionPlanner.GCSViews
             this.labelDroneModel.Size = new System.Drawing.Size(254, 45);
             this.labelDroneModel.Text = "Drone Model";
             this.labelDroneModel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            //
-            // Mods Buttons Eco Sport Normal Custom
-            //
+            
+            /*
+             * Mods Buttons Eco Sport Normal Custom
+             */
             AddButton("Eco", 1, 1);
             AddButton("Sport", 0, 1);
             AddButton("Normal", 2, 1);
             AddButton("Custom", 3, 1);
-            //
-            // dataGridView
-            // 
+            
+            /*
+             * Data Grid View
+             */
             this.tableLayoutPanelCopter.SetColumnSpan(this.dataGridView, 4);
             this.tableLayoutPanelCopter.SetRowSpan(this.dataGridView, 1);
             this.tableLayoutPanelCopter.Controls.Add(this.dataGridView, 0, 2);
@@ -3166,11 +3404,10 @@ namespace MissionPlanner.GCSViews
             }
             this.dataGridView.RowTemplate.Height = 35;
             this.dataGridView.EditingControlShowing += DataGridView_EditingControlShowing;
-            //
-            // comBoBox_FlyModes ^^CMB_modes
-            //
-            ///resources.ApplyResources(this.comBoBox_FlyModes, "comBoBox_FlyModes");
-            //this.tableLayoutPanelCopter.SetColumnSpan(this.comBoBox_FlyModes, 2);
+            
+            /*
+             * Combobox FlyModes CMB_modes
+             */
             this.comBoBox_FlyModes.DropDownWidth = 150;
             this.comBoBox_FlyModes.Name = "comBoBox_FlyModes";
             this.comBoBox_FlyModes.DisplayMember = "Key";
@@ -3180,12 +3417,11 @@ namespace MissionPlanner.GCSViews
             this.comBoBox_FlyModes.Dock = DockStyle.Fill;
             this.comBoBox_FlyModes.Font = fontNuveric;
             this.comBoBox_FlyModes.Margin = new System.Windows.Forms.Padding(3);
-            //this.tableLayoutPanelCopter.Controls.Add(this.comBoBox_FlyModes, 0, 5);
             this.comBoBox_FlyModes.Click += new System.EventHandler(this.comBoBox_FlyModes_Click);
-            // 
-            // but_setmode : BUT_setmode
-            // 
-            ///resources.ApplyResources(this.but_setmode, "but_setmode");
+            
+            /*
+             * Button Set Mode
+             */
             this.but_setmode.Text = "Set Mode";
             this.but_setmode.Font = fontBut;
             this.but_setmode.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -3196,12 +3432,11 @@ namespace MissionPlanner.GCSViews
             this.but_setmode.FlatAppearance.BorderColor = colorDis;
             this.but_setmode.BackColor = colorDis;
             this.but_setmode.Name = "but_setmode";
-            //this.tableLayoutPanelCopter.Controls.Add(this.but_setmode, 1, 5);
             this.but_setmode.Click += new System.EventHandler(this.but_setmode_Click);
-            // 
-            // labelHomeYaw
-            // 
-            ///resources.ApplyResources(this.labelHomeYaw, "labelHomeYaw");
+            
+            /*
+             * Label Home Yaw
+             */
             this.labelHomeYaw.Name = "labelHomeYaw";
             this.labelHomeYaw.Text = "Home Y";
             this.labelHomeYaw.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -3209,10 +3444,10 @@ namespace MissionPlanner.GCSViews
             this.labelHomeYaw.Margin = new System.Windows.Forms.Padding(0);
             this.labelHomeYaw.TextAlign = ContentAlignment.MiddleCenter;
             this.tableLayoutPanelCopter.Controls.Add(this.labelHomeYaw, 0, 3);
-            //
-            // numericHomeYaw
-            //
-            ///resources.ApplyResources(this.numericHomeYaw, "numericHomeYaw");
+            
+            /*
+             * Numeric Home Yaw
+             */
             this.numericHomeYaw.Dock = System.Windows.Forms.DockStyle.Fill;
             this.numericHomeYaw.Enabled = true;
             this.numericHomeYaw.BackColor = colorDis;
@@ -3221,9 +3456,10 @@ namespace MissionPlanner.GCSViews
             this.numericHomeYaw.Font = fontNuveric;
             this.numericHomeYaw.Margin = new System.Windows.Forms.Padding(3);
             this.tableLayoutPanelCopter.Controls.Add(this.numericHomeYaw, 2, 3);
-            // 
-            // setHomeYawButton
-            // 
+            
+            /*
+             * Set Home Yaw Button
+             */
             this.setHomeYawButton.Name = "setHomeYawButton";
             this.setHomeYawButton.Text = "Home Yaw";
             this.setHomeYawButton.Font = fontBut;
@@ -3236,10 +3472,10 @@ namespace MissionPlanner.GCSViews
             this.setHomeYawButton.BackColor = colorDis;
             this.tableLayoutPanelCopter.Controls.Add(this.setHomeYawButton, 3, 3);
             this.setHomeYawButton.Click += new System.EventHandler(this.HomeYaw_Click);
-            // 
-            // labelCurrHYaw
-            // 
-            ///resources.ApplyResources(this.labelCurrHYaw, "labelCurrHYaw");
+            
+            /*
+             * Label Current Home Yaw
+             */
             this.tableLayoutPanelCopter.Controls.Add(this.labelCurrHYaw, 1, 3);
             this.labelCurrHYaw.Dock = System.Windows.Forms.DockStyle.Fill;
             this.labelCurrHYaw.Font = fontLabel;
@@ -3249,10 +3485,10 @@ namespace MissionPlanner.GCSViews
             this.labelCurrHYaw.Size = new System.Drawing.Size(127, 45);
             this.labelCurrHYaw.Text = "_____";
             this.labelCurrHYaw.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // butSetRtlAlt
-            // 
-            ///resources.ApplyResources(this.butSetRtlAlt, "butSetRtlAlt");
+            
+            /*
+             * Button Set Rtl Alt
+             */
             this.butSetRtlAlt.Name = "butSetRtlAlt";
             this.butSetRtlAlt.Text = "Rtl Alt";
             this.butSetRtlAlt.Font = fontBut;
@@ -3265,10 +3501,10 @@ namespace MissionPlanner.GCSViews
             this.butSetRtlAlt.BackColor = colorDis;
             this.tableLayoutPanelCopter.Controls.Add(this.butSetRtlAlt, 3, 4);
             this.butSetRtlAlt.Click += new EventHandler(RtlAltClick);
-            //
-            // labelRtlAlt
-            // 
-            ///resources.ApplyResources(this.labelRtlAlt, "labelRtlAlt");
+            
+            /*
+             * Label Rtl Alt
+             */
             this.tableLayoutPanelCopter.Controls.Add(this.labelRtlAlt, 0, 4);
             this.labelRtlAlt.AutoSize = true;
             this.labelRtlAlt.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -3280,10 +3516,10 @@ namespace MissionPlanner.GCSViews
             this.labelRtlAlt.TabIndex = 13;
             this.labelRtlAlt.Text = "Rtl Alt :";
             this.labelRtlAlt.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // labelCurrRtlAlt
-            // 
-            ///resources.ApplyResources(this.labelCurrRtlAlt, "labelCurrRtlAlt");
+            
+            /*
+             * Label Current Rtl Alt
+             */
             this.tableLayoutPanelCopter.Controls.Add(this.labelCurrRtlAlt, 1, 4);
             this.labelCurrRtlAlt.Dock = System.Windows.Forms.DockStyle.Fill;
             this.labelCurrRtlAlt.Font = fontLabel;
@@ -3293,19 +3529,20 @@ namespace MissionPlanner.GCSViews
             this.labelCurrRtlAlt.Size = new System.Drawing.Size(127, 45);
             this.labelCurrRtlAlt.Text = "_____";
             this.labelCurrRtlAlt.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            //
-            // numericRtlAlt
-            //
-            ///resources.ApplyResources(this.numericRtlAlt, "numericRtlAlt");
+            
+            /*
+             * Numeric Rtl Alt
+             */
             this.tableLayoutPanelCopter.Controls.Add(this.numericRtlAlt, 2, 4);
             this.numericRtlAlt.Minimum = 1;
             this.numericRtlAlt.Maximum = 3000;
             this.numericRtlAlt.Dock = DockStyle.Fill;
             this.numericRtlAlt.Font = fontNuveric;
             this.numericRtlAlt.Margin = new System.Windows.Forms.Padding(3);
-            // 
-            // butGPS1on
-            // 
+            
+            /*
+             * Button GPS1 On
+             */
             this.butGPS1on.Name = "butGPS1on";
             this.butGPS1on.Text = "GPS 1";
             this.butGPS1on.Font = fontBut;
@@ -3316,11 +3553,11 @@ namespace MissionPlanner.GCSViews
             this.butGPS1on.FlatAppearance.BorderSize = 1;
             this.butGPS1on.FlatAppearance.BorderColor = colorDis;
             this.butGPS1on.BackColor = colorDis;
-            //this.tableLayoutPanelCopter.Controls.Add(this.butGPS1on, 0, 6);
             this.butGPS1on.Click += new System.EventHandler(this.butGPS1on_Click);
-            // 
-            // butGPS2on
-            // 
+            
+            /*
+             * Button GPS2 On
+             */
             this.butGPS2on.Name = "butGPS2on";
             this.butGPS2on.Text = "GPS 2";
             this.butGPS2on.Font = fontBut;
@@ -3331,11 +3568,11 @@ namespace MissionPlanner.GCSViews
             this.butGPS2on.FlatAppearance.BorderSize = 1;
             this.butGPS2on.FlatAppearance.BorderColor = colorDis;
             this.butGPS2on.BackColor = colorDis;
-            //this.tableLayoutPanelCopter.Controls.Add(this.butGPS2on, 0, 7);
             this.butGPS2on.Click += new System.EventHandler(this.butGPS2on_Click);
-            // 
-            // butGPSon
-            // 
+            
+            /*
+             * Button GPS On
+             */
             this.butGPSon.Name = "butGPSon";
             this.butGPSon.Text = "GPS on/off";
             this.butGPSon.Font = fontBut;
@@ -3346,11 +3583,11 @@ namespace MissionPlanner.GCSViews
             this.butGPSon.FlatAppearance.BorderSize = 1;
             this.butGPSon.FlatAppearance.BorderColor = colorDis;
             this.butGPSon.BackColor = colorDis;
-            //this.tableLayoutPanelCopter.Controls.Add(this.butGPSon, 0, 6);
             this.butGPSon.Click += new System.EventHandler(this.butGPSon_Click);
-            // 
-            // butGPSAuxOnOff
-            // 
+            
+            /*
+             * Button GPS Aux On/Off
+             */
             this.butGPSAuxOnOff.Name = "butGPSAuxOnOff";
             this.butGPSAuxOnOff.Text = "GPS on/off";
             this.butGPSAuxOnOff.Font = fontBut;
@@ -3363,9 +3600,10 @@ namespace MissionPlanner.GCSViews
             this.butGPSAuxOnOff.BackColor = colorOn;
             this.tableLayoutPanelCopter.Controls.Add(this.butGPSAuxOnOff, 3, 6);
             this.butGPSAuxOnOff.Click += new System.EventHandler(this.butGPSAuxOnOff_Click);
-            // 
-            // butForceLand
-            // 
+            
+            /*
+             * Button Force Land
+             */
             this.butForceLand.Name = "butForceLand";
             this.butForceLand.Text = "Force Land";
             this.butForceLand.Font = fontBut;
@@ -3378,9 +3616,10 @@ namespace MissionPlanner.GCSViews
             this.butForceLand.BackColor = colorOn;
             this.tableLayoutPanelCopter.Controls.Add(this.butForceLand, 1, 6);
             this.butForceLand.Click += new System.EventHandler(this.butForceLand_Click);
-            // 
-            // butArmDisarm
-            // 
+            
+            /*
+             * Button Arm/Disarm
+             */
             this.butArmDisarm.Name = "butArmDisarm";
             this.butArmDisarm.Text = "Arm/ Dis";
             this.butArmDisarm.Font = fontBut;
@@ -3393,9 +3632,10 @@ namespace MissionPlanner.GCSViews
             this.butArmDisarm.BackColor = colorDis;
             this.tableLayoutPanelCopter.Controls.Add(this.butArmDisarm, 0, 6);
             this.butArmDisarm.Click += new System.EventHandler(this.BUT_ARM_Click);
-            // 
-            // butLoiter
-            // 
+            
+            /*
+             * Button Loiter
+             */
             this.butLoiter.Name = "butLoiter";
             this.butLoiter.Text = "Loiter";
             this.butLoiter.Font = fontBut;
@@ -3408,9 +3648,10 @@ namespace MissionPlanner.GCSViews
             this.butLoiter.BackColor = colorDis;
             this.tableLayoutPanelCopter.Controls.Add(this.butLoiter, 1, 5);
             this.butLoiter.Click += new System.EventHandler(this.BUT_quickmanual_Click);
-            // 
-            // butRTL
-            // 
+            
+            /*
+             * Button RTL
+             */
             this.butRTL.Name = "butRTL";
             this.butRTL.Text = "RTL";
             this.butRTL.Font = fontBut;
@@ -3423,9 +3664,10 @@ namespace MissionPlanner.GCSViews
             this.butRTL.BackColor = colorDis;
             this.tableLayoutPanelCopter.Controls.Add(this.butRTL, 0, 5);
             this.butRTL.Click += new System.EventHandler(this.BUT_quickrtl_Click);
-            // 
-            // butGnGPS
-            // 
+            
+            /*
+             * Button GnGPS
+             */
             this.butGnGPS.Name = "butGnGPS";
             this.butGnGPS.Text = "GNoGPS";
             this.butGnGPS.Font = fontBut;
@@ -3438,9 +3680,10 @@ namespace MissionPlanner.GCSViews
             this.butGnGPS.BackColor = colorDis;
             this.tableLayoutPanelCopter.Controls.Add(this.butGnGPS, 2, 5);
             this.butGnGPS.Click += new System.EventHandler(this.BUT_GnGPS_Click);
-            // 
-            // butAltHold
-            // 
+            
+            /*
+             * Button AltHold
+             */
             this.butAltHold.Name = "butAltHold";
             this.butAltHold.Text = "Alt Hold";
             this.butAltHold.Font = fontBut;
@@ -3453,9 +3696,10 @@ namespace MissionPlanner.GCSViews
             this.butAltHold.BackColor = colorDis;
             this.butAltHold.Click += new System.EventHandler(this.butAltHold_Click);
             this.tableLayoutPanelCopter.Controls.Add(this.butAltHold, 3, 5);
-            // 
-            // IsActiveRC_Petr
-            //
+            
+            /*
+             * IsActive RC Petr
+             */
             this.IsActiveRC_Petr.Dock = DockStyle.Fill;
             this.IsActiveRC_Petr.TextAlign = ContentAlignment.MiddleCenter;
             this.IsActiveRC_Petr.FlatStyle = FlatStyle.Flat;
@@ -3466,10 +3710,10 @@ namespace MissionPlanner.GCSViews
             this.IsActiveRC_Petr.ForeColor = Color.White;
             this.IsActiveRC_Petr.Enabled = false;
             this.IsActiveRC_Petr.Visible = true;
-            //this.tableLayoutPanelCopter.Controls.Add(this.IsActiveRC_Petr, 0, 7);
-            // 
-            // IsActRCVamp_1
-            //
+            
+            /*
+             * Is Active RC Vamp 1
+             */
             this.IsActRCVamp_1.Dock = DockStyle.Fill;
             this.IsActRCVamp_1.TextAlign = ContentAlignment.MiddleCenter;
             this.IsActRCVamp_1.FlatStyle = FlatStyle.Flat;
@@ -3480,10 +3724,10 @@ namespace MissionPlanner.GCSViews
             this.IsActRCVamp_1.ForeColor = Color.White;
             this.IsActRCVamp_1.Enabled = false;
             this.IsActRCVamp_1.Visible = true;
-            //this.tableLayoutPanelCopter.Controls.Add(this.IsActRCVamp_1, 1, 7);
-            // 
-            // IsActRCVamp_2
-            //
+
+            /*
+             * Is Active RC Vamp 2
+             */
             this.IsActRCVamp_2.Dock = DockStyle.Fill;
             this.IsActRCVamp_2.TextAlign = ContentAlignment.MiddleCenter;
             this.IsActRCVamp_2.FlatStyle = FlatStyle.Flat;
@@ -3494,13 +3738,9 @@ namespace MissionPlanner.GCSViews
             this.IsActRCVamp_2.ForeColor = Color.White;
             this.IsActRCVamp_2.Enabled = false;
             this.IsActRCVamp_2.Visible = true;
-            //this.tableLayoutPanelCopter.Controls.Add(this.IsActRCVamp_2, 2, 7);
 
             MainV2.comPort.OnPacketReceived -= UpdateIsActiveRC;
             MainV2.comPort.OnPacketReceived += UpdateIsActiveRC;
-
-
-            //StartMessageProcessing();
         }
 
 
@@ -3676,6 +3916,8 @@ namespace MissionPlanner.GCSViews
         private System.Windows.Forms.GroupBox groupBoxRoll;
         private System.Windows.Forms.GroupBox groupBoxYaw;
         private System.Windows.Forms.GroupBox groupBoxPitch;
+        private System.Windows.Forms.GroupBox groupBoxPlaneVertical;
+        private System.Windows.Forms.GroupBox groupBoxPlaneHorizontal;
         private Controls.MyButton BUT_PayloadFolder;
         private System.Windows.Forms.ToolStripMenuItem setHomeHereToolStripMenuItem1;
         private System.Windows.Forms.ToolStripMenuItem groundColorToolStripMenuItem;
@@ -3695,6 +3937,8 @@ namespace MissionPlanner.GCSViews
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanelCopter;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanelPlane;
+        private System.Windows.Forms.TableLayoutPanel buttonsLayoutPlaneVertical;
+        private System.Windows.Forms.TableLayoutPanel buttonsLayoutPlaneHorizontal;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel2;
         private System.Windows.Forms.ToolStripMenuItem setBatteryCellCountToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem undockToolStripMenuItem;
@@ -3762,7 +4006,24 @@ namespace MissionPlanner.GCSViews
             public ModeList vampire { get; set; }
             public ModeList petrovych { get; set; }
         }
+        
+        //Plane
+        
+        // Vertical
+        private Button butQLoiter;
+        private Button butQHover;
+        private Button butQLand;
+        
+        // Horizontal
+        private Button butFBWA;
+        private Button butFBWB;
+        private Button butCRUISE;
+        private Button butAUTO;
+        private Button butLOITER;
+        private Button btnRTL;
+        
 
+        // Copter
         private System.Windows.Forms.Label labelDroneModel;
         private System.Windows.Forms.Label labelRtlAlt;
         private System.Windows.Forms.Label labelCurrHYaw;
