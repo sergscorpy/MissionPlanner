@@ -1,4 +1,4 @@
-﻿using DirectShowLib;
+using DirectShowLib;
 using GMap.NET;
 using GMap.NET.WindowsForms;
 using GMap.NET.WindowsForms.Markers;
@@ -234,6 +234,10 @@ namespace MissionPlanner.GCSViews
         };
 
         private bool transponderNeverConnected = true;
+        
+        private FakeGpsData gpsData;
+        
+        private bool _isLoopStart = false;
 
         public FlightData()
         {
@@ -701,6 +705,8 @@ namespace MissionPlanner.GCSViews
             TabListDisplay.Add(tabPagePreFlight.Name, MainV2.DisplayConfiguration.displayPreFlightTab);
 
             TabListDisplay.Add(tabCopter.Name, MainV2.DisplayConfiguration.displayAdvCopterTab);
+            
+            TabListDisplay.Add(tabPlane.Name, MainV2.DisplayConfiguration.displayAdvPlaneTab);
 
             TabListDisplay.Add(tabActions.Name, MainV2.DisplayConfiguration.displayAdvActionsTab);
 
@@ -1024,8 +1030,10 @@ namespace MissionPlanner.GCSViews
 
         private void BUT_ARM_Check ()
         {
-            var isitarmed = MainV2.comPort.MAV.cs.armed;
-            this.butArmDisarm.BackColor = isitarmed ? Color.Orange : Color.YellowGreen;
+            var isiTArmed = MainV2.comPort.MAV.cs.armed;
+            var color = isiTArmed ? Color.Orange : Color.YellowGreen;
+            this.butArmDisarm.BackColor = color;
+            this.butPlaneArmDisarm.BackColor = color;
         }
         private void BUT_ARM_Click(object sender, EventArgs e)
         {
@@ -1433,6 +1441,96 @@ namespace MissionPlanner.GCSViews
                     MainV2.comPort.MAV.cs.firmware == Firmwares.ArduRover ||
                     MainV2.comPort.MAV.cs.firmware == Firmwares.ArduCopter2)
                     MainV2.comPort.setMode("Loiter");
+            }
+            catch
+            {
+                CustomMessageBox.Show(Strings.CommandFailed, Strings.ERROR);
+            }
+
+            ((Control)sender).Enabled = true;
+        }
+        
+        private void BUT_Cruise_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                ((Control)sender).Enabled = false;
+                MainV2.comPort.setMode("CRUISE");
+            }
+            catch
+            {
+                CustomMessageBox.Show(Strings.CommandFailed, Strings.ERROR);
+            }
+
+            ((Control)sender).Enabled = true;
+        }
+        
+        private void BUT_FBWA_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                ((Control)sender).Enabled = false;
+                MainV2.comPort.setMode("FBWA");
+            }
+            catch
+            {
+                CustomMessageBox.Show(Strings.CommandFailed, Strings.ERROR);
+            }
+
+            ((Control)sender).Enabled = true;
+        }        
+        
+        private void BUT_FBWB_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                ((Control)sender).Enabled = false;
+                MainV2.comPort.setMode("FBWB");
+            }
+            catch
+            {
+                CustomMessageBox.Show(Strings.CommandFailed, Strings.ERROR);
+            }
+
+            ((Control)sender).Enabled = true;
+        }        
+        
+        private void BUT_QLand_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                ((Control)sender).Enabled = false;
+                MainV2.comPort.setMode("QLAND");
+            }
+            catch
+            {
+                CustomMessageBox.Show(Strings.CommandFailed, Strings.ERROR);
+            }
+
+            ((Control)sender).Enabled = true;
+        }        
+        
+        private void BUT_QHover_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                ((Control)sender).Enabled = false;
+                MainV2.comPort.setMode("QHOVER");
+            }
+            catch
+            {
+                CustomMessageBox.Show(Strings.CommandFailed, Strings.ERROR);
+            }
+
+            ((Control)sender).Enabled = true;
+        }        
+        
+        private void BUT_QLoiter_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                ((Control)sender).Enabled = false;
+                MainV2.comPort.setMode("QLOITER");
             }
             catch
             {
@@ -2944,6 +3042,95 @@ namespace MissionPlanner.GCSViews
                 });
             }
         }
+        
+        private Task planeFakeGPSToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (!MainV2.comPort.BaseStream.IsOpen)
+            {
+                CustomMessageBox.Show(Strings.PleaseConnect, Strings.ERROR);
+                return Task.CompletedTask;
+            }
+
+            if (MouseDownStart.Lat == 0.0 || MouseDownStart.Lng == 0.0)
+            {
+                CustomMessageBox.Show(Strings.BadCoords, Strings.ERROR);
+                return Task.CompletedTask;
+            }
+            
+            var point = new PointLatLng(MouseDownStart.Lat, MouseDownStart.Lng);
+
+            if (_isLoopStart)
+            {
+                gpsData.Lat = MouseDownStart.Lat;
+                gpsData.Lng = MouseDownStart.Lng;
+                gpsData.Sat = 30;
+                gpsData.WorkCounter = 6;
+               
+                POI.FakeGpsPoiDelete(gpsData.FakeGpsStringId);
+                POI.FakeGpsPoiAdd(point, gpsData.FakeGpsStringId);
+                return Task.CompletedTask;
+            }
+            
+            gpsData = new FakeGpsData
+            {
+                Lat = MouseDownStart.Lat,
+                Lng = MouseDownStart.Lng,
+                Sat = 30,
+                WorkCounter = 6
+            };
+            
+            POI.FakeGpsPoiDelete(gpsData.FakeGpsStringId);
+            POI.FakeGpsPoiAdd(point, gpsData.FakeGpsStringId);
+
+            try
+            {
+                _isLoopStart = true;
+                _ = Task.Run(SendFakeGpsLoopAsync);
+            }
+            catch (Exception ex)
+            {
+                CustomMessageBox.Show(Strings.CommandFailed + ex.Message, Strings.ERROR);
+            }
+
+            return Task.CompletedTask;
+        }
+        
+        private async Task SendFakeGpsLoopAsync()
+        {
+            while (true)
+            {
+                try
+                {
+                    var mav = MainV2.comPort.MAVlist.FirstOrDefault<MAVState>(a => a.compid == 1);
+                    
+                    if (mav == null)
+                    {
+                        continue;
+                    }
+                    
+                    var packet = gpsData.CreateMavlinkPacket();
+
+                    if (gpsData.WorkCounter > 0)
+                    {
+                        --gpsData.WorkCounter;
+                    }
+                        
+                    if (gpsData.WorkCounter <= 0)
+                    {
+                        gpsData.Sat = 0;
+                        gpsData.Alt = MainV2.comPort.MAV.cs.alt;
+                    }
+                    
+                    MainV2.comPort.sendPacket(packet, mav.sysid, mav.compid);
+
+                    await Task.Delay(500);
+                }
+                catch (Exception ex)
+                {
+                    CustomMessageBox.Show(Strings.CommandFailed + ex.Message, Strings.ERROR);
+                }
+            }
+        }
 
         private void gimbalTrackbar_Scroll(object sender, EventArgs e)
         {
@@ -4353,7 +4540,7 @@ namespace MissionPlanner.GCSViews
 
             coords1.AltUnit = CurrentState.AltUnit;
         }
-
+        
         private void modifyandSetAlt_Click(object sender, EventArgs e)
         {
             int newalt = (int)modifyandSetAlt.Value;
@@ -4366,7 +4553,34 @@ namespace MissionPlanner.GCSViews
                 CustomMessageBox.Show(Strings.ErrorCommunicating, Strings.ERROR);
             }
         }
+        
+        private void planeSetAlt_Click(object sender, EventArgs e)
+        {
+            var newAlt = (int)numericPlaneAlt.Value;
+            try
+            {
+                MainV2.comPort.setNewWPAlt(new Locationwp { alt = newAlt / CurrentState.multiplieralt });
+            }
+            catch
+            {
+                CustomMessageBox.Show(Strings.ErrorCommunicating, Strings.ERROR);
+            }
+        }
+        
+        private void planeSetLoiterRad_Click(object sender, EventArgs e)
+        {
+            var newRad = (int)numericPlaneLoiterRadius.Value;
 
+            try
+            {
+                MainV2.comPort.setParam(new[] { "LOITER_RAD", "WP_LOITER_RAD" }, newRad / CurrentState.multiplierdist);
+            }
+            catch
+            {
+                CustomMessageBox.Show(Strings.ErrorCommunicating, Strings.ERROR);
+            }
+        }
+        
         private void modifyandSetLoiterRad_Click(object sender, EventArgs e)
         {
             int newrad = (int)modifyandSetLoiterRad.Value;
@@ -4380,7 +4594,21 @@ namespace MissionPlanner.GCSViews
                 CustomMessageBox.Show(Strings.ErrorCommunicating, Strings.ERROR);
             }
         }
-
+        
+        private async void planeSetThrottle_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                await MainV2.comPort.doCommandAsync(MainV2.comPort.MAV.sysid, MainV2.comPort.MAV.compid,
+                        MAVLink.MAV_CMD.DO_CHANGE_SPEED, 0, (float)numericPlaneThrottle.Value, 0, 0, 0, 0, 0)
+                    .ConfigureAwait(true);
+            }
+            catch
+            {
+                CustomMessageBox.Show(Strings.ErrorCommunicating, Strings.ERROR);
+            }
+        }
+        
         private async void modifyandSetSpeed_Click(object sender, EventArgs e)
         {
             try
@@ -4388,6 +4616,30 @@ namespace MissionPlanner.GCSViews
                 await MainV2.comPort.doCommandAsync(MainV2.comPort.MAV.sysid, MainV2.comPort.MAV.compid,
                         MAVLink.MAV_CMD.DO_CHANGE_SPEED, 0, (float)modifyandSetSpeed.Value, 0, 0, 0, 0, 0)
                     .ConfigureAwait(true);
+            }
+            catch
+            {
+                CustomMessageBox.Show(Strings.ErrorCommunicating, Strings.ERROR);
+            }
+        }
+        
+        private void PlaneGPSOff_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                MainV2.comPort.setParam(new[] { "AHRS_GPS_USE" }, 0.0f);
+            }
+            catch
+            {
+                CustomMessageBox.Show(Strings.ErrorCommunicating, Strings.ERROR);
+            }
+        }
+        
+        private void PlaneGPSOn_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                MainV2.comPort.setParam(new[] { "AHRS_GPS_USE" }, 1f);
             }
             catch
             {
@@ -7240,13 +7492,14 @@ namespace MissionPlanner.GCSViews
             }
 
         }
+        
         private bool DataGridViewUpdate()
         {
             bool success = false;
 
             try
             {
-                if (IsComPortConnected())
+                if (IsComPortConnected() && MainV2.comPort.MAV.cs.firmware == Firmwares.ArduCopter2)
                 {
                     var angleMax = (int)MainV2.comPort.MAV.param["ANGLE_MAX"];
                     var loitSpeed = (int)MainV2.comPort.MAV.param["LOIT_SPEED"];

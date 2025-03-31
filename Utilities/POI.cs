@@ -83,6 +83,20 @@ namespace MissionPlanner.Utilities
 
             POIAdd(Point, output);
         }
+        
+        public static void FakeGpsPoiAdd(PointLatLngAlt point, string id)
+        {
+            if (point == null)
+                return;
+
+            point.Tag = id;
+            POI.POIs.Add(point);
+
+            if (_POIModified != null && !loading)
+            {
+                _POIModified(null, null);
+            }
+        }
 
         public static void POIDelete(GMapMarkerPOI Point)
         {
@@ -98,6 +112,22 @@ namespace MissionPlanner.Utilities
                         _POIModified(null, null);
                     return;
                 }
+            }
+        }
+        
+        public static void FakeGpsPoiDelete(string id)
+        {
+            if (string.IsNullOrEmpty(id))
+            {
+                return;
+            }
+            
+            for (var a = 0; a < POI.POIs.Count; a++)
+            {
+                if (POI.POIs[a].Tag != id) continue;
+                POI.POIs.RemoveAt(a);
+                _POIModified?.Invoke(null, null);
+                return;
             }
         }
 

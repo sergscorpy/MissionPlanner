@@ -43,3 +43,8 @@ docs/
 *.pem
 *.key
 /.vscode
+
+# Rider / IntelliJ IDEA
+.idea/
+*.iml
+*.iws
