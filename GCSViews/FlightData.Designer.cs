@@ -168,6 +168,9 @@ namespace MissionPlanner.GCSViews
             this.groupBoxYaw = new System.Windows.Forms.GroupBox();
             this.groupBoxPlaneVertical = new System.Windows.Forms.GroupBox();
             this.groupBoxPlaneHorizontal = new System.Windows.Forms.GroupBox();
+            this.groupBoxPlaneGPS = new System.Windows.Forms.GroupBox();
+            this.groupBoxPlaneInputs = new System.Windows.Forms.GroupBox();
+            this.groupBoxPlaneCommands = new System.Windows.Forms.GroupBox();
             this.TXT_gimbalYawPos = new System.Windows.Forms.TextBox();
             this.trackBarYaw = new System.Windows.Forms.TrackBar();
             this.BUT_resetGimbalPos = new MissionPlanner.Controls.MyButton();
@@ -208,6 +211,7 @@ namespace MissionPlanner.GCSViews
             this.contextMenuStripMap = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.goHereToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.flyToHereAltToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.planeFakeGPSToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.flyToCoordsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.addPoiToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.deleteToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -287,6 +291,9 @@ namespace MissionPlanner.GCSViews
             this.groupBoxYaw.SuspendLayout();
             this.groupBoxPlaneVertical.SuspendLayout();
             this.groupBoxPlaneHorizontal.SuspendLayout();
+            this.groupBoxPlaneGPS.SuspendLayout();
+            this.groupBoxPlaneInputs.SuspendLayout();
+            this.groupBoxPlaneCommands.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.trackBarYaw)).BeginInit();
             this.groupBoxPitch.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.trackBarPitch)).BeginInit();
@@ -845,7 +852,7 @@ namespace MissionPlanner.GCSViews
             this.BUT_clear_track.Name = "BUT_clear_track";
             this.toolTip1.SetToolTip(this.BUT_clear_track, resources.GetString("BUT_clear_track.ToolTip"));
             this.BUT_clear_track.UseVisualStyleBackColor = true;
-            this.BUT_clear_track.Click += new System.EventHandler(this.BUT_clear_track_Click);
+             
             // 
             // CMB_action
             // 
@@ -2492,6 +2499,7 @@ namespace MissionPlanner.GCSViews
             this.goHereToolStripMenuItem,
             this.flyToHereAltToolStripMenuItem,
             this.flyToCoordsToolStripMenuItem,
+            this.planeFakeGPSToolStripMenuItem,
             this.addPoiToolStripMenuItem,
             this.pointCameraHereToolStripMenuItem,
             this.PointCameraCoordsToolStripMenuItem1,
@@ -2500,7 +2508,8 @@ namespace MissionPlanner.GCSViews
             this.setHomeHereToolStripMenuItem,
             this.takeOffToolStripMenuItem,
             this.onOffCameraOverlapToolStripMenuItem,
-            this.jumpToTagToolStripMenuItem});
+            this.jumpToTagToolStripMenuItem
+            });
             this.contextMenuStripMap.Name = "contextMenuStrip1";
             resources.ApplyResources(this.contextMenuStripMap, "contextMenuStripMap");
             // 
@@ -2515,6 +2524,12 @@ namespace MissionPlanner.GCSViews
             this.flyToHereAltToolStripMenuItem.Name = "flyToHereAltToolStripMenuItem";
             resources.ApplyResources(this.flyToHereAltToolStripMenuItem, "flyToHereAltToolStripMenuItem");
             this.flyToHereAltToolStripMenuItem.Click += new System.EventHandler(this.flyToHereAltToolStripMenuItem_Click);
+            // 
+            // planeFakeGPSToolStripMenuItem
+            // 
+            this.planeFakeGPSToolStripMenuItem.Name = "planeFakeGPSToolStripMenuItem";
+            this.planeFakeGPSToolStripMenuItem.Text = "FakeGPS";
+            this.planeFakeGPSToolStripMenuItem.Click += (s, e) => planeFakeGPSToolStripMenuItem_Click(s, e);
             // 
             // flyToCoordsToolStripMenuItem
             // 
@@ -2898,7 +2913,13 @@ namespace MissionPlanner.GCSViews
             this.groupBoxPlaneVertical.ResumeLayout(false);
             this.groupBoxPlaneVertical.PerformLayout();            
             this.groupBoxPlaneHorizontal.ResumeLayout(false);
-            this.groupBoxPlaneHorizontal.PerformLayout();
+            this.groupBoxPlaneHorizontal.PerformLayout();            
+            this.groupBoxPlaneGPS.ResumeLayout(false);
+            this.groupBoxPlaneGPS.PerformLayout();            
+            this.groupBoxPlaneInputs.ResumeLayout(false);
+            this.groupBoxPlaneInputs.PerformLayout();            
+            this.groupBoxPlaneCommands.ResumeLayout(false);
+            this.groupBoxPlaneCommands.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.trackBarYaw)).EndInit();
             this.groupBoxPitch.ResumeLayout(false);
             this.groupBoxPitch.PerformLayout();
@@ -2942,8 +2963,14 @@ namespace MissionPlanner.GCSViews
             this.tableLayoutPanelPlane = new System.Windows.Forms.TableLayoutPanel();
             this.buttonsLayoutPlaneVertical = new System.Windows.Forms.TableLayoutPanel();
             this.buttonsLayoutPlaneHorizontal = new System.Windows.Forms.TableLayoutPanel();
+            this.buttonsLayoutPlaneGPS = new System.Windows.Forms.TableLayoutPanel();
+            this.buttonsLayoutPlaneInputs = new System.Windows.Forms.TableLayoutPanel();
+            this.buttonsLayoutPlaneCommands = new System.Windows.Forms.TableLayoutPanel();
             this.butSetRtlAlt = new System.Windows.Forms.Button();
             this.butArmDisarm = new System.Windows.Forms.Button();
+            this.butPlaneArmDisarm = new System.Windows.Forms.Button();
+            this.butPlaneClearTrack = new System.Windows.Forms.Button();
+            this.butPlaneJoystick = new System.Windows.Forms.Button();
             this.but_setmode = new System.Windows.Forms.Button();
             this.chBox_ExpMod = new System.Windows.Forms.CheckBox();
             this.chBox_X9 = new System.Windows.Forms.CheckBox();
@@ -2970,7 +2997,7 @@ namespace MissionPlanner.GCSViews
             /****************************************Plane*************************************************************/
 
             /*
-             * Buttons Init
+             * Inits
              */
             this.butQLoiter = new Button();
             this.butQHover = new Button();
@@ -2981,6 +3008,14 @@ namespace MissionPlanner.GCSViews
             this.butLOITER = new Button();
             this.butAUTO = new Button();
             this.btnRTL = new Button();
+            this.butGPSOn = new Button();
+            this.butGPSOff = new Button();
+            this.butSetAlt = new Button();
+            this.butSetThrottle = new Button();
+            this.butSetLoiterRadius = new Button();
+            this.numericPlaneAlt = new System.Windows.Forms.NumericUpDown();
+            this.numericPlaneThrottle = new System.Windows.Forms.NumericUpDown();
+            this.numericPlaneLoiterRadius = new System.Windows.Forms.NumericUpDown();
             
             /*
              * Tab Plane
@@ -2997,12 +3032,19 @@ namespace MissionPlanner.GCSViews
             this.tableLayoutPanelPlane.Dock = DockStyle.Fill;
             this.tableLayoutPanelPlane.ColumnCount = 2;
             this.tableLayoutPanelPlane.RowCount = 4;
-            this.tableLayoutPanelPlane.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25));
-            this.tableLayoutPanelPlane.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
+            this.tableLayoutPanelPlane.ColumnStyles.Clear();
+            this.tableLayoutPanelPlane.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 30));
+            this.tableLayoutPanelPlane.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 70));
+            this.tableLayoutPanelPlane.RowStyles.Clear();
             this.tableLayoutPanelPlane.RowStyles.Add(new RowStyle(SizeType.Absolute, 150));
             this.tableLayoutPanelPlane.RowStyles.Add(new RowStyle(SizeType.Absolute, 150));
-            this.tableLayoutPanelPlane.Controls.Add(this.groupBoxPlaneVertical);
-            this.tableLayoutPanelPlane.Controls.Add(this.groupBoxPlaneHorizontal);
+            this.tableLayoutPanelPlane.RowStyles.Add(new RowStyle(SizeType.Absolute, 100));
+            this.tableLayoutPanelPlane.Controls.Add(this.groupBoxPlaneVertical, 0, 0);
+            this.tableLayoutPanelPlane.Controls.Add(this.groupBoxPlaneHorizontal, 1, 0);
+            this.tableLayoutPanelPlane.Controls.Add(this.groupBoxPlaneGPS, 0, 1);
+            this.tableLayoutPanelPlane.Controls.Add(this.groupBoxPlaneInputs, 1, 1);
+            this.tableLayoutPanelPlane.Controls.Add(this.groupBoxPlaneCommands, 0, 2);
+            this.tableLayoutPanelPlane.SetColumnSpan(this.groupBoxPlaneCommands, 2);
             
             /*
              * Group Box Vertical
@@ -3033,7 +3075,7 @@ namespace MissionPlanner.GCSViews
              * Button QLoiter
              */
             this.butQLoiter.Name = "butQLoiter";
-            this.butQLoiter.Text = "QLOITER";
+            this.butQLoiter.Text = "QLoiter";
             this.butQLoiter.Width = 100;
             this.butQLoiter.Height = 30;
             this.butQLoiter.Font = fontBut;
@@ -3044,7 +3086,7 @@ namespace MissionPlanner.GCSViews
             this.butQLoiter.FlatAppearance.BorderSize = 1;
             this.butQLoiter.FlatAppearance.BorderColor = colorDis;
             this.butQLoiter.BackColor = colorDis;
-            this.butQLoiter.Click += new System.EventHandler(this.butQStabilize_Click); // TODO need to fix
+            this.butQLoiter.Click += new System.EventHandler(this.BUT_QLoiter_Click);
                                                                                            
             /*
              * Button QHover
@@ -3061,13 +3103,13 @@ namespace MissionPlanner.GCSViews
             this.butQHover.FlatAppearance.BorderSize = 1;
             this.butQHover.FlatAppearance.BorderColor = colorDis;
             this.butQHover.BackColor = colorDis;
-            this.butQHover.Click += new System.EventHandler(this.butQStabilize_Click); // TODO need to fix
+            this.butQHover.Click += new System.EventHandler(this.BUT_QHover_Click);
             
             /*
              * Button QLand
              */
             this.butQLand.Name = "butQLand";
-            this.butQLand.Text = "QHover";
+            this.butQLand.Text = "QLand";
             this.butQLand.Width = 100;
             this.butQLand.Height = 30;
             this.butQLand.Font = fontBut;
@@ -3078,7 +3120,7 @@ namespace MissionPlanner.GCSViews
             this.butQLand.FlatAppearance.BorderSize = 1;
             this.butQLand.FlatAppearance.BorderColor = colorDis;
             this.butQLand.BackColor = colorDis;
-            this.butQLand.Click += new System.EventHandler(this.butQStabilize_Click); // TODO need to fix
+            this.butQLand.Click += new System.EventHandler(this.BUT_QLand_Click);
             
             /*
              * Group Box Horizontal
@@ -3116,7 +3158,7 @@ namespace MissionPlanner.GCSViews
              * Button Cruise
              */
             this.butCRUISE.Name = "butCRUISE";
-            this.butCRUISE.Text = "CRUISE";
+            this.butCRUISE.Text = "Cruise";
             this.butCRUISE.Width = 100;
             this.butCRUISE.Height = 30;
             this.butCRUISE.Font = fontBut;
@@ -3127,7 +3169,7 @@ namespace MissionPlanner.GCSViews
             this.butCRUISE.FlatAppearance.BorderSize = 1;
             this.butCRUISE.FlatAppearance.BorderColor = colorDis;
             this.butCRUISE.BackColor = colorDis;
-            this.butCRUISE.Click += new System.EventHandler(this.butQStabilize_Click); // TODO need to fix
+            this.butCRUISE.Click += new System.EventHandler(this.BUT_Cruise_Click);
             
             /*
              * Button FBWA
@@ -3144,7 +3186,7 @@ namespace MissionPlanner.GCSViews
             this.butFBWA.FlatAppearance.BorderSize = 1;
             this.butFBWA.FlatAppearance.BorderColor = colorDis;
             this.butFBWA.BackColor = colorDis;
-            this.butFBWA.Click += new System.EventHandler(this.butQStabilize_Click); // TODO need to fix
+            this.butFBWA.Click += new System.EventHandler(this.BUT_FBWA_Click);
             
             /*
              * Button FBWB
@@ -3161,13 +3203,13 @@ namespace MissionPlanner.GCSViews
             this.butFBWB.FlatAppearance.BorderSize = 1;
             this.butFBWB.FlatAppearance.BorderColor = colorDis;
             this.butFBWB.BackColor = colorDis;
-            this.butFBWB.Click += new System.EventHandler(this.butQStabilize_Click); // TODO need to fix
+            this.butFBWB.Click += new System.EventHandler(this.BUT_FBWB_Click);
             
             /*
              * Button Loiter
              */
             this.butLOITER.Name = "butLOITER";
-            this.butLOITER.Text = "LOITER";
+            this.butLOITER.Text = "Loiter";
             this.butLOITER.Width = 100;
             this.butLOITER.Height = 30;
             this.butLOITER.Font = fontBut;
@@ -3178,13 +3220,13 @@ namespace MissionPlanner.GCSViews
             this.butLOITER.FlatAppearance.BorderSize = 1;
             this.butLOITER.FlatAppearance.BorderColor = colorDis;
             this.butLOITER.BackColor = colorDis;
-            this.butLOITER.Click += new System.EventHandler(this.butQStabilize_Click); // TODO need to fix
+            this.butLOITER.Click += new System.EventHandler(this.BUT_quickmanual_Click);
             
             /*
              * Button Auto
              */
             this.butAUTO.Name = "butAUTO";
-            this.butAUTO.Text = "AUTO";
+            this.butAUTO.Text = "Auto";
             this.butAUTO.Width = 100;
             this.butAUTO.Height = 30;
             this.butAUTO.Font = fontBut;
@@ -3195,7 +3237,7 @@ namespace MissionPlanner.GCSViews
             this.butAUTO.FlatAppearance.BorderSize = 1;
             this.butAUTO.FlatAppearance.BorderColor = colorDis;
             this.butAUTO.BackColor = colorDis;
-            this.butAUTO.Click += new System.EventHandler(this.butQStabilize_Click); // TODO need to fix
+            this.butAUTO.Click += new System.EventHandler(this.BUT_quickauto_Click);
             
             /*
              * Button RTL
@@ -3212,7 +3254,255 @@ namespace MissionPlanner.GCSViews
             this.btnRTL.FlatAppearance.BorderSize = 1;
             this.btnRTL.FlatAppearance.BorderColor = colorDis;
             this.btnRTL.BackColor = colorDis;
-            this.btnRTL.Click += new System.EventHandler(this.butQStabilize_Click); // TODO need to fix
+            this.btnRTL.Click += new System.EventHandler(this.BUT_quickrtl_Click);
+            
+            /*
+             * Group Box GPS
+             */
+            this.groupBoxPlaneGPS.Text = "GPS";
+            this.groupBoxPlaneGPS.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.groupBoxPlaneGPS.TabStop = false;
+            this.groupBoxPlaneGPS.Controls.Add(this.buttonsLayoutPlaneGPS);
+            
+            /*
+             * Buttons Layout Plane GPS
+             */
+            this.buttonsLayoutPlaneGPS.Name = "buttonsLayoutPlaneGPS";
+            this.buttonsLayoutPlaneGPS.Dock = DockStyle.Fill;
+            this.buttonsLayoutPlaneGPS.ColumnCount = 1;
+            this.buttonsLayoutPlaneGPS.RowCount = 2;
+            this.buttonsLayoutPlaneGPS.ColumnStyles.Clear();
+            this.buttonsLayoutPlaneGPS.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            this.buttonsLayoutPlaneGPS.RowStyles.Clear();
+            for (int i = 0; i < this.buttonsLayoutPlaneGPS.RowCount; i++)
+            {
+                this.buttonsLayoutPlaneGPS.RowStyles.Add(
+                    new RowStyle(SizeType.Percent, 100f / this.buttonsLayoutPlaneGPS.RowCount)
+                );
+            }
+            this.buttonsLayoutPlaneGPS.Controls.Add(this.butGPSOn, 0, 0);
+            this.buttonsLayoutPlaneGPS.Controls.Add(this.butGPSOff, 0, 1);
+            
+            /*
+             * Button GPS ON
+             */
+            this.butGPSOn.Name = "butGPSOn";
+            this.butGPSOn.Text = "GPS ON";
+            this.butGPSOn.Width = 100;
+            this.butGPSOn.Height = 30;
+            this.butGPSOn.Font = fontBut;
+            this.butGPSOn.Anchor = AnchorStyles.None;
+            this.butGPSOn.Enabled = true;
+            this.butGPSOn.UseVisualStyleBackColor = false;
+            this.butGPSOn.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.butGPSOn.FlatAppearance.BorderSize = 1;
+            this.butGPSOn.FlatAppearance.BorderColor = colorDis;
+            this.butGPSOn.BackColor = colorDis;
+            this.butGPSOn.Click += new System.EventHandler(this.PlaneGPSOn_Click);
+            
+            /*
+             * Button GPS OFF
+             */
+            this.butGPSOff.Name = "butGPSOff";
+            this.butGPSOff.Text = "GPS OFF";
+            this.butGPSOff.Width = 100;
+            this.butGPSOff.Height = 30;
+            this.butGPSOff.Font = fontBut;
+            this.butGPSOff.Anchor = AnchorStyles.None;
+            this.butGPSOff.Enabled = true;
+            this.butGPSOff.UseVisualStyleBackColor = false;
+            this.butGPSOff.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.butGPSOff.FlatAppearance.BorderSize = 1;
+            this.butGPSOff.FlatAppearance.BorderColor = colorDis;
+            this.butGPSOff.BackColor = colorDis;
+            this.butGPSOff.Click += new System.EventHandler(this.PlaneGPSOff_Click);
+            
+            /*
+             * Group Box Inputs
+             */
+            this.groupBoxPlaneInputs.Text = "Inputs";
+            this.groupBoxPlaneInputs.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.groupBoxPlaneInputs.TabStop = false;
+            this.groupBoxPlaneInputs.Controls.Add(this.buttonsLayoutPlaneInputs);
+            
+            /*
+             * Buttons Layout Plane Inputs
+             */
+            this.buttonsLayoutPlaneInputs.Name = "buttonsLayoutPlaneInputs";
+            this.buttonsLayoutPlaneInputs.Dock = DockStyle.Fill;
+            this.buttonsLayoutPlaneInputs.ColumnCount = 2;
+            this.buttonsLayoutPlaneInputs.RowCount = 3;
+            this.buttonsLayoutPlaneInputs.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 40F));
+            this.buttonsLayoutPlaneInputs.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 60F));
+            this.buttonsLayoutPlaneInputs.RowStyles.Add(new RowStyle(SizeType.Percent, 33.33F));
+            this.buttonsLayoutPlaneInputs.RowStyles.Add(new RowStyle(SizeType.Percent, 33.33F));
+            this.buttonsLayoutPlaneInputs.RowStyles.Add(new RowStyle(SizeType.Percent, 33.33F));
+            this.buttonsLayoutPlaneInputs.Padding = new Padding(10);
+            this.buttonsLayoutPlaneInputs.Controls.Add(this.numericPlaneAlt, 0, 0);
+            this.buttonsLayoutPlaneInputs.Controls.Add(this.numericPlaneThrottle, 0, 1);
+            this.buttonsLayoutPlaneInputs.Controls.Add(this.numericPlaneLoiterRadius, 0, 2);
+            this.buttonsLayoutPlaneInputs.Controls.Add(this.butSetAlt, 1, 0);
+            this.buttonsLayoutPlaneInputs.Controls.Add(this.butSetThrottle, 1, 1);
+            this.buttonsLayoutPlaneInputs.Controls.Add(this.butSetLoiterRadius, 1, 2);
+            
+            /*
+             * Numeric Alt
+             */
+            this.numericPlaneAlt.Anchor = AnchorStyles.None;
+            this.numericPlaneAlt.Enabled = true;
+            this.numericPlaneAlt.BackColor = colorDis;
+            this.numericPlaneAlt.Minimum = 0;
+            this.numericPlaneAlt.Maximum = 2000;
+            this.numericPlaneAlt.Value = 100;
+            this.numericPlaneAlt.Font = fontNuveric;
+            
+            /*
+             * Numeric Throttle
+             */
+            this.numericPlaneThrottle.Anchor = AnchorStyles.None;
+            this.numericPlaneThrottle.Enabled = true;
+            this.numericPlaneThrottle.BackColor = colorDis;
+            this.numericPlaneThrottle.Minimum = 0;
+            this.numericPlaneThrottle.Maximum = 1000;
+            this.numericPlaneThrottle.Value = 45;
+            this.numericPlaneThrottle.Font = fontNuveric;
+            
+            /*
+             * Numeric Loiter Radius
+             */
+            this.numericPlaneLoiterRadius.Enabled = true;
+            this.numericPlaneLoiterRadius.Anchor = AnchorStyles.None;
+            this.numericPlaneLoiterRadius.BackColor = colorDis;
+            this.numericPlaneLoiterRadius.Minimum = 0;
+            this.numericPlaneLoiterRadius.Maximum = 1000;
+            this.numericPlaneLoiterRadius.Value = 60;
+            this.numericPlaneLoiterRadius.Font = fontNuveric;
+            
+            /*
+             * Button Set Alt
+             */
+            this.butSetAlt.Name = "butSetAlt";
+            this.butSetAlt.Text = "Set Alt";
+            this.butSetAlt.Width = 130;
+            this.butSetAlt.Height = 30;
+            this.butSetAlt.Font = fontBut;
+            this.butSetAlt.Anchor = AnchorStyles.None;
+            this.butSetAlt.Enabled = true;
+            this.butSetAlt.UseVisualStyleBackColor = false;
+            this.butSetAlt.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.butSetAlt.FlatAppearance.BorderSize = 1;
+            this.butSetAlt.FlatAppearance.BorderColor = colorDis;
+            this.butSetAlt.BackColor = colorDis;
+            this.butSetAlt.Click += new System.EventHandler(this.planeSetAlt_Click);
+            
+            /*
+             * Button Set Throttle
+             */
+            this.butSetThrottle.Name = "butSetThrottle";
+            this.butSetThrottle.Text = "Set Throttle";
+            this.butSetThrottle.Width = 130;
+            this.butSetThrottle.Height = 30;
+            this.butSetThrottle.Font = fontBut;
+            this.butSetThrottle.Anchor = AnchorStyles.None;
+            this.butSetThrottle.Enabled = true;
+            this.butSetThrottle.UseVisualStyleBackColor = false;
+            this.butSetThrottle.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.butSetThrottle.FlatAppearance.BorderSize = 1;
+            this.butSetThrottle.FlatAppearance.BorderColor = colorDis;
+            this.butSetThrottle.BackColor = colorDis;
+            this.butSetThrottle.Click += new System.EventHandler(this.planeSetThrottle_Click);
+            
+            /*
+             * Button Set Loiter Radius
+             */
+            this.butSetLoiterRadius.Name = "butSetLoiterRadius";
+            this.butSetLoiterRadius.Text = "Set Loiter Rad";
+            this.butSetLoiterRadius.Width = 130;
+            this.butSetLoiterRadius.Height = 30;
+            this.butSetLoiterRadius.Font = fontBut;
+            this.butSetLoiterRadius.Anchor = AnchorStyles.None;
+            this.butSetLoiterRadius.Enabled = true;
+            this.butSetLoiterRadius.UseVisualStyleBackColor = false;
+            this.butSetLoiterRadius.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.butSetLoiterRadius.FlatAppearance.BorderSize = 1;
+            this.butSetLoiterRadius.FlatAppearance.BorderColor = colorDis;
+            this.butSetLoiterRadius.BackColor = colorDis;
+            this.butSetLoiterRadius.Click += new System.EventHandler(this.planeSetLoiterRad_Click);
+                
+            /*
+             * Group Box Commands
+             */
+            this.groupBoxPlaneCommands.Text = "Commands";
+            this.groupBoxPlaneCommands.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.groupBoxPlaneCommands.TabStop = false;
+            this.groupBoxPlaneCommands.Controls.Add(this.buttonsLayoutPlaneCommands);
+            
+            /*
+             * Buttons Layout Plane Commands
+             */
+            this.buttonsLayoutPlaneCommands.Name = "buttonsLayoutPlaneCommands";
+            this.buttonsLayoutPlaneCommands.Dock = DockStyle.Fill;
+            this.buttonsLayoutPlaneCommands.ColumnCount = 3;
+            this.buttonsLayoutPlaneCommands.RowCount = 1;
+            this.buttonsLayoutPlaneCommands.ColumnStyles.Clear();
+            this.buttonsLayoutPlaneCommands.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.33F));
+            this.buttonsLayoutPlaneCommands.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.33F));
+            this.buttonsLayoutPlaneCommands.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.34F));
+            this.buttonsLayoutPlaneCommands.RowStyles.Clear();
+            this.buttonsLayoutPlaneCommands.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            this.buttonsLayoutPlaneCommands.Padding = new Padding(10);
+            this.buttonsLayoutPlaneCommands.Controls.Add(this.butPlaneArmDisarm, 0, 0);
+            this.buttonsLayoutPlaneCommands.Controls.Add(this.butPlaneClearTrack, 1, 0);
+            this.buttonsLayoutPlaneCommands.Controls.Add(this.butPlaneJoystick, 2, 0);
+            
+            /*
+             * Button Arm/Disarm
+             */
+            this.butPlaneArmDisarm.Name = "butPlaneArmDisarm";
+            this.butPlaneArmDisarm.Text = "Arm/Disarm";
+            this.butPlaneArmDisarm.Width = 130;
+            this.butPlaneArmDisarm.Height = 30;
+            this.butPlaneArmDisarm.Font = fontBut;
+            this.butPlaneArmDisarm.Anchor = AnchorStyles.None;
+            this.butPlaneArmDisarm.Enabled = true;
+            this.butPlaneArmDisarm.UseVisualStyleBackColor = false;
+            this.butPlaneArmDisarm.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.butPlaneArmDisarm.FlatAppearance.BorderSize = 2;
+            this.butPlaneArmDisarm.FlatAppearance.BorderColor = Color.OrangeRed;
+            this.butPlaneArmDisarm.BackColor = colorDis;
+            this.butPlaneArmDisarm.Click += new System.EventHandler(this.BUT_ARM_Click);
+            
+            /*
+             * Button Clear Track
+             */
+            this.butPlaneClearTrack.Name = "butPlaneClearTrack";
+            this.butPlaneClearTrack.Text = "Clear Track";
+            this.butPlaneClearTrack.Width = 130;
+            this.butPlaneClearTrack.Height = 30;
+            this.butPlaneClearTrack.Font = fontBut;
+            this.butPlaneClearTrack.Anchor = AnchorStyles.None;
+            this.butPlaneClearTrack.Enabled = true;
+            this.butPlaneClearTrack.UseVisualStyleBackColor = false;
+            this.butPlaneClearTrack.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.butPlaneClearTrack.FlatAppearance.BorderSize = 1;
+            this.butPlaneClearTrack.BackColor = colorDis;
+            this.butPlaneClearTrack.Click += new System.EventHandler(this.BUT_clear_track_Click);
+            
+            /*
+             * Button Joystick
+             */
+            this.butPlaneJoystick.Name = "butPlaneJoystick";
+            this.butPlaneJoystick.Text = "Joystick";
+            this.butPlaneJoystick.Width = 130;
+            this.butPlaneJoystick.Height = 30;
+            this.butPlaneJoystick.Font = fontBut;
+            this.butPlaneJoystick.Anchor = AnchorStyles.None;
+            this.butPlaneJoystick.Enabled = true;
+            this.butPlaneJoystick.UseVisualStyleBackColor = false;
+            this.butPlaneJoystick.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.butPlaneJoystick.FlatAppearance.BorderSize = 1;
+            this.butPlaneJoystick.BackColor = colorDis;
+            this.butPlaneJoystick.Click += new System.EventHandler(this.BUT_joystick_Click);
             
             /****************************************Plane End*********************************************************/
             
@@ -3741,6 +4031,8 @@ namespace MissionPlanner.GCSViews
 
             MainV2.comPort.OnPacketReceived -= UpdateIsActiveRC;
             MainV2.comPort.OnPacketReceived += UpdateIsActiveRC;
+            
+            /****************************************Copter End********************************************************/
         }
 
 
@@ -3805,6 +4097,7 @@ namespace MissionPlanner.GCSViews
         private System.Windows.Forms.ToolStripMenuItem flyToHereAltToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem flightPlannerToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem userItemsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem planeFakeGPSToolStripMenuItem;
         //private Crom.Controls.Docking.DockContainer dockContainer1;
         private Controls.MyButton BUT_ARM;
         private Controls.ModifyandSet modifyandSetAlt;
@@ -3918,6 +4211,9 @@ namespace MissionPlanner.GCSViews
         private System.Windows.Forms.GroupBox groupBoxPitch;
         private System.Windows.Forms.GroupBox groupBoxPlaneVertical;
         private System.Windows.Forms.GroupBox groupBoxPlaneHorizontal;
+        private System.Windows.Forms.GroupBox groupBoxPlaneGPS;
+        private System.Windows.Forms.GroupBox groupBoxPlaneInputs;
+        private System.Windows.Forms.GroupBox groupBoxPlaneCommands;
         private Controls.MyButton BUT_PayloadFolder;
         private System.Windows.Forms.ToolStripMenuItem setHomeHereToolStripMenuItem1;
         private System.Windows.Forms.ToolStripMenuItem groundColorToolStripMenuItem;
@@ -3939,6 +4235,9 @@ namespace MissionPlanner.GCSViews
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanelPlane;
         private System.Windows.Forms.TableLayoutPanel buttonsLayoutPlaneVertical;
         private System.Windows.Forms.TableLayoutPanel buttonsLayoutPlaneHorizontal;
+        private System.Windows.Forms.TableLayoutPanel buttonsLayoutPlaneGPS;
+        private System.Windows.Forms.TableLayoutPanel buttonsLayoutPlaneInputs;
+        private System.Windows.Forms.TableLayoutPanel buttonsLayoutPlaneCommands;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel2;
         private System.Windows.Forms.ToolStripMenuItem setBatteryCellCountToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem undockToolStripMenuItem;
@@ -4022,6 +4321,22 @@ namespace MissionPlanner.GCSViews
         private Button butLOITER;
         private Button btnRTL;
         
+        // GPS
+        private Button butGPSOn;
+        private Button butGPSOff;
+        
+        // Inputs
+        private NumericUpDown numericPlaneAlt;
+        private NumericUpDown numericPlaneThrottle;
+        private NumericUpDown numericPlaneLoiterRadius;
+        private Button butSetAlt;
+        private Button butSetThrottle;
+        private Button butSetLoiterRadius;
+        
+        // Commands
+        private Button butPlaneArmDisarm;
+        private Button butPlaneClearTrack;
+        private Button butPlaneJoystick;
 
         // Copter
         private System.Windows.Forms.Label labelDroneModel;
