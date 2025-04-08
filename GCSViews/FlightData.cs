@@ -234,10 +234,116 @@ namespace MissionPlanner.GCSViews
         };
 
         private bool transponderNeverConnected = true;
-        
+
         private FakeGpsData gpsData;
-        
+
         private bool _isLoopStart = false;
+
+        // Thrust imbalance check sctruct
+        public struct motorBalanceChecker
+        {
+            private const int MAX_RAW_INPUT = 2000;
+            private const int MIN_RAW_INPUT = 1000;
+            private const int DT_RAW_INPUT = MAX_RAW_INPUT - MIN_RAW_INPUT;
+            private const float IMBALANCE_THRESHOLD = 1.25f;
+
+            public float motor1_pct;
+            public float motor2_pct;
+            public float motor3_pct;
+            public float motor4_pct;
+            public float motor_diff;
+            public bool is_balanced;
+
+            public motorBalanceChecker(bool do_update = true)
+            {
+                this.motor1_pct = 0;
+                this.motor2_pct = 0;
+                this.motor3_pct = 0;
+                this.motor4_pct = 0;
+                this.motor_diff = 1;
+                this.is_balanced = false;
+                if (do_update)
+                {
+                    this.update();
+                }
+            }
+            public void update()
+            {
+                if (MainV2.comPort.BaseStream != null && MainV2.comPort.BaseStream.IsOpen)
+                {
+                    float[] motorall_raw = getMotorRaw();
+
+                    for (int i = 0; i < motorall_raw.Length; i++)
+                    {
+                        GetType()
+                            .GetField($"motor{i + 1}_pct")
+                            .SetValueDirect(__makeref(this), (motorall_raw[i] - MIN_RAW_INPUT) / (DT_RAW_INPUT));
+                    }
+
+                    float min = float.MaxValue, max = float.MinValue;
+                    foreach (float motor_raw in motorall_raw)
+                    {
+                        min = Math.Min(min, motor_raw);
+                        max = Math.Max(max, motor_raw);
+                    }
+                    ;
+                    if (min == 0)
+                    {
+                        this.motor_diff = float.MaxValue;
+                    }
+                    else
+                    {
+                        this.motor_diff = max / min;
+                    }
+                    ;
+                    this.is_balanced = (motor_diff < IMBALANCE_THRESHOLD);
+                }
+            }
+
+            private static float[] getMotorRaw()
+            {
+                Dictionary<int, float> motorDict = new Dictionary<int, float>();
+                motorDict.Add(33, float.NaN); // Motor1
+                motorDict.Add(34, float.NaN); // Motor2
+                motorDict.Add(35, float.NaN); // Motor3
+                motorDict.Add(36, float.NaN); // Motor4
+                motorDict.Add(37, float.NaN); // Motor5
+                motorDict.Add(38, float.NaN); // Motor6
+                motorDict.Add(39, float.NaN); // Motor7
+                motorDict.Add(40, float.NaN); // Motor8
+                motorDict.Add(82, float.NaN); // Motor9
+                motorDict.Add(83, float.NaN); // Motor10
+                motorDict.Add(84, float.NaN); // Motor11
+                motorDict.Add(85, float.NaN); // Motor12
+                motorDict.Add(160, float.NaN); // Motor13
+                motorDict.Add(161, float.NaN); // Motor14
+                motorDict.Add(162, float.NaN); // Motor15
+                motorDict.Add(163, float.NaN); // Motor16
+                List<string> paramList = new List<string>();
+                for (int i = 1; i < motorDict.Count + 1; i++)
+                {
+                    string param = $"SERVO{i}_FUNCTION";
+                    MAVLinkParam func = MainV2.comPort.MAV.param[param];
+                    if (func is null) continue;
+                    if (motorDict.ContainsKey((int)func.Value))
+                    {
+                        motorDict[((int)func.Value)] =
+                            (float)typeof(CurrentState)
+                            .GetProperty($"ch{i}out")
+                            .GetValue(MainV2.comPort.MAV.cs);
+                    }
+                }
+
+                List<float> result = new List<float>();
+                foreach (int key in motorDict.Keys)
+                {
+                    if (motorDict[key] is float.NaN) continue;
+                    result.Add(motorDict[key]);
+                }
+
+                return result.ToArray();
+            }
+        };
 
         public FlightData()
         {
@@ -705,7 +811,7 @@ namespace MissionPlanner.GCSViews
             TabListDisplay.Add(tabPagePreFlight.Name, MainV2.DisplayConfiguration.displayPreFlightTab);
 
             TabListDisplay.Add(tabCopter.Name, MainV2.DisplayConfiguration.displayAdvCopterTab);
-            
+
             TabListDisplay.Add(tabPlane.Name, MainV2.DisplayConfiguration.displayAdvPlaneTab);
 
             TabListDisplay.Add(tabActions.Name, MainV2.DisplayConfiguration.displayAdvActionsTab);
@@ -1083,6 +1189,18 @@ namespace MissionPlanner.GCSViews
             }
         }
 
+        private void BUT_thrustImbalance_Check()
+        {
+            motorBalanceChecker currentTrust = new motorBalanceChecker(do_update: true);
+            this.BUT_thrustImbalance.BackColor = currentTrust.is_balanced ? colorDis : Color.Firebrick;
+            this.BUT_thrustImbalance.FlatAppearance.BorderColor = currentTrust.is_balanced ? colorDis : Color.Red;
+        }
+        private void BUT_thrustImbalance_Click(object sender, EventArgs e)
+        {
+            var form = new ThrustBalance();
+            form.Show();
+        }
+
         private void but_bintolog_Click(object sender, EventArgs e)
         {
             using (OpenFileDialog ofd = new OpenFileDialog())
@@ -1449,7 +1567,7 @@ namespace MissionPlanner.GCSViews
 
             ((Control)sender).Enabled = true;
         }
-        
+
         private void BUT_Cruise_Click(object sender, EventArgs e)
         {
             try
@@ -1464,7 +1582,7 @@ namespace MissionPlanner.GCSViews
 
             ((Control)sender).Enabled = true;
         }
-        
+
         private void BUT_FBWA_Click(object sender, EventArgs e)
         {
             try
@@ -1478,8 +1596,8 @@ namespace MissionPlanner.GCSViews
             }
 
             ((Control)sender).Enabled = true;
-        }        
-        
+        }
+
         private void BUT_FBWB_Click(object sender, EventArgs e)
         {
             try
@@ -1493,8 +1611,8 @@ namespace MissionPlanner.GCSViews
             }
 
             ((Control)sender).Enabled = true;
-        }        
-        
+        }
+
         private void BUT_QLand_Click(object sender, EventArgs e)
         {
             try
@@ -1508,8 +1626,8 @@ namespace MissionPlanner.GCSViews
             }
 
             ((Control)sender).Enabled = true;
-        }        
-        
+        }
+
         private void BUT_QHover_Click(object sender, EventArgs e)
         {
             try
@@ -1523,8 +1641,8 @@ namespace MissionPlanner.GCSViews
             }
 
             ((Control)sender).Enabled = true;
-        }        
-        
+        }
+
         private void BUT_QLoiter_Click(object sender, EventArgs e)
         {
             try
@@ -3042,7 +3160,7 @@ namespace MissionPlanner.GCSViews
                 });
             }
         }
-        
+
         private Task planeFakeGPSToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (!MainV2.comPort.BaseStream.IsOpen)
@@ -3056,7 +3174,7 @@ namespace MissionPlanner.GCSViews
                 CustomMessageBox.Show(Strings.BadCoords, Strings.ERROR);
                 return Task.CompletedTask;
             }
-            
+
             var point = new PointLatLng(MouseDownStart.Lat, MouseDownStart.Lng);
 
             if (_isLoopStart)
@@ -3065,12 +3183,12 @@ namespace MissionPlanner.GCSViews
                 gpsData.Lng = MouseDownStart.Lng;
                 gpsData.Sat = 30;
                 gpsData.WorkCounter = 6;
-               
+
                 POI.FakeGpsPoiDelete(gpsData.FakeGpsStringId);
                 POI.FakeGpsPoiAdd(point, gpsData.FakeGpsStringId);
                 return Task.CompletedTask;
             }
-            
+
             gpsData = new FakeGpsData
             {
                 Lat = MouseDownStart.Lat,
@@ -3078,7 +3196,7 @@ namespace MissionPlanner.GCSViews
                 Sat = 30,
                 WorkCounter = 6
             };
-            
+
             POI.FakeGpsPoiDelete(gpsData.FakeGpsStringId);
             POI.FakeGpsPoiAdd(point, gpsData.FakeGpsStringId);
 
@@ -3094,7 +3212,7 @@ namespace MissionPlanner.GCSViews
 
             return Task.CompletedTask;
         }
-        
+
         private async Task SendFakeGpsLoopAsync()
         {
             while (true)
@@ -3102,25 +3220,25 @@ namespace MissionPlanner.GCSViews
                 try
                 {
                     var mav = MainV2.comPort.MAVlist.FirstOrDefault<MAVState>(a => a.compid == 1);
-                    
+
                     if (mav == null)
                     {
                         continue;
                     }
-                    
+
                     var packet = gpsData.CreateMavlinkPacket();
 
                     if (gpsData.WorkCounter > 0)
                     {
                         --gpsData.WorkCounter;
                     }
-                        
+
                     if (gpsData.WorkCounter <= 0)
                     {
                         gpsData.Sat = 0;
                         gpsData.Alt = MainV2.comPort.MAV.cs.alt;
                     }
-                    
+
                     MainV2.comPort.sendPacket(packet, mav.sysid, mav.compid);
 
                     await Task.Delay(500);
@@ -4540,7 +4658,7 @@ namespace MissionPlanner.GCSViews
 
             coords1.AltUnit = CurrentState.AltUnit;
         }
-        
+
         private void modifyandSetAlt_Click(object sender, EventArgs e)
         {
             int newalt = (int)modifyandSetAlt.Value;
@@ -4553,7 +4671,7 @@ namespace MissionPlanner.GCSViews
                 CustomMessageBox.Show(Strings.ErrorCommunicating, Strings.ERROR);
             }
         }
-        
+
         private void planeSetAlt_Click(object sender, EventArgs e)
         {
             var newAlt = (int)numericPlaneAlt.Value;
@@ -4566,7 +4684,7 @@ namespace MissionPlanner.GCSViews
                 CustomMessageBox.Show(Strings.ErrorCommunicating, Strings.ERROR);
             }
         }
-        
+
         private void planeSetLoiterRad_Click(object sender, EventArgs e)
         {
             var newRad = (int)numericPlaneLoiterRadius.Value;
@@ -4580,7 +4698,7 @@ namespace MissionPlanner.GCSViews
                 CustomMessageBox.Show(Strings.ErrorCommunicating, Strings.ERROR);
             }
         }
-        
+
         private void modifyandSetLoiterRad_Click(object sender, EventArgs e)
         {
             int newrad = (int)modifyandSetLoiterRad.Value;
@@ -4594,7 +4712,7 @@ namespace MissionPlanner.GCSViews
                 CustomMessageBox.Show(Strings.ErrorCommunicating, Strings.ERROR);
             }
         }
-        
+
         private async void planeSetThrottle_Click(object sender, EventArgs e)
         {
             try
@@ -4608,7 +4726,7 @@ namespace MissionPlanner.GCSViews
                 CustomMessageBox.Show(Strings.ErrorCommunicating, Strings.ERROR);
             }
         }
-        
+
         private async void modifyandSetSpeed_Click(object sender, EventArgs e)
         {
             try
@@ -4622,7 +4740,7 @@ namespace MissionPlanner.GCSViews
                 CustomMessageBox.Show(Strings.ErrorCommunicating, Strings.ERROR);
             }
         }
-        
+
         private void PlaneGPSOff_Click(object sender, EventArgs e)
         {
             try
@@ -4634,7 +4752,7 @@ namespace MissionPlanner.GCSViews
                 CustomMessageBox.Show(Strings.ErrorCommunicating, Strings.ERROR);
             }
         }
-        
+
         private void PlaneGPSOn_Click(object sender, EventArgs e)
         {
             try
@@ -7492,7 +7610,7 @@ namespace MissionPlanner.GCSViews
             }
 
         }
-        
+
         private bool DataGridViewUpdate()
         {
             bool success = false;
@@ -7601,12 +7719,20 @@ namespace MissionPlanner.GCSViews
                 {
                     this.tableLayoutPanelCopter.Controls.Add(IsActiveRC_Petr, 1, 7);
                 }
+                if (!this.tableLayoutPanelCopter.Controls.Contains(BUT_thrustImbalance))
+                {
+                    this.tableLayoutPanelCopter.Controls.Add(BUT_thrustImbalance, 0, 7);
+                }
             }
             else
             {
                 if (this.tableLayoutPanelCopter.Controls.Contains(IsActiveRC_Petr))
                 {
                     this.tableLayoutPanelCopter.Controls.Remove(IsActiveRC_Petr);
+                }
+                if (this.tableLayoutPanelCopter.Controls.Contains(BUT_thrustImbalance))
+                {
+                    this.tableLayoutPanelCopter.Controls.Remove(BUT_thrustImbalance);
                 }
             }
             if ((comboBoxDronModel.Text == "Вампір") && (chBox_X9.Checked))
@@ -7647,6 +7773,7 @@ namespace MissionPlanner.GCSViews
             LabelUpdate(labelCurrHYaw, "DR_HOME_YAW");
             UpdateButtonModState();
             BUT_ARM_Check();
+            BUT_thrustImbalance_Check();
         }
 
         private void Copter_UI_Init()
