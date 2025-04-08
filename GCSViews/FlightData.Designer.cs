@@ -2993,6 +2993,7 @@ namespace MissionPlanner.GCSViews
             this.IsActiveRC_Petr = new Button();
             this.IsActRCVamp_1 = new Button();
             this.IsActRCVamp_2 = new Button();
+            this.BUT_thrustImbalance = new Button();
             
             /****************************************Plane*************************************************************/
 
@@ -3922,7 +3923,23 @@ namespace MissionPlanner.GCSViews
             this.butArmDisarm.BackColor = colorDis;
             this.tableLayoutPanelCopter.Controls.Add(this.butArmDisarm, 0, 6);
             this.butArmDisarm.Click += new System.EventHandler(this.BUT_ARM_Click);
-            
+
+            /*
+             * Button Thrst Imb
+             */
+            this.BUT_thrustImbalance.Name = "BUT_thrustImbalance";
+            this.BUT_thrustImbalance.Text = "Thrst Imb";
+            this.BUT_thrustImbalance.Font = fontBut;
+            this.BUT_thrustImbalance.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.BUT_thrustImbalance.Enabled = true;
+            this.BUT_thrustImbalance.UseVisualStyleBackColor = false;
+            this.BUT_thrustImbalance.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.BUT_thrustImbalance.FlatAppearance.BorderSize = 1;
+            this.BUT_thrustImbalance.FlatAppearance.BorderColor = colorDis;
+            this.BUT_thrustImbalance.BackColor = colorDis;
+            this.tableLayoutPanelCopter.Controls.Add(this.BUT_thrustImbalance, 0, 7);
+            this.BUT_thrustImbalance.Click += new System.EventHandler(this.BUT_thrustImbalance_Click);
+
             /*
              * Button Loiter
              */
@@ -4373,6 +4390,7 @@ namespace MissionPlanner.GCSViews
         private Button butGnGPS;
         private Button butAltHold;
         private Button but_setmode;
+        private Button BUT_thrustImbalance;
 
         private Button IsActiveRC_Petr;
         private Button IsActRCVamp_1;
