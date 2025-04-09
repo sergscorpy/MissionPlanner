@@ -41,6 +41,35 @@ namespace MissionPlanner.Controls
             this.servo3_lbl.ForeColor = colorGradient[servo3_pct];
             this.servo4_lbl.ForeColor = colorGradient[servo4_pct];
         }
+        
+        private static IEnumerable<Color> GetColorBand(int size, Color[] color, int[] band = null)
+        {
+            
+            if (band is null)
+            {
+                band = Array.Empty<int>();
+            };
+            int bandDiff = color.Length - band.Length;
+            if (bandDiff > 0)
+            {
+                int lastBand = band.Length > 0 ? band[band.Length - 1] : 0;
+                for (int i = 1; i < bandDiff + 1; i++)
+                {
+                    band = band.Append(lastBand + i * (size - lastBand) / bandDiff).ToArray();
+                };
+            };
+            
+            var total = color.Zip(band, (c, b) => new { Color = c, Band = b });
+            int cur_size = 0;
+            foreach (var cb in total)
+            {
+                for (int i = 0; i < cb.Band - cur_size; i++)
+                {
+                    yield return cb.Color;
+                }
+                cur_size = cb.Band;
+            };
+        }
         private static IEnumerable<Color> GetColorGradient(Color from, Color to, int totalNumberOfColors)
         {
             if (totalNumberOfColors < 2)
