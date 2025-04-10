@@ -43,6 +43,7 @@ namespace MissionPlanner.Controls
             this.servo4_pct = new System.Windows.Forms.Label();
             this.servo4_lbl = new System.Windows.Forms.Label();
             this.update_timer = new System.Windows.Forms.Timer(this.components);
+            this.motorBalanceChecker = new FlightData.motorBalanceChecker();
             this.SuspendLayout();
             // 
             // servo1_pct
