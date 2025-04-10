@@ -242,10 +242,10 @@ namespace MissionPlanner.GCSViews
         // Thrust imbalance check sctruct
         public struct motorBalanceChecker
         {
-            private const int MAX_RAW_INPUT = 2000;
-            private const int MIN_RAW_INPUT = 1000;
-            private const int DT_RAW_INPUT = MAX_RAW_INPUT - MIN_RAW_INPUT;
             private const float IMBALANCE_THRESHOLD = 1.25f;
+            private int MAX_RAW_INPUT;
+            private int MIN_RAW_INPUT;
+            private int DT_RAW_INPUT;
 
             public float motor1_pct;
             public float motor2_pct;
@@ -256,6 +256,9 @@ namespace MissionPlanner.GCSViews
 
             public motorBalanceChecker(bool do_update = true)
             {
+                this.MAX_RAW_INPUT = 0;
+                this.MIN_RAW_INPUT = 0;
+                this.DT_RAW_INPUT = 0;
                 this.motor1_pct = 0;
                 this.motor2_pct = 0;
                 this.motor3_pct = 0;
@@ -269,10 +272,16 @@ namespace MissionPlanner.GCSViews
             }
             public void update()
             {
-                if (MainV2.comPort.BaseStream != null && MainV2.comPort.BaseStream.IsOpen)
+                if (MainV2.comPort.BaseStream != null && MainV2.comPort.BaseStream.IsOpen && MainV2.comPort.MAV.param.Count > 0)
                 {
-                    float[] motorall_raw = getMotorRaw();
+                    if (DT_RAW_INPUT == 0)
+                    {
+                        MAX_RAW_INPUT = (int)MainV2.comPort.MAV.param["MOT_PWM_MAX"];
+                        MIN_RAW_INPUT = (int)MainV2.comPort.MAV.param["MOT_PWM_MIN"];
+                        DT_RAW_INPUT = MAX_RAW_INPUT - MIN_RAW_INPUT;
+                    };
 
+                    float[] motorall_raw = getMotorRaw();
                     for (int i = 0; i < motorall_raw.Length; i++)
                     {
                         GetType()
