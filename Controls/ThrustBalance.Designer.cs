@@ -39,13 +39,6 @@ namespace MissionPlanner.Controls
             this.servo3_lbl = new System.Windows.Forms.Label();
             this.servo4_lbl = new System.Windows.Forms.Label();
             this.update_timer = new System.Windows.Forms.Timer(this.components);
-            this.motorBalanceChecker = new FlightData.motorBalanceChecker();
-            this.colorGradient =
-                GetColorBand(
-                    100,
-                    new[] { System.Drawing.Color.LimeGreen, System.Drawing.Color.Yellow, System.Drawing.Color.Red },
-                    new[] {50, 80}
-                ).ToArray();
             this.SuspendLayout();
             // 
             // servo1_lbl

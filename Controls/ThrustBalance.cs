@@ -17,6 +17,12 @@ namespace MissionPlanner.Controls
         {
             InitializeComponent();
 
+            colorGradient =
+                GetColorBand(
+                    100,
+                    new[] { System.Drawing.Color.LimeGreen, System.Drawing.Color.Yellow, System.Drawing.Color.Red },
+                    new[] { 50, 80 }
+                ).ToArray();
             Utilities.ThemeManager.ApplyThemeTo(this);
 
             update_timer_Tick(null, null);
