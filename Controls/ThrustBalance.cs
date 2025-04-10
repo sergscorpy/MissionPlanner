@@ -37,15 +37,15 @@ namespace MissionPlanner.Controls
             int servo4_pct = (int)(motorBalanceChecker.motor4_pct * 100);
 
             motorBalanceChecker.update();
-            this.servo1_lbl.Text = $"{servo1_pct}₁";
-            this.servo2_lbl.Text = $"₂{servo2_pct}";
-            this.servo3_lbl.Text = $"³{servo3_pct}";
-            this.servo4_lbl.Text = $"{servo4_pct}⁴";
+            this.servo1_pct.ForeColor = colorGradient[servo1_pct];
+            this.servo2_pct.ForeColor = colorGradient[servo2_pct];
+            this.servo3_pct.ForeColor = colorGradient[servo3_pct];
+            this.servo4_pct.ForeColor = colorGradient[servo4_pct];
 
-            this.servo1_lbl.ForeColor = colorGradient[servo1_pct];
-            this.servo2_lbl.ForeColor = colorGradient[servo2_pct];
-            this.servo3_lbl.ForeColor = colorGradient[servo3_pct];
-            this.servo4_lbl.ForeColor = colorGradient[servo4_pct];
+            this.servo1_pct.Text = $"{servo1_pct}%";
+            this.servo2_pct.Text = $"{servo2_pct}%";
+            this.servo3_pct.Text = $"{servo3_pct}%";
+            this.servo4_pct.Text = $"{servo4_pct}%";
         }
         
         private static IEnumerable<Color> GetColorBand(int size, Color[] color, int[] band = null)
