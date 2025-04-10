@@ -261,7 +261,7 @@ namespace MissionPlanner.GCSViews
                 this.motor3_pct = 0;
                 this.motor4_pct = 0;
                 this.motor_diff = 1;
-                this.is_balanced = false;
+                this.is_balanced = true;
                 if (do_update)
                 {
                     this.update();
