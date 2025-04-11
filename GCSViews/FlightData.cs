@@ -276,8 +276,8 @@ namespace MissionPlanner.GCSViews
                 {
                     if (DT_RAW_INPUT == 0)
                     {
-                        MAX_RAW_INPUT = (int)MainV2.comPort.MAV.param["MOT_PWM_MAX"];
-                        MIN_RAW_INPUT = (int)MainV2.comPort.MAV.param["MOT_PWM_MIN"];
+                        MAX_RAW_INPUT = getMAVParam("MOT_PWM_MAX", 2000);
+                        MIN_RAW_INPUT = getMAVParam("MOT_PWM_MIN", 1000);
                         DT_RAW_INPUT = MAX_RAW_INPUT - MIN_RAW_INPUT;
                     };
 
@@ -309,6 +309,19 @@ namespace MissionPlanner.GCSViews
                 }
             }
 
+            private static int getMAVParam(string paramName, int defaultValue = 0)
+            {
+                MAVLinkParam param = MainV2.comPort.MAV.param[paramName];
+                if (param == null)
+                {
+                    return defaultValue;
+                }
+                else
+                {
+                    return (int)param.Value;
+                }
+            }
+            
             private static float[] getMotorRaw()
             {
                 Dictionary<int, float> motorDict = new Dictionary<int, float>();
