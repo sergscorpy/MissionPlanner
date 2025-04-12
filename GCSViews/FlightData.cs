@@ -272,7 +272,7 @@ namespace MissionPlanner.GCSViews
             }
             public void update()
             {
-                if (MainV2.comPort.BaseStream != null && MainV2.comPort.BaseStream.IsOpen && MainV2.comPort.MAV.param.Count > 0)
+                if (MainV2.comPort.BaseStream?.IsOpen == true && MainV2.comPort.MAV?.param?.Count > 0)
                 {
                     if (DT_RAW_INPUT == 0)
                     {
@@ -311,7 +311,7 @@ namespace MissionPlanner.GCSViews
 
             private static int getMAVParam(string paramName, int defaultValue = 0)
             {
-                MAVLinkParam param = MainV2.comPort.MAV.param[paramName];
+                MAVLinkParam param = MainV2.comPort.MAV?.param?[paramName];
                 if (param == null)
                 {
                     return defaultValue;
@@ -345,7 +345,7 @@ namespace MissionPlanner.GCSViews
                 for (int i = 1; i < motorDict.Count + 1; i++)
                 {
                     string param = $"SERVO{i}_FUNCTION";
-                    MAVLinkParam func = MainV2.comPort.MAV.param[param];
+                    MAVLinkParam func = MainV2.comPort.MAV?.param?[param];
                     if (func is null) continue;
                     if (motorDict.ContainsKey((int)func.Value))
                     {
