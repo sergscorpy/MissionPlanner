@@ -251,6 +251,18 @@ namespace MissionPlanner.GCSViews
             public float motor2_pct;
             public float motor3_pct;
             public float motor4_pct;
+            public float motor5_pct;
+            public float motor6_pct;
+            public float motor7_pct;
+            public float motor8_pct;
+            public float motor9_pct;
+            public float motor10_pct;
+            public float motor11_pct;
+            public float motor12_pct;
+            public float motor13_pct;
+            public float motor14_pct;
+            public float motor15_pct;
+            public float motor16_pct;
             public float motor_diff;
             public bool is_balanced;
 
@@ -263,6 +275,18 @@ namespace MissionPlanner.GCSViews
                 this.motor2_pct = 0;
                 this.motor3_pct = 0;
                 this.motor4_pct = 0;
+                this.motor5_pct = 0;
+                this.motor6_pct = 0;
+                this.motor7_pct = 0;
+                this.motor8_pct = 0;
+                this.motor9_pct = 0;
+                this.motor10_pct = 0;
+                this.motor11_pct = 0;
+                this.motor12_pct = 0;
+                this.motor13_pct = 0;
+                this.motor14_pct = 0;
+                this.motor15_pct = 0;
+                this.motor16_pct = 0;
                 this.motor_diff = 1;
                 this.is_balanced = true;
                 if (do_update)
@@ -285,7 +309,7 @@ namespace MissionPlanner.GCSViews
                     for (int i = 0; i < motorall_raw.Length; i++)
                     {
                         GetType()
-                            .GetField($"motor{i + 1}_pct")
+                            .GetField($"motor{i + 1}_pct")?
                             .SetValueDirect(__makeref(this), (motorall_raw[i] - MIN_RAW_INPUT) / (DT_RAW_INPUT));
                     }
 
