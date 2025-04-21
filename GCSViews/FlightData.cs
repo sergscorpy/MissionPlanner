@@ -303,7 +303,8 @@ namespace MissionPlanner.GCSViews
                         MAX_RAW_INPUT = getMAVParam("MOT_PWM_MAX", 2000);
                         MIN_RAW_INPUT = getMAVParam("MOT_PWM_MIN", 1000);
                         DT_RAW_INPUT = MAX_RAW_INPUT - MIN_RAW_INPUT;
-                    };
+                    }
+                    ;
 
                     float[] motorall_raw = getMotorRaw();
                     for (int i = 0; i < motorall_raw.Length; i++)
@@ -345,7 +346,7 @@ namespace MissionPlanner.GCSViews
                     return (int)param.Value;
                 }
             }
-            
+
             private static float[] getMotorRaw()
             {
                 Dictionary<int, float> motorDict = new Dictionary<int, float>();
@@ -1180,7 +1181,7 @@ namespace MissionPlanner.GCSViews
             }
         }
 
-        private void BUT_ARM_Check ()
+        private void BUT_ARM_Check()
         {
             var isiTArmed = MainV2.comPort.MAV.cs.armed;
             var color = isiTArmed ? Color.Orange : Color.YellowGreen;
@@ -7433,6 +7434,7 @@ namespace MissionPlanner.GCSViews
         {
             try
             {
+                string _key = "";
                 if (!IsComPortConnected())
                 {
                     CustomMessageBox.Show("No connection to autopilot");
@@ -7440,8 +7442,18 @@ namespace MissionPlanner.GCSViews
                 }
 
                 float value = Convert.ToSingle(numericHomeYaw.Value);
+                switch (comboBoxDronModel.Text)
+                {
+                    case "Воробєй":
+                        _key = "DR_HOME_YAW";
+                        break;
 
-                KeyValuePair<string, float> param = new KeyValuePair<string, float>("DR_HOME_YAW", value);
+                    case "Вампір":
+                        _key = "DR_HOME_ANGLE";
+                        break;
+                }
+
+                KeyValuePair<string, float> param = new KeyValuePair<string, float>(_key, value);
 
                 SetParam(param);
 
@@ -7709,49 +7721,53 @@ namespace MissionPlanner.GCSViews
                     {
                         var rcin = (MAVLink.mavlink_rc_channels_t)message.data;
                         ch10in = rcin.chan10_raw;
-                        ch6in = rcin.chan6_raw;
-                        ch7in = rcin.chan7_raw;
-
-                        switch (ch10in > 1500)
+                        ch9in = rcin.chan9_raw;
+                        if (comboBoxDronModel.Text == "Воробєй")
                         {
-                            case true:
-                                IsActiveRC_Petr.BackColor = Color.OrangeRed;
-                                IsActiveRC_Petr.Text = "ВІДЧ";
-                                break;
-                            case false:
-                                IsActiveRC_Petr.BackColor = Color.LimeGreen;
-                                IsActiveRC_Petr.Text = "ЗАЧИН";
-                                break;
+                            switch (ch10in > 1500)
+                            {
+                                case true:
+                                    IsActiveRC_Petr.BackColor = Color.OrangeRed;
+                                    IsActiveRC_Petr.Text = "ВІДЧ";
+                                    break;
+                                case false:
+                                    IsActiveRC_Petr.BackColor = Color.LimeGreen;
+                                    IsActiveRC_Petr.Text = "ЗАЧИН";
+                                    break;
+                            }
                         }
-                        switch (ch6in)
+                        if (comboBoxDronModel.Text == "Вампір")
                         {
-                            case ushort n when (n >= 1000 && n < 1300):
-                                IsActRCVamp_1.BackColor = Color.OrangeRed;
-                                IsActRCVamp_1.Text = "ВІДЧ";
-                                break;
-                            case ushort n when (n >= 1300 && n < 1700):
-                                IsActRCVamp_1.BackColor = Color.Gold;
-                                IsActRCVamp_1.Text = "ЗАРЯД";
-                                break;
-                            case ushort n when (n >= 1700 && n <= 2000):
-                                IsActRCVamp_1.BackColor = Color.LimeGreen;
-                                IsActRCVamp_1.Text = "ЗАЧИН";
-                                break;
-                        }
-                        switch (ch7in)
-                        {
-                            case ushort n when (n >= 1000 && n < 1300):
-                                IsActRCVamp_2.BackColor = Color.OrangeRed;
-                                IsActRCVamp_2.Text = "ВІДЧ";
-                                break;
-                            case ushort n when (n >= 1300 && n < 1700):
-                                IsActRCVamp_2.BackColor = Color.Gold;
-                                IsActRCVamp_2.Text = "ЗАРЯД";
-                                break;
-                            case ushort n when (n >= 1700 && n <= 2000):
-                                IsActRCVamp_2.BackColor = Color.LimeGreen;
-                                IsActRCVamp_2.Text = "ЗАЧИН";
-                                break;
+                            switch (ch9in)
+                            {
+                                case ushort n when (n >= 1000 && n < 1300):
+                                    IsActRCVamp_1.BackColor = Color.OrangeRed;
+                                    IsActRCVamp_1.Text = "ВІДЧ";
+                                    break;
+                                case ushort n when (n >= 1300 && n < 1700):
+                                    IsActRCVamp_1.BackColor = Color.Gold;
+                                    IsActRCVamp_1.Text = "ЗАРЯД";
+                                    break;
+                                case ushort n when (n >= 1700 && n <= 2000):
+                                    IsActRCVamp_1.BackColor = Color.LimeGreen;
+                                    IsActRCVamp_1.Text = "ЗАЧИН";
+                                    break;
+                            }
+                            switch (ch10in)
+                            {
+                                case ushort n when (n >= 1000 && n < 1300):
+                                    IsActRCVamp_2.BackColor = Color.OrangeRed;
+                                    IsActRCVamp_2.Text = "ВІДЧ";
+                                    break;
+                                case ushort n when (n >= 1300 && n < 1700):
+                                    IsActRCVamp_2.BackColor = Color.Gold;
+                                    IsActRCVamp_2.Text = "ЗАРЯД";
+                                    break;
+                                case ushort n when (n >= 1700 && n <= 2000):
+                                    IsActRCVamp_2.BackColor = Color.LimeGreen;
+                                    IsActRCVamp_2.Text = "ЗАЧИН";
+                                    break;
+                            }
                         }
                         break;
                     }
@@ -7769,6 +7785,10 @@ namespace MissionPlanner.GCSViews
                 {
                     this.tableLayoutPanelCopter.Controls.Add(BUT_thrustImbalance, 0, 7);
                 }
+                if (!this.tableLayoutPanelCopter.Controls.Contains(butGnGPS))
+                {
+                    this.tableLayoutPanelCopter.Controls.Add(this.butGnGPS, 2, 5);
+                }
             }
             else
             {
@@ -7779,6 +7799,10 @@ namespace MissionPlanner.GCSViews
                 if (this.tableLayoutPanelCopter.Controls.Contains(BUT_thrustImbalance))
                 {
                     this.tableLayoutPanelCopter.Controls.Remove(BUT_thrustImbalance);
+                }
+                if (this.tableLayoutPanelCopter.Controls.Contains(butGnGPS))
+                {
+                    this.tableLayoutPanelCopter.Controls.Remove(butGnGPS);
                 }
             }
             if ((comboBoxDronModel.Text == "Вампір") && (chBox_X9.Checked))
@@ -7816,7 +7840,16 @@ namespace MissionPlanner.GCSViews
             //CheckBoxUpdate(IsActRCVamp_1);
             //CheckBoxUpdate(IsActRCVamp_2);
             LabelUpdate(labelCurrRtlAlt, "RTL_ALT");
-            LabelUpdate(labelCurrHYaw, "DR_HOME_YAW");
+            switch (comboBoxDronModel.Text)
+            {
+                case "Воробєй":
+                    LabelUpdate(labelCurrHYaw, "DR_HOME_YAW");
+                    break;
+
+                case "Вампір":
+                    LabelUpdate(labelCurrHYaw, "DR_HOME_ANGLE");
+                    break;
+            }
             UpdateButtonModState();
             BUT_ARM_Check();
             BUT_thrustImbalance_Check();

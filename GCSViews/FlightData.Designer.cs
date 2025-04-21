@@ -4395,8 +4395,7 @@ namespace MissionPlanner.GCSViews
         private Button IsActiveRC_Petr;
         private Button IsActRCVamp_1;
         private Button IsActRCVamp_2;
-        private ushort ch7in;
-        private ushort ch6in;
+        private ushort ch9in;
         private ushort ch10in;
 
         private string GPS1 = "1";
