@@ -7464,26 +7464,6 @@ namespace MissionPlanner.GCSViews
             }
         }
 
-        private void CurrentHomeYaw_Click(object sender, EventArgs e)
-        {
-            try
-            {
-
-                if (!IsComPortConnected())
-                {
-                    CustomMessageBox.Show("No connection to autopilot");
-                    return;
-                }
-
-                var value = Convert.ToString((float)MainV2.comPort.MAV.param["DR_HOME_YAW"]);
-
-                CustomMessageBox.Show(value);
-            }
-            catch //(Exception ex)
-            {
-                //CustomMessageBox.Show(ex.Message, "ERROR");
-            }
-        }
         private void butGPS1on_Click(object sender, EventArgs e)
         {
             Button butGPS = (Button)sender;

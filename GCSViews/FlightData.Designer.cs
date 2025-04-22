@@ -3930,13 +3930,14 @@ namespace MissionPlanner.GCSViews
             this.BUT_thrustImbalance.Name = "BUT_thrustImbalance";
             this.BUT_thrustImbalance.Text = "Thrst Imb";
             this.BUT_thrustImbalance.Font = fontBut;
+            this.BUT_thrustImbalance.ForeColor = Color.Black;
             this.BUT_thrustImbalance.Dock = System.Windows.Forms.DockStyle.Fill;
             this.BUT_thrustImbalance.Enabled = true;
             this.BUT_thrustImbalance.UseVisualStyleBackColor = false;
             this.BUT_thrustImbalance.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.BUT_thrustImbalance.FlatAppearance.BorderSize = 1;
             this.BUT_thrustImbalance.FlatAppearance.BorderColor = colorDis;
-            this.BUT_thrustImbalance.BackColor = colorDis;
+            this.BUT_thrustImbalance.BackColor = colorOn;
             this.tableLayoutPanelCopter.Controls.Add(this.BUT_thrustImbalance, 0, 7);
             this.BUT_thrustImbalance.Click += new System.EventHandler(this.BUT_thrustImbalance_Click);
 
@@ -3978,14 +3979,14 @@ namespace MissionPlanner.GCSViews
             this.butGnGPS.Name = "butGnGPS";
             this.butGnGPS.Text = "GNoGPS";
             this.butGnGPS.Font = fontBut;
+            this.butGnGPS.ForeColor = Color.Black;
             this.butGnGPS.Dock = System.Windows.Forms.DockStyle.Fill;
             this.butGnGPS.Enabled = true;
             this.butGnGPS.UseVisualStyleBackColor = false;
             this.butGnGPS.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.butGnGPS.FlatAppearance.BorderSize = 1;
             this.butGnGPS.FlatAppearance.BorderColor = colorDis;
-            this.butGnGPS.BackColor = colorDis;
-            this.tableLayoutPanelCopter.Controls.Add(this.butGnGPS, 2, 5);
+            this.butGnGPS.BackColor = colorOn;
             this.butGnGPS.Click += new System.EventHandler(this.BUT_GnGPS_Click);
             
             /*
