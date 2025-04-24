@@ -1747,6 +1747,73 @@ namespace MissionPlanner.GCSViews
 
             ((Control)sender).Enabled = true;
         }
+        private async void butUnaReboot_Click(object sender, EventArgs e)
+        {
+            int servoChannel = 15;
+            int pwmMax = 2000;
+            int pwmMin = 1000;
+
+            try
+            {
+                bool resultSet = MainV2.comPort.doCommand(
+                    (byte)MainV2.comPort.sysidcurrent,
+                    (byte)MainV2.comPort.compidcurrent,
+                    MAVLink.MAV_CMD.DO_SET_SERVO,
+                    servoChannel,
+                    pwmMax,
+                    0, 0, 0, 0, 0
+                );
+
+                if (resultSet)
+                {
+                    butUnaReboot.BackColor = Color.Gold;
+
+                    await Task.Delay(1000);
+
+                    bool resultReset = MainV2.comPort.doCommand(
+                        (byte)MainV2.comPort.sysidcurrent,
+                        (byte)MainV2.comPort.compidcurrent,
+                        MAVLink.MAV_CMD.DO_SET_SERVO,
+                        servoChannel,
+                        pwmMin,
+                        0, 0, 0, 0, 0
+                    );
+
+                    if (resultReset)
+                    {
+                        butUnaReboot.BackColor = colorOn;
+                    }
+                    else
+                    {
+                        butUnaReboot.BackColor = Color.OrangeRed;
+                    }
+                }
+                else
+                {
+                    butUnaReboot.BackColor = Color.OrangeRed;
+                }
+            }
+            catch (Exception ex)
+            {
+                CustomMessageBox.Show("Виняток: " + ex.Message, "Помилка");
+            }
+        }
+
+        private void butToggleSwitch_Click(object sender, EventArgs e)
+        {
+            if (CustomMessageBox.Show("Are you sure?", "", MessageBoxButtons.YesNo) == (int)DialogResult.Yes)
+            {
+                var target_system = (byte)MainV2.comPort.sysidcurrent;
+                if (target_system == 0)
+                {
+                    log.Info("Not toggling safety on sysid 0");
+                    return;
+                }
+                var custom_mode = (MainV2.comPort.MAV.cs.sensors_enabled.motor_control && MainV2.comPort.MAV.cs.sensors_enabled.seen) ? 1u : 0u;
+                var mode = new MAVLink.mavlink_set_mode_t() { custom_mode = custom_mode, target_system = target_system };
+                MainV2.comPort.setMode(mode, MAVLink.MAV_MODE_FLAG.SAFETY_ARMED);
+            }
+        }
 
         private void BUT_RAWSensor_Click(object sender, EventArgs e)
         {
@@ -7574,7 +7641,7 @@ namespace MissionPlanner.GCSViews
                 ButtomUpdateGPS(butGPS, GPS1);
             }
         }
-
+        
         private void ButtomUpdateGPS(Button butGPS, string key)
         {
             try
@@ -7616,6 +7683,72 @@ namespace MissionPlanner.GCSViews
             }
 
         }
+
+        private void butFS_Options_Click(object sender, EventArgs e)
+        {
+            Button but = (Button)sender;
+
+            if ((MainV2.comPort.MAV.param.ContainsKey("FS_OPTIONS")) && (MainV2.comPort.MAV.param.ContainsKey("FS_THR_ENABLE")))
+            {
+                if (but.BackColor == colorOn)
+                {
+                    SetParam("FS_OPTIONS", 1);
+                    SetParam("FS_THR_ENABLE", 2);
+                }
+                else
+                {
+                    SetParam("FS_OPTIONS", 16);
+                    SetParam("FS_THR_ENABLE", 1);
+                }
+
+                ButtomUpdate_FS(but);
+            }
+        }
+
+        private void ButtomUpdate_FS(Button but)
+        {
+            try
+            {
+                int valueFS_OPTIONS = (int)MainV2.comPort.MAV.param["FS_OPTIONS"];
+                int valueFS_THR_ENABLE = (int)MainV2.comPort.MAV.param["FS_THR_ENABLE"];
+                bool isDefault = (valueFS_OPTIONS == 16) && (valueFS_THR_ENABLE == 1);
+
+                switch (isDefault)
+                {
+                    case true:
+                        but.BackColor = colorOn;
+                        break;
+                    case false:
+                        but.BackColor = Color.Gold;
+                        break;
+                }
+            }
+            catch //(Exception ex)
+            {
+                //CustomMessageBox.Show(ex.Message, "ERROR");
+            }
+        }
+
+        private void butMissionStart_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (!MainV2.comPort.doCommand(MAVLink.MAV_CMD.MISSION_START, 0, 0, 0, 0, 0, 0, 0))
+                {
+                    CustomMessageBox.Show("Старт місії не виконано", Strings.ERROR);
+                }
+                else
+                {
+                    CustomMessageBox.Show("Старт місії!", "INFO");
+                }
+            }
+            catch (Exception ex)
+            {
+                CustomMessageBox.Show("Помилка, команда не надіслана!" + ex.Message, Strings.ERROR);
+            }
+        }
+
+
         private void LabelUpdate(System.Windows.Forms.Label label, string key)
         {
             try
@@ -7769,6 +7902,22 @@ namespace MissionPlanner.GCSViews
                 {
                     this.tableLayoutPanelCopter.Controls.Add(this.butGnGPS, 2, 5);
                 }
+                if (this.tableLayoutPanelCopter.Controls.Contains(butUnaReboot))
+                {
+                    this.tableLayoutPanelCopter.Controls.Remove(butUnaReboot);
+                }
+                if (this.tableLayoutPanelCopter.Controls.Contains(butToggleSwitch))
+                {
+                    this.tableLayoutPanelCopter.Controls.Remove(butToggleSwitch);
+                }
+                if (this.tableLayoutPanelCopter.Controls.Contains(butFS_Options))
+                {
+                    this.tableLayoutPanelCopter.Controls.Remove(butFS_Options);
+                }
+                if (this.tableLayoutPanelCopter.Controls.Contains(butMissionStart))
+                {
+                    this.tableLayoutPanelCopter.Controls.Remove(butMissionStart);
+                }
             }
             else
             {
@@ -7784,7 +7933,24 @@ namespace MissionPlanner.GCSViews
                 {
                     this.tableLayoutPanelCopter.Controls.Remove(butGnGPS);
                 }
+                if (!this.tableLayoutPanelCopter.Controls.Contains(butUnaReboot))
+                {
+                    this.tableLayoutPanelCopter.Controls.Add(this.butUnaReboot, 2, 6);
+                }
+                if (!this.tableLayoutPanelCopter.Controls.Contains(butToggleSwitch))
+                {
+                    this.tableLayoutPanelCopter.Controls.Add(this.butToggleSwitch, 2, 5);
+                }
+                if (!this.tableLayoutPanelCopter.Controls.Contains(butFS_Options))
+                {
+                    this.tableLayoutPanelCopter.Controls.Add(this.butFS_Options, 0, 7);
+                }
+                if (!this.tableLayoutPanelCopter.Controls.Contains(butMissionStart))
+                {
+                    this.tableLayoutPanelCopter.Controls.Add(this.butMissionStart, 3, 7);
+                }
             }
+
             if ((comboBoxDronModel.Text == "Вампір") && (chBox_X9.Checked))
             {
                 if (!this.tableLayoutPanelCopter.Controls.Contains(IsActRCVamp_1))
@@ -7833,6 +7999,7 @@ namespace MissionPlanner.GCSViews
             UpdateButtonModState();
             BUT_ARM_Check();
             BUT_thrustImbalance_Check();
+            ButtomUpdate_FS(butFS_Options);
         }
 
         private void Copter_UI_Init()
@@ -7850,6 +8017,7 @@ namespace MissionPlanner.GCSViews
             UpdateCheckBoxIsActiveRC();
 
             BUT_ARM_Check();
+            ButtomUpdate_FS(butFS_Options);
         }
     }
 }

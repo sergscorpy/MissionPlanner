@@ -2990,6 +2990,10 @@ namespace MissionPlanner.GCSViews
             this.butRTL = new Button();
             this.butGnGPS = new Button();
             this.butAltHold = new Button();
+            this.butUnaReboot = new Button();
+            this.butMissionStart = new Button();
+            this.butFS_Options = new Button();
+            this.butToggleSwitch = new Button();
             this.IsActiveRC_Petr = new Button();
             this.IsActRCVamp_1 = new Button();
             this.IsActRCVamp_2 = new Button();
@@ -3671,12 +3675,12 @@ namespace MissionPlanner.GCSViews
                 else if (row.Cells[0].Value.ToString() == "Loit Speed")
                 {
                     minValue = 20;
-                    maxValue = 3500;
+                    maxValue = 50000;
                 }
                 else if (row.Cells[0].Value.ToString() == "Mission Speed")
                 {
                     minValue = 10;
-                    maxValue = 2000;
+                    maxValue = 50000;
                 }
                 else
                 {
@@ -4004,6 +4008,74 @@ namespace MissionPlanner.GCSViews
             this.butAltHold.BackColor = colorDis;
             this.butAltHold.Click += new System.EventHandler(this.butAltHold_Click);
             this.tableLayoutPanelCopter.Controls.Add(this.butAltHold, 3, 5);
+            
+            /*
+             * Button UNA Reboot
+             */
+            this.butUnaReboot.Font = fontBut;
+            this.butUnaReboot.Name = "butUnaReboot";
+            this.butUnaReboot.Text = "UNA";
+            this.butUnaReboot.ForeColor = Color.Black;
+            this.butUnaReboot.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.butUnaReboot.Enabled = true;
+            this.butUnaReboot.UseVisualStyleBackColor = false;
+            this.butUnaReboot.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.butUnaReboot.FlatAppearance.BorderSize = 1;
+            this.butUnaReboot.FlatAppearance.BorderColor = colorDis;
+            this.butUnaReboot.BackColor = colorOn;
+            this.butUnaReboot.Click += new System.EventHandler(this.butUnaReboot_Click);
+            this.tableLayoutPanelCopter.Controls.Add(this.butUnaReboot, 2, 6);
+
+            /*
+             * Button Toggle Switch
+             */
+            this.butToggleSwitch.Font = fontBut;
+            this.butToggleSwitch.Name = "butToggleSwitch";
+            this.butToggleSwitch.Text = "Sf_Switch";
+            this.butToggleSwitch.ForeColor = Color.Black;
+            this.butToggleSwitch.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.butToggleSwitch.Enabled = true;
+            this.butToggleSwitch.UseVisualStyleBackColor = false;
+            this.butToggleSwitch.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.butToggleSwitch.FlatAppearance.BorderSize = 1;
+            this.butToggleSwitch.FlatAppearance.BorderColor = colorDis;
+            this.butToggleSwitch.BackColor = colorOn;
+            this.butToggleSwitch.Click += new System.EventHandler(this.butToggleSwitch_Click);
+
+
+            /*
+             * Button FS_Options
+             */
+            this.butFS_Options.Font = fontBut;
+            this.butFS_Options.Name = "butFS_Options";
+            this.butFS_Options.Text = "FS_Opt";
+            this.butFS_Options.ForeColor = Color.Black;
+            this.butFS_Options.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.butFS_Options.Enabled = true;
+            this.butFS_Options.UseVisualStyleBackColor = false;
+            this.butFS_Options.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.butFS_Options.FlatAppearance.BorderSize = 1;
+            this.butFS_Options.FlatAppearance.BorderColor = colorDis;
+            this.butFS_Options.BackColor = colorOn;
+            this.butFS_Options.Click += new System.EventHandler(this.butFS_Options_Click);
+
+                        
+            /*
+             * Button UNA Reboot
+             */
+            this.butMissionStart.Font = fontBut;
+            this.butMissionStart.Name = "butMissionStart";
+            this.butMissionStart.Text = "Start";
+            this.butMissionStart.ForeColor = Color.Black;
+            this.butMissionStart.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.butMissionStart.Enabled = true;
+            this.butMissionStart.UseVisualStyleBackColor = false;
+            this.butMissionStart.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.butMissionStart.FlatAppearance.BorderSize = 1;
+            this.butMissionStart.FlatAppearance.BorderColor = colorDis;
+            this.butMissionStart.BackColor = colorOn;
+            this.butMissionStart.Click += new System.EventHandler(this.butMissionStart_Click);
+
             
             /*
              * IsActive RC Petr
@@ -4390,6 +4462,10 @@ namespace MissionPlanner.GCSViews
         private Button butRTL;
         private Button butGnGPS;
         private Button butAltHold;
+        private Button butUnaReboot;
+        private Button butToggleSwitch;
+        private Button butFS_Options;
+        private Button butMissionStart;
         private Button but_setmode;
         private Button BUT_thrustImbalance;
 
