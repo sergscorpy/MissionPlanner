@@ -1184,7 +1184,7 @@ namespace MissionPlanner.GCSViews
         private void BUT_ARM_Check()
         {
             var isiTArmed = MainV2.comPort.MAV.cs.armed;
-            var color = isiTArmed ? Color.Orange : Color.YellowGreen;
+            var color = isiTArmed ? Color.Sienna : Color.YellowGreen;
             this.butArmDisarm.BackColor = color;
             this.butPlaneArmDisarm.BackColor = color;
         }
@@ -7573,12 +7573,12 @@ namespace MissionPlanner.GCSViews
         {
             try
             {
-                if (butGPSAuxOnOff.BackColor != Color.Orange)
+                if (butGPSAuxOnOff.BackColor != Color.Sienna)
                 {
                     if (MainV2.comPort.doCommand((byte)MainV2.comPort.sysidcurrent, (byte)MainV2.comPort.compidcurrent,
                         MAVLink.MAV_CMD.DO_AUX_FUNCTION, 65, 2, 0, 0, 0, 0, 0))
                     {
-                        butGPSAuxOnOff.BackColor = Color.Orange;
+                        butGPSAuxOnOff.BackColor = Color.Sienna;
                     }
                     else
                     {
@@ -7711,15 +7711,15 @@ namespace MissionPlanner.GCSViews
             {
                 int valueFS_OPTIONS = (int)MainV2.comPort.MAV.param["FS_OPTIONS"];
                 int valueFS_THR_ENABLE = (int)MainV2.comPort.MAV.param["FS_THR_ENABLE"];
-                bool isDefault = (valueFS_OPTIONS == 16) && (valueFS_THR_ENABLE == 1);
+                bool isDefault = (valueFS_OPTIONS == 1) && (valueFS_THR_ENABLE == 2);
 
                 switch (isDefault)
                 {
                     case true:
-                        but.BackColor = colorOn;
+                        but.BackColor = Color.Sienna;
                         break;
                     case false:
-                        but.BackColor = Color.Gold;
+                        but.BackColor = colorOn;
                         break;
                 }
             }
@@ -7894,6 +7894,10 @@ namespace MissionPlanner.GCSViews
                 {
                     this.tableLayoutPanelCopter.Controls.Add(IsActiveRC_Petr, 1, 7);
                 }
+                if (!this.tableLayoutPanelCopter.Controls.Contains(butForceLand))
+                {
+                    this.tableLayoutPanelCopter.Controls.Add(butForceLand, 1, 6);
+                }
                 if (!this.tableLayoutPanelCopter.Controls.Contains(BUT_thrustImbalance))
                 {
                     this.tableLayoutPanelCopter.Controls.Add(BUT_thrustImbalance, 0, 7);
@@ -7925,6 +7929,10 @@ namespace MissionPlanner.GCSViews
                 {
                     this.tableLayoutPanelCopter.Controls.Remove(IsActiveRC_Petr);
                 }
+                if (this.tableLayoutPanelCopter.Controls.Contains(butForceLand))
+                {
+                    this.tableLayoutPanelCopter.Controls.Remove(butForceLand);
+                }
                 if (this.tableLayoutPanelCopter.Controls.Contains(BUT_thrustImbalance))
                 {
                     this.tableLayoutPanelCopter.Controls.Remove(BUT_thrustImbalance);
@@ -7947,7 +7955,7 @@ namespace MissionPlanner.GCSViews
                 }
                 if (!this.tableLayoutPanelCopter.Controls.Contains(butMissionStart))
                 {
-                    this.tableLayoutPanelCopter.Controls.Add(this.butMissionStart, 3, 7);
+                    this.tableLayoutPanelCopter.Controls.Add(this.butMissionStart, 1, 6);
                 }
             }
 

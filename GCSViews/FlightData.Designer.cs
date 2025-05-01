@@ -3902,6 +3902,7 @@ namespace MissionPlanner.GCSViews
             this.butForceLand.Name = "butForceLand";
             this.butForceLand.Text = "Force Land";
             this.butForceLand.Font = fontBut;
+            this.butForceLand.ForeColor = Color.Black;
             this.butForceLand.Dock = System.Windows.Forms.DockStyle.Fill;
             this.butForceLand.Enabled = true;
             this.butForceLand.UseVisualStyleBackColor = false;
@@ -3909,7 +3910,6 @@ namespace MissionPlanner.GCSViews
             this.butForceLand.FlatAppearance.BorderSize = 1;
             this.butForceLand.FlatAppearance.BorderColor = colorDis;
             this.butForceLand.BackColor = colorOn;
-            this.tableLayoutPanelCopter.Controls.Add(this.butForceLand, 1, 6);
             this.butForceLand.Click += new System.EventHandler(this.butForceLand_Click);
             
             /*
@@ -4014,7 +4014,7 @@ namespace MissionPlanner.GCSViews
              */
             this.butUnaReboot.Font = fontBut;
             this.butUnaReboot.Name = "butUnaReboot";
-            this.butUnaReboot.Text = "UNA";
+            this.butUnaReboot.Text = "UNA on/off";
             this.butUnaReboot.ForeColor = Color.Black;
             this.butUnaReboot.Dock = System.Windows.Forms.DockStyle.Fill;
             this.butUnaReboot.Enabled = true;
@@ -4065,7 +4065,7 @@ namespace MissionPlanner.GCSViews
              */
             this.butMissionStart.Font = fontBut;
             this.butMissionStart.Name = "butMissionStart";
-            this.butMissionStart.Text = "Start";
+            this.butMissionStart.Text = "Start Miss";
             this.butMissionStart.ForeColor = Color.Black;
             this.butMissionStart.Dock = System.Windows.Forms.DockStyle.Fill;
             this.butMissionStart.Enabled = true;
