@@ -52,7 +52,7 @@ namespace MissionPlanner.Controls
             this.servo1_pct.BackColor = System.Drawing.Color.Transparent;
             this.servo1_pct.Font = new System.Drawing.Font("Tahoma", 19.8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.servo1_pct.ForeColor = System.Drawing.Color.Green;
-            this.servo1_pct.Location = new System.Drawing.Point(170, 15);
+            this.servo1_pct.Location = new System.Drawing.Point(170, 150);
             this.servo1_pct.Name = "servo1_pct";
             this.servo1_pct.Size = new System.Drawing.Size(90, 40);
             this.servo1_pct.TabIndex = 2;
@@ -64,7 +64,7 @@ namespace MissionPlanner.Controls
             this.servo1_lbl.BackColor = System.Drawing.Color.Transparent;
             this.servo1_lbl.Font = new System.Drawing.Font("Tahoma", 17F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.servo1_lbl.ForeColor = System.Drawing.Color.White;
-            this.servo1_lbl.Location = new System.Drawing.Point(187, 49);
+            this.servo1_lbl.Location = new System.Drawing.Point(187, 117);
             this.servo1_lbl.Name = "servo1_lbl";
             this.servo1_lbl.Size = new System.Drawing.Size(30, 40);
             this.servo1_lbl.Text = "1";
@@ -76,8 +76,8 @@ namespace MissionPlanner.Controls
             this.servo2_pct.BackColor = System.Drawing.Color.Transparent;
             this.servo2_pct.Font = new System.Drawing.Font("Tahoma", 19.8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.servo2_pct.ForeColor = System.Drawing.Color.Green;
-            this.servo2_pct.Location = new System.Drawing.Point(170, 150);
-            this.servo2_pct.Name = "servo2_lbl";
+            this.servo2_pct.Location = new System.Drawing.Point(170, 15);
+            this.servo2_pct.Name = "servo2_pct";
             this.servo2_pct.Size = new System.Drawing.Size(90, 40);
             this.servo2_pct.TabIndex = 3;
             this.servo2_pct.Text = "0%";
@@ -88,7 +88,7 @@ namespace MissionPlanner.Controls
             this.servo2_lbl.BackColor = System.Drawing.Color.Transparent;
             this.servo2_lbl.Font = new System.Drawing.Font("Tahoma", 17F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.servo2_lbl.ForeColor = System.Drawing.Color.White;
-            this.servo2_lbl.Location = new System.Drawing.Point(187, 117);
+            this.servo2_lbl.Location = new System.Drawing.Point(187, 49);
             this.servo2_lbl.Name = "servo2_lbl";
             this.servo2_lbl.Size = new System.Drawing.Size(30, 40);
             this.servo2_lbl.Text = "2";
@@ -101,7 +101,7 @@ namespace MissionPlanner.Controls
             this.servo3_pct.Font = new System.Drawing.Font("Tahoma", 19.8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.servo3_pct.ForeColor = System.Drawing.Color.Green;
             this.servo3_pct.Location = new System.Drawing.Point(15, 150);
-            this.servo3_pct.Name = "servo3_lbl";
+            this.servo3_pct.Name = "servo3_pct";
             this.servo3_pct.Size = new System.Drawing.Size(90, 40);
             this.servo3_pct.TabIndex = 5;
             this.servo3_pct.Text = "0%";
@@ -125,7 +125,7 @@ namespace MissionPlanner.Controls
             this.servo4_pct.Font = new System.Drawing.Font("Tahoma", 19.8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.servo4_pct.ForeColor = System.Drawing.Color.Green;
             this.servo4_pct.Location = new System.Drawing.Point(15, 15);
-            this.servo4_pct.Name = "servo4_lbl";
+            this.servo4_pct.Name = "servo4_pct";
             this.servo4_pct.Size = new System.Drawing.Size(90, 40);
             this.servo4_pct.TabIndex = 4;
             this.servo4_pct.Text = "0%";
