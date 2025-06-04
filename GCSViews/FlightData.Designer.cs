@@ -592,7 +592,7 @@ namespace MissionPlanner.GCSViews
             this.tabControlactions.ContextMenuStrip = this.contextMenuStripactionstab;
             this.tabControlactions.Controls.Add(this.tabQuick);
             this.tabControlactions.Controls.Add(this.tabCopter);
-            this.tabControlactions.Controls.Add(this.tabPlane);
+            //this.tabControlactions.Controls.Add(this.tabPlane);
             this.tabControlactions.Controls.Add(this.tabActions);
             this.tabControlactions.Controls.Add(this.tabPagemessages);
             this.tabControlactions.Controls.Add(this.tabActionsSimple);
@@ -3561,6 +3561,7 @@ namespace MissionPlanner.GCSViews
             /*
              * Combo Box Drone Model
              */
+            this.tableLayoutPanelCopter.SetColumnSpan(this.comboBoxDronModel, 2);
             this.tableLayoutPanelCopter.Controls.Add(this.comboBoxDronModel, 2, 0);
             this.comboBoxDronModel.DataSource = _comboItems;
             this.comboBoxDronModel.DisplayMember = "Key";
@@ -3572,45 +3573,46 @@ namespace MissionPlanner.GCSViews
             this.comboBoxDronModel.Font = fontNuveric;
             this.comboBoxDronModel.Margin = new System.Windows.Forms.Padding(3);
             this.comboBoxDronModel.SelectedIndexChanged += comboBoxDronModel_SelectedIndexChanged;
-            
-            /*
-             * Checkbox ExpMod
-             */
-            this.tableLayoutPanelCopter.Controls.Add(this.chBox_ExpMod, 0, 0);
-            this.chBox_ExpMod.Appearance = System.Windows.Forms.Appearance.Button;
-            this.chBox_ExpMod.CheckAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.chBox_ExpMod.Margin = new System.Windows.Forms.Padding(10,2,10,2);
-            this.chBox_ExpMod.AutoSize = true;
-            this.chBox_ExpMod.Checked = false;
-            this.chBox_ExpMod.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.chBox_ExpMod.Name = "chBox_ExpMod";
-            this.chBox_ExpMod.Text = "Exp Mod";
-            this.chBox_ExpMod.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F);
-            this.chBox_ExpMod.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this.chBox_ExpMod.UseVisualStyleBackColor = true;
-            this.chBox_ExpMod.CheckedChanged += new System.EventHandler(this.chBox_ExpMod_CheckedChanged);
-            
-            /*
-             * Checkbox X9
-             */
-            this.tableLayoutPanelCopter.Controls.Add(this.chBox_X9, 3, 0);
-            this.chBox_X9.Appearance = System.Windows.Forms.Appearance.Button;
-            this.chBox_X9.CheckAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.chBox_X9.Margin = new System.Windows.Forms.Padding(10,2,10,2);
-            this.chBox_X9.AutoSize = true;
-            this.chBox_X9.Checked = false;
-            this.chBox_X9.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.chBox_X9.Name = "chBox_X9";
-            this.chBox_X9.Text = "X9";
-            this.chBox_X9.Font = fontBut;
-            this.chBox_X9.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this.chBox_X9.UseVisualStyleBackColor = true;
-            this.chBox_X9.CheckedChanged += new System.EventHandler(this.chBox_X9_CheckedChanged);
-            
+
+            ///*
+            // * Checkbox ExpMod
+            // */
+            //this.tableLayoutPanelCopter.Controls.Add(this.chBox_ExpMod, 0, 0);
+            //this.chBox_ExpMod.Appearance = System.Windows.Forms.Appearance.Button;
+            //this.chBox_ExpMod.CheckAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            //this.chBox_ExpMod.Margin = new System.Windows.Forms.Padding(10, 2, 10, 2);
+            //this.chBox_ExpMod.AutoSize = true;
+            //this.chBox_ExpMod.Checked = false;
+            //this.chBox_ExpMod.Dock = System.Windows.Forms.DockStyle.Fill;
+            //this.chBox_ExpMod.Name = "chBox_ExpMod";
+            //this.chBox_ExpMod.Text = "Exp Mod";
+            //this.chBox_ExpMod.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F);
+            //this.chBox_ExpMod.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            //this.chBox_ExpMod.UseVisualStyleBackColor = true;
+            //this.chBox_ExpMod.CheckedChanged += new System.EventHandler(this.chBox_ExpMod_CheckedChanged);
+
+            ///*
+            // * Checkbox X9
+            // */
+            //this.tableLayoutPanelCopter.Controls.Add(this.chBox_X9, 3, 0);
+            //this.chBox_X9.Appearance = System.Windows.Forms.Appearance.Button;
+            //this.chBox_X9.CheckAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            //this.chBox_X9.Margin = new System.Windows.Forms.Padding(10,2,10,2);
+            //this.chBox_X9.AutoSize = true;
+            //this.chBox_X9.Checked = false;
+            //this.chBox_X9.Dock = System.Windows.Forms.DockStyle.Fill;
+            //this.chBox_X9.Name = "chBox_X9";
+            //this.chBox_X9.Text = "X9";
+            //this.chBox_X9.Font = fontBut;
+            //this.chBox_X9.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            //this.chBox_X9.UseVisualStyleBackColor = true;
+            //this.chBox_X9.CheckedChanged += new System.EventHandler(this.chBox_X9_CheckedChanged);
+
             /*
              * Label Drone Model
              */
-            this.tableLayoutPanelCopter.Controls.Add(this.labelDroneModel, 1, 0);
+            this.tableLayoutPanelCopter.SetColumnSpan(this.labelDroneModel, 2);
+            this.tableLayoutPanelCopter.Controls.Add(this.labelDroneModel, 0, 0);
             this.labelDroneModel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.labelDroneModel.Font = fontLabel;
             this.labelDroneModel.Location = new System.Drawing.Point(0, 0);
@@ -3702,461 +3704,461 @@ namespace MissionPlanner.GCSViews
             this.dataGridView.RowTemplate.Height = 35;
             this.dataGridView.EditingControlShowing += DataGridView_EditingControlShowing;
             
-            /*
-             * Combobox FlyModes CMB_modes
-             */
-            this.comBoBox_FlyModes.DropDownWidth = 150;
-            this.comBoBox_FlyModes.Name = "comBoBox_FlyModes";
-            this.comBoBox_FlyModes.DisplayMember = "Key";
-            this.comBoBox_FlyModes.ValueMember = "Value";
-            this.comBoBox_FlyModes.DropDownStyle = ComboBoxStyle.DropDownList;
-            this.comBoBox_FlyModes.FormattingEnabled = true;
-            this.comBoBox_FlyModes.Dock = DockStyle.Fill;
-            this.comBoBox_FlyModes.Font = fontNuveric;
-            this.comBoBox_FlyModes.Margin = new System.Windows.Forms.Padding(3);
-            this.comBoBox_FlyModes.Click += new System.EventHandler(this.comBoBox_FlyModes_Click);
+            ///*
+            // * Combobox FlyModes CMB_modes
+            // */
+            //this.comBoBox_FlyModes.DropDownWidth = 150;
+            //this.comBoBox_FlyModes.Name = "comBoBox_FlyModes";
+            //this.comBoBox_FlyModes.DisplayMember = "Key";
+            //this.comBoBox_FlyModes.ValueMember = "Value";
+            //this.comBoBox_FlyModes.DropDownStyle = ComboBoxStyle.DropDownList;
+            //this.comBoBox_FlyModes.FormattingEnabled = true;
+            //this.comBoBox_FlyModes.Dock = DockStyle.Fill;
+            //this.comBoBox_FlyModes.Font = fontNuveric;
+            //this.comBoBox_FlyModes.Margin = new System.Windows.Forms.Padding(3);
+            //this.comBoBox_FlyModes.Click += new System.EventHandler(this.comBoBox_FlyModes_Click);
             
-            /*
-             * Button Set Mode
-             */
-            this.but_setmode.Text = "Set Mode";
-            this.but_setmode.Font = fontBut;
-            this.but_setmode.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.but_setmode.Enabled = true;
-            this.but_setmode.UseVisualStyleBackColor = false;
-            this.but_setmode.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.but_setmode.FlatAppearance.BorderSize = 1;
-            this.but_setmode.FlatAppearance.BorderColor = colorDis;
-            this.but_setmode.BackColor = colorDis;
-            this.but_setmode.Name = "but_setmode";
-            this.but_setmode.Click += new System.EventHandler(this.but_setmode_Click);
+            ///*
+            // * Button Set Mode
+            // */
+            //this.but_setmode.Text = "Set Mode";
+            //this.but_setmode.Font = fontBut;
+            //this.but_setmode.Dock = System.Windows.Forms.DockStyle.Fill;
+            //this.but_setmode.Enabled = true;
+            //this.but_setmode.UseVisualStyleBackColor = false;
+            //this.but_setmode.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            //this.but_setmode.FlatAppearance.BorderSize = 1;
+            //this.but_setmode.FlatAppearance.BorderColor = colorDis;
+            //this.but_setmode.BackColor = colorDis;
+            //this.but_setmode.Name = "but_setmode";
+            //this.but_setmode.Click += new System.EventHandler(this.but_setmode_Click);
             
-            /*
-             * Label Home Yaw
-             */
-            this.labelHomeYaw.Name = "labelHomeYaw";
-            this.labelHomeYaw.Text = "Home Y";
-            this.labelHomeYaw.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.labelHomeYaw.Font = fontLabel;
-            this.labelHomeYaw.Margin = new System.Windows.Forms.Padding(0);
-            this.labelHomeYaw.TextAlign = ContentAlignment.MiddleCenter;
-            this.tableLayoutPanelCopter.Controls.Add(this.labelHomeYaw, 0, 3);
+            ///*
+            // * Label Home Yaw
+            // */
+            //this.labelHomeYaw.Name = "labelHomeYaw";
+            //this.labelHomeYaw.Text = "Home Y";
+            //this.labelHomeYaw.Dock = System.Windows.Forms.DockStyle.Fill;
+            //this.labelHomeYaw.Font = fontLabel;
+            //this.labelHomeYaw.Margin = new System.Windows.Forms.Padding(0);
+            //this.labelHomeYaw.TextAlign = ContentAlignment.MiddleCenter;
+            //this.tableLayoutPanelCopter.Controls.Add(this.labelHomeYaw, 0, 3);
             
-            /*
-             * Numeric Home Yaw
-             */
-            this.numericHomeYaw.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.numericHomeYaw.Enabled = true;
-            this.numericHomeYaw.BackColor = colorDis;
-            this.numericHomeYaw.Minimum = 0;
-            this.numericHomeYaw.Maximum = 359;
-            this.numericHomeYaw.Font = fontNuveric;
-            this.numericHomeYaw.Margin = new System.Windows.Forms.Padding(3);
-            this.tableLayoutPanelCopter.Controls.Add(this.numericHomeYaw, 2, 3);
+            ///*
+            // * Numeric Home Yaw
+            // */
+            //this.numericHomeYaw.Dock = System.Windows.Forms.DockStyle.Fill;
+            //this.numericHomeYaw.Enabled = true;
+            //this.numericHomeYaw.BackColor = colorDis;
+            //this.numericHomeYaw.Minimum = 0;
+            //this.numericHomeYaw.Maximum = 359;
+            //this.numericHomeYaw.Font = fontNuveric;
+            //this.numericHomeYaw.Margin = new System.Windows.Forms.Padding(3);
+            //this.tableLayoutPanelCopter.Controls.Add(this.numericHomeYaw, 2, 3);
             
-            /*
-             * Set Home Yaw Button
-             */
-            this.setHomeYawButton.Name = "setHomeYawButton";
-            this.setHomeYawButton.Text = "Home Yaw";
-            this.setHomeYawButton.Font = fontBut;
-            this.setHomeYawButton.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.setHomeYawButton.Enabled = true;
-            this.setHomeYawButton.UseVisualStyleBackColor = false;
-            this.setHomeYawButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.setHomeYawButton.FlatAppearance.BorderSize = 1;
-            this.setHomeYawButton.FlatAppearance.BorderColor = colorDis;
-            this.setHomeYawButton.BackColor = colorDis;
-            this.tableLayoutPanelCopter.Controls.Add(this.setHomeYawButton, 3, 3);
-            this.setHomeYawButton.Click += new System.EventHandler(this.HomeYaw_Click);
+            ///*
+            // * Set Home Yaw Button
+            // */
+            //this.setHomeYawButton.Name = "setHomeYawButton";
+            //this.setHomeYawButton.Text = "Home Yaw";
+            //this.setHomeYawButton.Font = fontBut;
+            //this.setHomeYawButton.Dock = System.Windows.Forms.DockStyle.Fill;
+            //this.setHomeYawButton.Enabled = true;
+            //this.setHomeYawButton.UseVisualStyleBackColor = false;
+            //this.setHomeYawButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            //this.setHomeYawButton.FlatAppearance.BorderSize = 1;
+            //this.setHomeYawButton.FlatAppearance.BorderColor = colorDis;
+            //this.setHomeYawButton.BackColor = colorDis;
+            //this.tableLayoutPanelCopter.Controls.Add(this.setHomeYawButton, 3, 3);
+            //this.setHomeYawButton.Click += new System.EventHandler(this.HomeYaw_Click);
             
-            /*
-             * Label Current Home Yaw
-             */
-            this.tableLayoutPanelCopter.Controls.Add(this.labelCurrHYaw, 1, 3);
-            this.labelCurrHYaw.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.labelCurrHYaw.Font = fontLabel;
-            this.labelCurrHYaw.Location = new System.Drawing.Point(0, 45);
-            this.labelCurrHYaw.Margin = new System.Windows.Forms.Padding(0);
-            this.labelCurrHYaw.Name = "labelCurrHYaw";
-            this.labelCurrHYaw.Size = new System.Drawing.Size(127, 45);
-            this.labelCurrHYaw.Text = "_____";
-            this.labelCurrHYaw.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            ///*
+            // * Label Current Home Yaw
+            // */
+            //this.tableLayoutPanelCopter.Controls.Add(this.labelCurrHYaw, 1, 3);
+            //this.labelCurrHYaw.Dock = System.Windows.Forms.DockStyle.Fill;
+            //this.labelCurrHYaw.Font = fontLabel;
+            //this.labelCurrHYaw.Location = new System.Drawing.Point(0, 45);
+            //this.labelCurrHYaw.Margin = new System.Windows.Forms.Padding(0);
+            //this.labelCurrHYaw.Name = "labelCurrHYaw";
+            //this.labelCurrHYaw.Size = new System.Drawing.Size(127, 45);
+            //this.labelCurrHYaw.Text = "_____";
+            //this.labelCurrHYaw.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             
-            /*
-             * Button Set Rtl Alt
-             */
-            this.butSetRtlAlt.Name = "butSetRtlAlt";
-            this.butSetRtlAlt.Text = "Rtl Alt";
-            this.butSetRtlAlt.Font = fontBut;
-            this.butSetRtlAlt.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.butSetRtlAlt.Enabled = true;
-            this.butSetRtlAlt.UseVisualStyleBackColor = false;
-            this.butSetRtlAlt.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.butSetRtlAlt.FlatAppearance.BorderSize = 1;
-            this.butSetRtlAlt.FlatAppearance.BorderColor = colorDis;
-            this.butSetRtlAlt.BackColor = colorDis;
-            this.tableLayoutPanelCopter.Controls.Add(this.butSetRtlAlt, 3, 4);
-            this.butSetRtlAlt.Click += new EventHandler(RtlAltClick);
+            ///*
+            // * Button Set Rtl Alt
+            // */
+            //this.butSetRtlAlt.Name = "butSetRtlAlt";
+            //this.butSetRtlAlt.Text = "Rtl Alt";
+            //this.butSetRtlAlt.Font = fontBut;
+            //this.butSetRtlAlt.Dock = System.Windows.Forms.DockStyle.Fill;
+            //this.butSetRtlAlt.Enabled = true;
+            //this.butSetRtlAlt.UseVisualStyleBackColor = false;
+            //this.butSetRtlAlt.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            //this.butSetRtlAlt.FlatAppearance.BorderSize = 1;
+            //this.butSetRtlAlt.FlatAppearance.BorderColor = colorDis;
+            //this.butSetRtlAlt.BackColor = colorDis;
+            //this.tableLayoutPanelCopter.Controls.Add(this.butSetRtlAlt, 3, 4);
+            //this.butSetRtlAlt.Click += new EventHandler(RtlAltClick);
             
-            /*
-             * Label Rtl Alt
-             */
-            this.tableLayoutPanelCopter.Controls.Add(this.labelRtlAlt, 0, 4);
-            this.labelRtlAlt.AutoSize = true;
-            this.labelRtlAlt.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.labelRtlAlt.Font = fontLabel;
-            this.labelRtlAlt.Location = new System.Drawing.Point(0, 45);
-            this.labelRtlAlt.Margin = new System.Windows.Forms.Padding(0);
-            this.labelRtlAlt.Name = "labelRtlAlt";
-            this.labelRtlAlt.Size = new System.Drawing.Size(127, 45);
-            this.labelRtlAlt.TabIndex = 13;
-            this.labelRtlAlt.Text = "Rtl Alt :";
-            this.labelRtlAlt.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            ///*
+            // * Label Rtl Alt
+            // */
+            //this.tableLayoutPanelCopter.Controls.Add(this.labelRtlAlt, 0, 4);
+            //this.labelRtlAlt.AutoSize = true;
+            //this.labelRtlAlt.Dock = System.Windows.Forms.DockStyle.Fill;
+            //this.labelRtlAlt.Font = fontLabel;
+            //this.labelRtlAlt.Location = new System.Drawing.Point(0, 45);
+            //this.labelRtlAlt.Margin = new System.Windows.Forms.Padding(0);
+            //this.labelRtlAlt.Name = "labelRtlAlt";
+            //this.labelRtlAlt.Size = new System.Drawing.Size(127, 45);
+            //this.labelRtlAlt.TabIndex = 13;
+            //this.labelRtlAlt.Text = "Rtl Alt :";
+            //this.labelRtlAlt.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             
-            /*
-             * Label Current Rtl Alt
-             */
-            this.tableLayoutPanelCopter.Controls.Add(this.labelCurrRtlAlt, 1, 4);
-            this.labelCurrRtlAlt.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.labelCurrRtlAlt.Font = fontLabel;
-            this.labelCurrRtlAlt.Location = new System.Drawing.Point(0, 45);
-            this.labelCurrRtlAlt.Margin = new System.Windows.Forms.Padding(0);
-            this.labelCurrRtlAlt.Name = "labelCurrRtlAlt";
-            this.labelCurrRtlAlt.Size = new System.Drawing.Size(127, 45);
-            this.labelCurrRtlAlt.Text = "_____";
-            this.labelCurrRtlAlt.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            ///*
+            // * Label Current Rtl Alt
+            // */
+            //this.tableLayoutPanelCopter.Controls.Add(this.labelCurrRtlAlt, 1, 4);
+            //this.labelCurrRtlAlt.Dock = System.Windows.Forms.DockStyle.Fill;
+            //this.labelCurrRtlAlt.Font = fontLabel;
+            //this.labelCurrRtlAlt.Location = new System.Drawing.Point(0, 45);
+            //this.labelCurrRtlAlt.Margin = new System.Windows.Forms.Padding(0);
+            //this.labelCurrRtlAlt.Name = "labelCurrRtlAlt";
+            //this.labelCurrRtlAlt.Size = new System.Drawing.Size(127, 45);
+            //this.labelCurrRtlAlt.Text = "_____";
+            //this.labelCurrRtlAlt.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             
-            /*
-             * Numeric Rtl Alt
-             */
-            this.tableLayoutPanelCopter.Controls.Add(this.numericRtlAlt, 2, 4);
-            this.numericRtlAlt.Minimum = 1;
-            this.numericRtlAlt.Maximum = 3000;
-            this.numericRtlAlt.Dock = DockStyle.Fill;
-            this.numericRtlAlt.Font = fontNuveric;
-            this.numericRtlAlt.Margin = new System.Windows.Forms.Padding(3);
+            ///*
+            // * Numeric Rtl Alt
+            // */
+            //this.tableLayoutPanelCopter.Controls.Add(this.numericRtlAlt, 2, 4);
+            //this.numericRtlAlt.Minimum = 1;
+            //this.numericRtlAlt.Maximum = 3000;
+            //this.numericRtlAlt.Dock = DockStyle.Fill;
+            //this.numericRtlAlt.Font = fontNuveric;
+            //this.numericRtlAlt.Margin = new System.Windows.Forms.Padding(3);
             
-            /*
-             * Button GPS1 On
-             */
-            this.butGPS1on.Name = "butGPS1on";
-            this.butGPS1on.Text = "GPS 1";
-            this.butGPS1on.Font = fontBut;
-            this.butGPS1on.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.butGPS1on.Enabled = false;
-            this.butGPS1on.UseVisualStyleBackColor = false;
-            this.butGPS1on.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.butGPS1on.FlatAppearance.BorderSize = 1;
-            this.butGPS1on.FlatAppearance.BorderColor = colorDis;
-            this.butGPS1on.BackColor = colorDis;
-            this.butGPS1on.Click += new System.EventHandler(this.butGPS1on_Click);
+            ///*
+            // * Button GPS1 On
+            // */
+            //this.butGPS1on.Name = "butGPS1on";
+            //this.butGPS1on.Text = "GPS 1";
+            //this.butGPS1on.Font = fontBut;
+            //this.butGPS1on.Dock = System.Windows.Forms.DockStyle.Fill;
+            //this.butGPS1on.Enabled = false;
+            //this.butGPS1on.UseVisualStyleBackColor = false;
+            //this.butGPS1on.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            //this.butGPS1on.FlatAppearance.BorderSize = 1;
+            //this.butGPS1on.FlatAppearance.BorderColor = colorDis;
+            //this.butGPS1on.BackColor = colorDis;
+            //this.butGPS1on.Click += new System.EventHandler(this.butGPS1on_Click);
             
-            /*
-             * Button GPS2 On
-             */
-            this.butGPS2on.Name = "butGPS2on";
-            this.butGPS2on.Text = "GPS 2";
-            this.butGPS2on.Font = fontBut;
-            this.butGPS2on.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.butGPS2on.Enabled = false;
-            this.butGPS2on.UseVisualStyleBackColor = false;
-            this.butGPS2on.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.butGPS2on.FlatAppearance.BorderSize = 1;
-            this.butGPS2on.FlatAppearance.BorderColor = colorDis;
-            this.butGPS2on.BackColor = colorDis;
-            this.butGPS2on.Click += new System.EventHandler(this.butGPS2on_Click);
+            ///*
+            // * Button GPS2 On
+            // */
+            //this.butGPS2on.Name = "butGPS2on";
+            //this.butGPS2on.Text = "GPS 2";
+            //this.butGPS2on.Font = fontBut;
+            //this.butGPS2on.Dock = System.Windows.Forms.DockStyle.Fill;
+            //this.butGPS2on.Enabled = false;
+            //this.butGPS2on.UseVisualStyleBackColor = false;
+            //this.butGPS2on.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            //this.butGPS2on.FlatAppearance.BorderSize = 1;
+            //this.butGPS2on.FlatAppearance.BorderColor = colorDis;
+            //this.butGPS2on.BackColor = colorDis;
+            //this.butGPS2on.Click += new System.EventHandler(this.butGPS2on_Click);
             
-            /*
-             * Button GPS On
-             */
-            this.butGPSon.Name = "butGPSon";
-            this.butGPSon.Text = "GPS on/off";
-            this.butGPSon.Font = fontBut;
-            this.butGPSon.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.butGPSon.Enabled = false;
-            this.butGPSon.UseVisualStyleBackColor = false;
-            this.butGPSon.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.butGPSon.FlatAppearance.BorderSize = 1;
-            this.butGPSon.FlatAppearance.BorderColor = colorDis;
-            this.butGPSon.BackColor = colorDis;
-            this.butGPSon.Click += new System.EventHandler(this.butGPSon_Click);
+            ///*
+            // * Button GPS On
+            // */
+            //this.butGPSon.Name = "butGPSon";
+            //this.butGPSon.Text = "GPS on/off";
+            //this.butGPSon.Font = fontBut;
+            //this.butGPSon.Dock = System.Windows.Forms.DockStyle.Fill;
+            //this.butGPSon.Enabled = false;
+            //this.butGPSon.UseVisualStyleBackColor = false;
+            //this.butGPSon.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            //this.butGPSon.FlatAppearance.BorderSize = 1;
+            //this.butGPSon.FlatAppearance.BorderColor = colorDis;
+            //this.butGPSon.BackColor = colorDis;
+            //this.butGPSon.Click += new System.EventHandler(this.butGPSon_Click);
             
-            /*
-             * Button GPS Aux On/Off
-             */
-            this.butGPSAuxOnOff.Name = "butGPSAuxOnOff";
-            this.butGPSAuxOnOff.Text = "GPS on/off";
-            this.butGPSAuxOnOff.Font = fontBut;
-            this.butGPSAuxOnOff.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.butGPSAuxOnOff.Enabled = true;
-            this.butGPSAuxOnOff.UseVisualStyleBackColor = false;
-            this.butGPSAuxOnOff.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.butGPSAuxOnOff.FlatAppearance.BorderSize = 1;
-            this.butGPSAuxOnOff.FlatAppearance.BorderColor = colorDis;
-            this.butGPSAuxOnOff.BackColor = colorOn;
-            this.tableLayoutPanelCopter.Controls.Add(this.butGPSAuxOnOff, 3, 6);
-            this.butGPSAuxOnOff.Click += new System.EventHandler(this.butGPSAuxOnOff_Click);
+            ///*
+            // * Button GPS Aux On/Off
+            // */
+            //this.butGPSAuxOnOff.Name = "butGPSAuxOnOff";
+            //this.butGPSAuxOnOff.Text = "GPS on/off";
+            //this.butGPSAuxOnOff.Font = fontBut;
+            //this.butGPSAuxOnOff.Dock = System.Windows.Forms.DockStyle.Fill;
+            //this.butGPSAuxOnOff.Enabled = true;
+            //this.butGPSAuxOnOff.UseVisualStyleBackColor = false;
+            //this.butGPSAuxOnOff.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            //this.butGPSAuxOnOff.FlatAppearance.BorderSize = 1;
+            //this.butGPSAuxOnOff.FlatAppearance.BorderColor = colorDis;
+            //this.butGPSAuxOnOff.BackColor = colorOn;
+            //this.tableLayoutPanelCopter.Controls.Add(this.butGPSAuxOnOff, 3, 6);
+            //this.butGPSAuxOnOff.Click += new System.EventHandler(this.butGPSAuxOnOff_Click);
             
-            /*
-             * Button Force Land
-             */
-            this.butForceLand.Name = "butForceLand";
-            this.butForceLand.Text = "Force Land";
-            this.butForceLand.Font = fontBut;
-            this.butForceLand.ForeColor = Color.Black;
-            this.butForceLand.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.butForceLand.Enabled = true;
-            this.butForceLand.UseVisualStyleBackColor = false;
-            this.butForceLand.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.butForceLand.FlatAppearance.BorderSize = 1;
-            this.butForceLand.FlatAppearance.BorderColor = colorDis;
-            this.butForceLand.BackColor = colorOn;
-            this.butForceLand.Click += new System.EventHandler(this.butForceLand_Click);
+            ///*
+            // * Button Force Land
+            // */
+            //this.butForceLand.Name = "butForceLand";
+            //this.butForceLand.Text = "Force Land";
+            //this.butForceLand.Font = fontBut;
+            //this.butForceLand.ForeColor = Color.Black;
+            //this.butForceLand.Dock = System.Windows.Forms.DockStyle.Fill;
+            //this.butForceLand.Enabled = true;
+            //this.butForceLand.UseVisualStyleBackColor = false;
+            //this.butForceLand.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            //this.butForceLand.FlatAppearance.BorderSize = 1;
+            //this.butForceLand.FlatAppearance.BorderColor = colorDis;
+            //this.butForceLand.BackColor = colorOn;
+            //this.butForceLand.Click += new System.EventHandler(this.butForceLand_Click);
             
-            /*
-             * Button Arm/Disarm
-             */
-            this.butArmDisarm.Name = "butArmDisarm";
-            this.butArmDisarm.Text = "Arm/ Dis";
-            this.butArmDisarm.Font = fontBut;
-            this.butArmDisarm.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.butArmDisarm.Enabled = true;
-            this.butArmDisarm.UseVisualStyleBackColor = false;
-            this.butArmDisarm.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.butArmDisarm.FlatAppearance.BorderSize = 2;
-            this.butArmDisarm.FlatAppearance.BorderColor = Color.OrangeRed;
-            this.butArmDisarm.BackColor = colorDis;
-            this.tableLayoutPanelCopter.Controls.Add(this.butArmDisarm, 0, 6);
-            this.butArmDisarm.Click += new System.EventHandler(this.BUT_ARM_Click);
+            ///*
+            // * Button Arm/Disarm
+            // */
+            //this.butArmDisarm.Name = "butArmDisarm";
+            //this.butArmDisarm.Text = "Arm/ Dis";
+            //this.butArmDisarm.Font = fontBut;
+            //this.butArmDisarm.Dock = System.Windows.Forms.DockStyle.Fill;
+            //this.butArmDisarm.Enabled = true;
+            //this.butArmDisarm.UseVisualStyleBackColor = false;
+            //this.butArmDisarm.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            //this.butArmDisarm.FlatAppearance.BorderSize = 2;
+            //this.butArmDisarm.FlatAppearance.BorderColor = Color.OrangeRed;
+            //this.butArmDisarm.BackColor = colorDis;
+            //this.tableLayoutPanelCopter.Controls.Add(this.butArmDisarm, 0, 6);
+            //this.butArmDisarm.Click += new System.EventHandler(this.BUT_ARM_Click);
 
-            /*
-             * Button Thrst Imb
-             */
-            this.BUT_thrustImbalance.Name = "BUT_thrustImbalance";
-            this.BUT_thrustImbalance.Text = "Thrst Imb";
-            this.BUT_thrustImbalance.Font = fontBut;
-            this.BUT_thrustImbalance.ForeColor = Color.Black;
-            this.BUT_thrustImbalance.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.BUT_thrustImbalance.Enabled = true;
-            this.BUT_thrustImbalance.UseVisualStyleBackColor = false;
-            this.BUT_thrustImbalance.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.BUT_thrustImbalance.FlatAppearance.BorderSize = 1;
-            this.BUT_thrustImbalance.FlatAppearance.BorderColor = colorDis;
-            this.BUT_thrustImbalance.BackColor = colorOn;
-            this.tableLayoutPanelCopter.Controls.Add(this.BUT_thrustImbalance, 0, 7);
-            this.BUT_thrustImbalance.Click += new System.EventHandler(this.BUT_thrustImbalance_Click);
+            ///*
+            // * Button Thrst Imb
+            // */
+            //this.BUT_thrustImbalance.Name = "BUT_thrustImbalance";
+            //this.BUT_thrustImbalance.Text = "Thrst Imb";
+            //this.BUT_thrustImbalance.Font = fontBut;
+            //this.BUT_thrustImbalance.ForeColor = Color.Black;
+            //this.BUT_thrustImbalance.Dock = System.Windows.Forms.DockStyle.Fill;
+            //this.BUT_thrustImbalance.Enabled = true;
+            //this.BUT_thrustImbalance.UseVisualStyleBackColor = false;
+            //this.BUT_thrustImbalance.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            //this.BUT_thrustImbalance.FlatAppearance.BorderSize = 1;
+            //this.BUT_thrustImbalance.FlatAppearance.BorderColor = colorDis;
+            //this.BUT_thrustImbalance.BackColor = colorOn;
+            //this.tableLayoutPanelCopter.Controls.Add(this.BUT_thrustImbalance, 0, 7);
+            //this.BUT_thrustImbalance.Click += new System.EventHandler(this.BUT_thrustImbalance_Click);
 
-            /*
-             * Button Loiter
-             */
-            this.butLoiter.Name = "butLoiter";
-            this.butLoiter.Text = "Loiter";
-            this.butLoiter.Font = fontBut;
-            this.butLoiter.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.butLoiter.Enabled = true;
-            this.butLoiter.UseVisualStyleBackColor = false;
-            this.butLoiter.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.butLoiter.FlatAppearance.BorderSize = 1;
-            this.butLoiter.FlatAppearance.BorderColor = colorDis;
-            this.butLoiter.BackColor = colorDis;
-            this.tableLayoutPanelCopter.Controls.Add(this.butLoiter, 1, 5);
-            this.butLoiter.Click += new System.EventHandler(this.BUT_quickmanual_Click);
+            ///*
+            // * Button Loiter
+            // */
+            //this.butLoiter.Name = "butLoiter";
+            //this.butLoiter.Text = "Loiter";
+            //this.butLoiter.Font = fontBut;
+            //this.butLoiter.Dock = System.Windows.Forms.DockStyle.Fill;
+            //this.butLoiter.Enabled = true;
+            //this.butLoiter.UseVisualStyleBackColor = false;
+            //this.butLoiter.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            //this.butLoiter.FlatAppearance.BorderSize = 1;
+            //this.butLoiter.FlatAppearance.BorderColor = colorDis;
+            //this.butLoiter.BackColor = colorDis;
+            //this.tableLayoutPanelCopter.Controls.Add(this.butLoiter, 1, 5);
+            //this.butLoiter.Click += new System.EventHandler(this.BUT_quickmanual_Click);
             
-            /*
-             * Button RTL
-             */
-            this.butRTL.Name = "butRTL";
-            this.butRTL.Text = "RTL";
-            this.butRTL.Font = fontBut;
-            this.butRTL.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.butRTL.Enabled = true;
-            this.butRTL.UseVisualStyleBackColor = false;
-            this.butRTL.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.butRTL.FlatAppearance.BorderSize = 1;
-            this.butRTL.FlatAppearance.BorderColor = colorDis;
-            this.butRTL.BackColor = colorDis;
-            this.tableLayoutPanelCopter.Controls.Add(this.butRTL, 0, 5);
-            this.butRTL.Click += new System.EventHandler(this.BUT_quickrtl_Click);
+            ///*
+            // * Button RTL
+            // */
+            //this.butRTL.Name = "butRTL";
+            //this.butRTL.Text = "RTL";
+            //this.butRTL.Font = fontBut;
+            //this.butRTL.Dock = System.Windows.Forms.DockStyle.Fill;
+            //this.butRTL.Enabled = true;
+            //this.butRTL.UseVisualStyleBackColor = false;
+            //this.butRTL.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            //this.butRTL.FlatAppearance.BorderSize = 1;
+            //this.butRTL.FlatAppearance.BorderColor = colorDis;
+            //this.butRTL.BackColor = colorDis;
+            //this.tableLayoutPanelCopter.Controls.Add(this.butRTL, 0, 5);
+            //this.butRTL.Click += new System.EventHandler(this.BUT_quickrtl_Click);
             
-            /*
-             * Button GnGPS
-             */
-            this.butGnGPS.Name = "butGnGPS";
-            this.butGnGPS.Text = "GNoGPS";
-            this.butGnGPS.Font = fontBut;
-            this.butGnGPS.ForeColor = Color.Black;
-            this.butGnGPS.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.butGnGPS.Enabled = true;
-            this.butGnGPS.UseVisualStyleBackColor = false;
-            this.butGnGPS.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.butGnGPS.FlatAppearance.BorderSize = 1;
-            this.butGnGPS.FlatAppearance.BorderColor = colorDis;
-            this.butGnGPS.BackColor = colorOn;
-            this.butGnGPS.Click += new System.EventHandler(this.BUT_GnGPS_Click);
+            ///*
+            // * Button GnGPS
+            // */
+            //this.butGnGPS.Name = "butGnGPS";
+            //this.butGnGPS.Text = "GNoGPS";
+            //this.butGnGPS.Font = fontBut;
+            //this.butGnGPS.ForeColor = Color.Black;
+            //this.butGnGPS.Dock = System.Windows.Forms.DockStyle.Fill;
+            //this.butGnGPS.Enabled = true;
+            //this.butGnGPS.UseVisualStyleBackColor = false;
+            //this.butGnGPS.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            //this.butGnGPS.FlatAppearance.BorderSize = 1;
+            //this.butGnGPS.FlatAppearance.BorderColor = colorDis;
+            //this.butGnGPS.BackColor = colorOn;
+            //this.butGnGPS.Click += new System.EventHandler(this.BUT_GnGPS_Click);
             
-            /*
-             * Button AltHold
-             */
-            this.butAltHold.Name = "butAltHold";
-            this.butAltHold.Text = "Alt Hold";
-            this.butAltHold.Font = fontBut;
-            this.butAltHold.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.butAltHold.Enabled = true;
-            this.butAltHold.UseVisualStyleBackColor = false;
-            this.butAltHold.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.butAltHold.FlatAppearance.BorderSize = 1;
-            this.butAltHold.FlatAppearance.BorderColor = colorDis;
-            this.butAltHold.BackColor = colorDis;
-            this.butAltHold.Click += new System.EventHandler(this.butAltHold_Click);
-            this.tableLayoutPanelCopter.Controls.Add(this.butAltHold, 3, 5);
+            ///*
+            // * Button AltHold
+            // */
+            //this.butAltHold.Name = "butAltHold";
+            //this.butAltHold.Text = "Alt Hold";
+            //this.butAltHold.Font = fontBut;
+            //this.butAltHold.Dock = System.Windows.Forms.DockStyle.Fill;
+            //this.butAltHold.Enabled = true;
+            //this.butAltHold.UseVisualStyleBackColor = false;
+            //this.butAltHold.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            //this.butAltHold.FlatAppearance.BorderSize = 1;
+            //this.butAltHold.FlatAppearance.BorderColor = colorDis;
+            //this.butAltHold.BackColor = colorDis;
+            //this.butAltHold.Click += new System.EventHandler(this.butAltHold_Click);
+            //this.tableLayoutPanelCopter.Controls.Add(this.butAltHold, 3, 5);
             
-            /*
-             * Button UNA Reboot
-             */
-            this.butUnaReboot.Font = fontBut;
-            this.butUnaReboot.Name = "butUnaReboot";
-            this.butUnaReboot.Text = "UNA on/off";
-            this.butUnaReboot.ForeColor = Color.Black;
-            this.butUnaReboot.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.butUnaReboot.Enabled = true;
-            this.butUnaReboot.UseVisualStyleBackColor = false;
-            this.butUnaReboot.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.butUnaReboot.FlatAppearance.BorderSize = 1;
-            this.butUnaReboot.FlatAppearance.BorderColor = colorDis;
-            this.butUnaReboot.BackColor = colorOn;
-            this.butUnaReboot.Click += new System.EventHandler(this.butUnaReboot_Click);
-            this.tableLayoutPanelCopter.Controls.Add(this.butUnaReboot, 2, 6);
+            ///*
+            // * Button UNA Reboot
+            // */
+            //this.butUnaReboot.Font = fontBut;
+            //this.butUnaReboot.Name = "butUnaReboot";
+            //this.butUnaReboot.Text = "UNA on/off";
+            //this.butUnaReboot.ForeColor = Color.Black;
+            //this.butUnaReboot.Dock = System.Windows.Forms.DockStyle.Fill;
+            //this.butUnaReboot.Enabled = true;
+            //this.butUnaReboot.UseVisualStyleBackColor = false;
+            //this.butUnaReboot.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            //this.butUnaReboot.FlatAppearance.BorderSize = 1;
+            //this.butUnaReboot.FlatAppearance.BorderColor = colorDis;
+            //this.butUnaReboot.BackColor = colorOn;
+            //this.butUnaReboot.Click += new System.EventHandler(this.butUnaReboot_Click);
+            //this.tableLayoutPanelCopter.Controls.Add(this.butUnaReboot, 2, 6);
                         
-            /*
-             * Button Stabilise drop SkyDroid camera
-             */
-            this.butRSPH.Font = fontBut;
-            this.butRSPH.Name = "butRSPH";
-            this.butRSPH.Text = "RSPH On/Off";
-            this.butRSPH.ForeColor = Color.Black;
-            this.butRSPH.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.butRSPH.Enabled = true;
-            this.butRSPH.UseVisualStyleBackColor = false;
-            this.butRSPH.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.butRSPH.FlatAppearance.BorderSize = 1;
-            this.butRSPH.FlatAppearance.BorderColor = colorDis;
-            this.butRSPH.BackColor = colorOn;
-            this.butRSPH.Click += new System.EventHandler(this.butRSPH_Click);
-            this.tableLayoutPanelCopter.Controls.Add(this.butRSPH, 3, 7);
+            ///*
+            // * Button Stabilise drop SkyDroid camera
+            // */
+            //this.butRSPH.Font = fontBut;
+            //this.butRSPH.Name = "butRSPH";
+            //this.butRSPH.Text = "RSPH On/Off";
+            //this.butRSPH.ForeColor = Color.Black;
+            //this.butRSPH.Dock = System.Windows.Forms.DockStyle.Fill;
+            //this.butRSPH.Enabled = true;
+            //this.butRSPH.UseVisualStyleBackColor = false;
+            //this.butRSPH.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            //this.butRSPH.FlatAppearance.BorderSize = 1;
+            //this.butRSPH.FlatAppearance.BorderColor = colorDis;
+            //this.butRSPH.BackColor = colorOn;
+            //this.butRSPH.Click += new System.EventHandler(this.butRSPH_Click);
+            //this.tableLayoutPanelCopter.Controls.Add(this.butRSPH, 3, 7);
             
-            /*
-             * Button Stabilise drop SkyDroid camera
-             */
-            this.butRSPH_ST.Name = "butRSPH_ST";
-            this.butRSPH_ST.Font = fontBut;
-            this.butRSPH_ST.Text = "RSPH Switch";
-            this.butRSPH_ST.ForeColor = Color.Black;
-            this.butRSPH_ST.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.butRSPH_ST.Enabled = true;
-            this.butRSPH_ST.UseVisualStyleBackColor = false;
-            this.butRSPH_ST.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.butRSPH_ST.FlatAppearance.BorderSize = 1;
-            this.butRSPH_ST.FlatAppearance.BorderColor = colorDis;
-            this.butRSPH_ST.BackColor = colorOn;
-            this.butRSPH_ST.Click += new System.EventHandler(this.butRSPH_ST_Click);
-            this.tableLayoutPanelCopter.Controls.Add(this.butRSPH_ST, 3, 8);
+            ///*
+            // * Button Stabilise drop SkyDroid camera
+            // */
+            //this.butRSPH_ST.Name = "butRSPH_ST";
+            //this.butRSPH_ST.Font = fontBut;
+            //this.butRSPH_ST.Text = "RSPH Switch";
+            //this.butRSPH_ST.ForeColor = Color.Black;
+            //this.butRSPH_ST.Dock = System.Windows.Forms.DockStyle.Fill;
+            //this.butRSPH_ST.Enabled = true;
+            //this.butRSPH_ST.UseVisualStyleBackColor = false;
+            //this.butRSPH_ST.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            //this.butRSPH_ST.FlatAppearance.BorderSize = 1;
+            //this.butRSPH_ST.FlatAppearance.BorderColor = colorDis;
+            //this.butRSPH_ST.BackColor = colorOn;
+            //this.butRSPH_ST.Click += new System.EventHandler(this.butRSPH_ST_Click);
+            //this.tableLayoutPanelCopter.Controls.Add(this.butRSPH_ST, 3, 8);
 
-            /*
-             * Button Toggle Switch
-             */
-            this.butToggleSwitch.Font = fontBut;
-            this.butToggleSwitch.Name = "butToggleSwitch";
-            this.butToggleSwitch.Text = "Sf_Switch";
-            this.butToggleSwitch.ForeColor = Color.Black;
-            this.butToggleSwitch.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.butToggleSwitch.Enabled = true;
-            this.butToggleSwitch.UseVisualStyleBackColor = false;
-            this.butToggleSwitch.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.butToggleSwitch.FlatAppearance.BorderSize = 1;
-            this.butToggleSwitch.FlatAppearance.BorderColor = colorDis;
-            this.butToggleSwitch.BackColor = colorOn;
-            this.butToggleSwitch.Click += new System.EventHandler(this.butToggleSwitch_Click);
+            ///*
+            // * Button Toggle Switch
+            // */
+            //this.butToggleSwitch.Font = fontBut;
+            //this.butToggleSwitch.Name = "butToggleSwitch";
+            //this.butToggleSwitch.Text = "Sf_Switch";
+            //this.butToggleSwitch.ForeColor = Color.Black;
+            //this.butToggleSwitch.Dock = System.Windows.Forms.DockStyle.Fill;
+            //this.butToggleSwitch.Enabled = true;
+            //this.butToggleSwitch.UseVisualStyleBackColor = false;
+            //this.butToggleSwitch.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            //this.butToggleSwitch.FlatAppearance.BorderSize = 1;
+            //this.butToggleSwitch.FlatAppearance.BorderColor = colorDis;
+            //this.butToggleSwitch.BackColor = colorOn;
+            //this.butToggleSwitch.Click += new System.EventHandler(this.butToggleSwitch_Click);
 
 
-            /*
-             * Button FS_Options
-             */
-            this.butFS_Options.Font = fontBut;
-            this.butFS_Options.Name = "butFS_Options";
-            this.butFS_Options.Text = "FS_Opt";
-            this.butFS_Options.ForeColor = Color.Black;
-            this.butFS_Options.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.butFS_Options.Enabled = true;
-            this.butFS_Options.UseVisualStyleBackColor = false;
-            this.butFS_Options.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.butFS_Options.FlatAppearance.BorderSize = 1;
-            this.butFS_Options.FlatAppearance.BorderColor = colorDis;
-            this.butFS_Options.BackColor = colorOn;
-            this.butFS_Options.Click += new System.EventHandler(this.butFS_Options_Click);
+            ///*
+            // * Button FS_Options
+            // */
+            //this.butFS_Options.Font = fontBut;
+            //this.butFS_Options.Name = "butFS_Options";
+            //this.butFS_Options.Text = "FS_Opt";
+            //this.butFS_Options.ForeColor = Color.Black;
+            //this.butFS_Options.Dock = System.Windows.Forms.DockStyle.Fill;
+            //this.butFS_Options.Enabled = true;
+            //this.butFS_Options.UseVisualStyleBackColor = false;
+            //this.butFS_Options.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            //this.butFS_Options.FlatAppearance.BorderSize = 1;
+            //this.butFS_Options.FlatAppearance.BorderColor = colorDis;
+            //this.butFS_Options.BackColor = colorOn;
+            //this.butFS_Options.Click += new System.EventHandler(this.butFS_Options_Click);
 
                         
-            /*
-             * Button UNA Reboot
-             */
-            this.butMissionStart.Font = fontBut;
-            this.butMissionStart.Name = "butMissionStart";
-            this.butMissionStart.Text = "Start Miss";
-            this.butMissionStart.ForeColor = Color.Black;
-            this.butMissionStart.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.butMissionStart.Enabled = true;
-            this.butMissionStart.UseVisualStyleBackColor = false;
-            this.butMissionStart.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.butMissionStart.FlatAppearance.BorderSize = 1;
-            this.butMissionStart.FlatAppearance.BorderColor = colorDis;
-            this.butMissionStart.BackColor = colorOn;
-            this.butMissionStart.Click += new System.EventHandler(this.butMissionStart_Click);
+            ///*
+            // * Button UNA Reboot
+            // */
+            //this.butMissionStart.Font = fontBut;
+            //this.butMissionStart.Name = "butMissionStart";
+            //this.butMissionStart.Text = "Start Miss";
+            //this.butMissionStart.ForeColor = Color.Black;
+            //this.butMissionStart.Dock = System.Windows.Forms.DockStyle.Fill;
+            //this.butMissionStart.Enabled = true;
+            //this.butMissionStart.UseVisualStyleBackColor = false;
+            //this.butMissionStart.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            //this.butMissionStart.FlatAppearance.BorderSize = 1;
+            //this.butMissionStart.FlatAppearance.BorderColor = colorDis;
+            //this.butMissionStart.BackColor = colorOn;
+            //this.butMissionStart.Click += new System.EventHandler(this.butMissionStart_Click);
 
             
-            /*
-             * IsActive RC Petr
-             */
-            this.IsActiveRC_Petr.Dock = DockStyle.Fill;
-            this.IsActiveRC_Petr.TextAlign = ContentAlignment.MiddleCenter;
-            this.IsActiveRC_Petr.FlatStyle = FlatStyle.Flat;
-            this.IsActiveRC_Petr.FlatAppearance.BorderSize = 0;
-            this.IsActiveRC_Petr.Text = "Скид";
-            this.IsActiveRC_Petr.Font = fontBut;
-            this.IsActiveRC_Petr.BackColor = colorDis2;
-            this.IsActiveRC_Petr.ForeColor = Color.White;
-            this.IsActiveRC_Petr.Enabled = false;
-            this.IsActiveRC_Petr.Visible = true;
+            ///*
+            // * IsActive RC Petr
+            // */
+            //this.IsActiveRC_Petr.Dock = DockStyle.Fill;
+            //this.IsActiveRC_Petr.TextAlign = ContentAlignment.MiddleCenter;
+            //this.IsActiveRC_Petr.FlatStyle = FlatStyle.Flat;
+            //this.IsActiveRC_Petr.FlatAppearance.BorderSize = 0;
+            //this.IsActiveRC_Petr.Text = "Скид";
+            //this.IsActiveRC_Petr.Font = fontBut;
+            //this.IsActiveRC_Petr.BackColor = colorDis2;
+            //this.IsActiveRC_Petr.ForeColor = Color.White;
+            //this.IsActiveRC_Petr.Enabled = false;
+            //this.IsActiveRC_Petr.Visible = true;
             
-            /*
-             * Is Active RC Vamp 1
-             */
-            this.IsActRCVamp_1.Dock = DockStyle.Fill;
-            this.IsActRCVamp_1.TextAlign = ContentAlignment.MiddleCenter;
-            this.IsActRCVamp_1.FlatStyle = FlatStyle.Flat;
-            this.IsActRCVamp_1.FlatAppearance.BorderSize = 0;
-            this.IsActRCVamp_1.Text = "Скид 1";
-            this.IsActRCVamp_1.Font = fontBut;
-            this.IsActRCVamp_1.BackColor = colorDis2;
-            this.IsActRCVamp_1.ForeColor = Color.White;
-            this.IsActRCVamp_1.Enabled = false;
-            this.IsActRCVamp_1.Visible = true;
+            ///*
+            // * Is Active RC Vamp 1
+            // */
+            //this.IsActRCVamp_1.Dock = DockStyle.Fill;
+            //this.IsActRCVamp_1.TextAlign = ContentAlignment.MiddleCenter;
+            //this.IsActRCVamp_1.FlatStyle = FlatStyle.Flat;
+            //this.IsActRCVamp_1.FlatAppearance.BorderSize = 0;
+            //this.IsActRCVamp_1.Text = "Скид 1";
+            //this.IsActRCVamp_1.Font = fontBut;
+            //this.IsActRCVamp_1.BackColor = colorDis2;
+            //this.IsActRCVamp_1.ForeColor = Color.White;
+            //this.IsActRCVamp_1.Enabled = false;
+            //this.IsActRCVamp_1.Visible = true;
 
-            /*
-             * Is Active RC Vamp 2
-             */
-            this.IsActRCVamp_2.Dock = DockStyle.Fill;
-            this.IsActRCVamp_2.TextAlign = ContentAlignment.MiddleCenter;
-            this.IsActRCVamp_2.FlatStyle = FlatStyle.Flat;
-            this.IsActRCVamp_2.FlatAppearance.BorderSize = 0;
-            this.IsActRCVamp_2.Text = "Скид 2";
-            this.IsActRCVamp_2.Font = fontBut;
-            this.IsActRCVamp_2.BackColor = colorDis2;
-            this.IsActRCVamp_2.ForeColor = Color.White;
-            this.IsActRCVamp_2.Enabled = false;
-            this.IsActRCVamp_2.Visible = true;
+            ///*
+            // * Is Active RC Vamp 2
+            // */
+            //this.IsActRCVamp_2.Dock = DockStyle.Fill;
+            //this.IsActRCVamp_2.TextAlign = ContentAlignment.MiddleCenter;
+            //this.IsActRCVamp_2.FlatStyle = FlatStyle.Flat;
+            //this.IsActRCVamp_2.FlatAppearance.BorderSize = 0;
+            //this.IsActRCVamp_2.Text = "Скид 2";
+            //this.IsActRCVamp_2.Font = fontBut;
+            //this.IsActRCVamp_2.BackColor = colorDis2;
+            //this.IsActRCVamp_2.ForeColor = Color.White;
+            //this.IsActRCVamp_2.Enabled = false;
+            //this.IsActRCVamp_2.Visible = true;
 
-            MainV2.comPort.OnPacketReceived -= UpdateIsActiveRC;
-            MainV2.comPort.OnPacketReceived += UpdateIsActiveRC;
+            //MainV2.comPort.OnPacketReceived -= UpdateIsActiveRC;
+            //MainV2.comPort.OnPacketReceived += UpdateIsActiveRC;
             
             /****************************************Copter End********************************************************/
         }

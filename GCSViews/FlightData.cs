@@ -859,7 +859,7 @@ namespace MissionPlanner.GCSViews
 
             TabListDisplay.Add(tabCopter.Name, MainV2.DisplayConfiguration.displayAdvCopterTab);
 
-            TabListDisplay.Add(tabPlane.Name, MainV2.DisplayConfiguration.displayAdvPlaneTab);
+            //TabListDisplay.Add(tabPlane.Name, MainV2.DisplayConfiguration.displayAdvPlaneTab);
 
             TabListDisplay.Add(tabActions.Name, MainV2.DisplayConfiguration.displayAdvActionsTab);
 
@@ -7013,20 +7013,20 @@ namespace MissionPlanner.GCSViews
                 if (button.Name == "Custom")
                 {
                     CheckCustom(button.Name);
-                    if (!this.tableLayoutPanelCopter.Controls.Contains(this.dataGridView))
-                    {
-                        this.tableLayoutPanelCopter.Controls.Add(this.dataGridView, 0, 2);
-                        this.tableLayoutPanelCopter.RowStyles[2].Height = 96F;
-                    }
+                    //if (!this.tableLayoutPanelCopter.Controls.Contains(this.dataGridView))
+                    //{
+                    //    this.tableLayoutPanelCopter.Controls.Add(this.dataGridView, 0, 2);
+                    //    this.tableLayoutPanelCopter.RowStyles[2].Height = 96F;
+                    //}
                 }
                 else
                 {
                     Check(button.Name);
-                    if (this.tableLayoutPanelCopter.Controls.Contains(this.dataGridView) && !chBox_ExpMod.Checked)
-                    {
-                        this.tableLayoutPanelCopter.Controls.Remove(this.dataGridView);
-                        this.tableLayoutPanelCopter.RowStyles[2].Height = 0F;
-                    }
+                    //if (this.tableLayoutPanelCopter.Controls.Contains(this.dataGridView) && !chBox_ExpMod.Checked)
+                    //{
+                    //    this.tableLayoutPanelCopter.Controls.Remove(this.dataGridView);
+                    //    this.tableLayoutPanelCopter.RowStyles[2].Height = 0F;
+                    //}
                 }
             }
             catch (Exception ex)
@@ -7046,21 +7046,21 @@ namespace MissionPlanner.GCSViews
                     {
                         var buttTrue = FindButtonByName(key);
                         buttTrue.AutoSize = true;
-                        if (this.tableLayoutPanelCopter.Controls.Contains(this.dataGridView) && !chBox_ExpMod.Checked)
-                        {
-                            this.tableLayoutPanelCopter.Controls.Remove(this.dataGridView);
-                            this.tableLayoutPanelCopter.RowStyles[2].Height = 0F;
-                        }
+                        //if (this.tableLayoutPanelCopter.Controls.Contains(this.dataGridView) && !chBox_ExpMod.Checked)
+                        //{
+                        //    this.tableLayoutPanelCopter.Controls.Remove(this.dataGridView);
+                        //    this.tableLayoutPanelCopter.RowStyles[2].Height = 0F;
+                        //}
                     }
                     else
                     {
                         var buttTrue = FindButtonByName("Custom");
                         //buttTrue.AutoSize = true;
-                        if (!this.tableLayoutPanelCopter.Controls.Contains(this.dataGridView))
-                        {
-                            this.tableLayoutPanelCopter.Controls.Add(this.dataGridView, 0, 2);
-                            this.tableLayoutPanelCopter.RowStyles[2].Height = 96F;
-                        }
+                        //if (!this.tableLayoutPanelCopter.Controls.Contains(this.dataGridView))
+                        //{
+                        //    this.tableLayoutPanelCopter.Controls.Add(this.dataGridView, 0, 2);
+                        //    this.tableLayoutPanelCopter.RowStyles[2].Height = 96F;
+                        //}
                     }
                 }
             }
@@ -7256,7 +7256,7 @@ namespace MissionPlanner.GCSViews
             initParamTable();
             LoadCustomParameters();
 
-            UpdateLayoutControls();
+            //UpdateLayoutControls();
 
             ListButtonsMods.ForEach(button => button.AutoSize = false);
 
@@ -8060,41 +8060,41 @@ namespace MissionPlanner.GCSViews
             //CheckBoxUpdate(IsActiveRC_Petr);
             //CheckBoxUpdate(IsActRCVamp_1);
             //CheckBoxUpdate(IsActRCVamp_2);
-            LabelUpdate(labelCurrRtlAlt, "RTL_ALT");
-            switch (comboBoxDronModel.Text)
-            {
-                case "Воробєй":
-                    LabelUpdate(labelCurrHYaw, "DR_HOME_YAW");
-                    break;
+            //LabelUpdate(labelCurrRtlAlt, "RTL_ALT");
+            //switch (comboBoxDronModel.Text)
+            //{
+            //    case "Воробєй":
+            //        LabelUpdate(labelCurrHYaw, "DR_HOME_YAW");
+            //        break;
 
-                case "Вампір":
-                    LabelUpdate(labelCurrHYaw, "DR_HOME_ANGLE");
-                    break;
-            }
+            //    case "Вампір":
+            //        LabelUpdate(labelCurrHYaw, "DR_HOME_ANGLE");
+            //        break;
+            //}
             UpdateButtonModState();
-            BUT_ARM_Check();
-            BUT_thrustImbalance_Check();
-            ButtomUpdate_FS(butFS_Options);
-            ButtomUpdate_RSPH(butRSPH);
+            //BUT_ARM_Check();
+            //BUT_thrustImbalance_Check();
+            //ButtomUpdate_FS(butFS_Options);
+            //ButtomUpdate_RSPH(butRSPH);
         }
 
         private void Copter_UI_Init()
         {
-            comBoBox_FlyModes.DataSource = ArduPilot.Common.getModesList(MainV2.comPort.MAV.cs.firmware);
-            comBoBox_FlyModes.ValueMember = "Key";
-            comBoBox_FlyModes.DisplayMember = "Value";
+            //comBoBox_FlyModes.DataSource = ArduPilot.Common.getModesList(MainV2.comPort.MAV.cs.firmware);
+            //comBoBox_FlyModes.ValueMember = "Key";
+            //comBoBox_FlyModes.DisplayMember = "Value";
 
             //default to Land
-            comBoBox_FlyModes.Text = "Land";
+            //comBoBox_FlyModes.Text = "Land";
 
             LoadDeafoultParameters();
             LoadCustomParameters();
 
-            UpdateLayoutControls();
+            //UpdateLayoutControls();
 
-            BUT_ARM_Check();
-            ButtomUpdate_FS(butFS_Options);
-            ButtomUpdate_RSPH(butRSPH);
+            //BUT_ARM_Check();
+            //ButtomUpdate_FS(butFS_Options);
+            //ButtomUpdate_RSPH(butRSPH);
         }
     }
 }
