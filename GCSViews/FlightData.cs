@@ -7256,7 +7256,7 @@ namespace MissionPlanner.GCSViews
             initParamTable();
             LoadCustomParameters();
 
-            UpdateLayoutControls();
+            UpdateCheckBoxIsActiveRC();
 
             ListButtonsMods.ForEach(button => button.AutoSize = false);
 
@@ -7728,48 +7728,6 @@ namespace MissionPlanner.GCSViews
                 //CustomMessageBox.Show(ex.Message, "ERROR");
             }
         }
-        private void butRSPH_Click(object sender, EventArgs e)
-        {
-            Button but = (Button)sender;
-
-            if (MainV2.comPort.MAV.param.ContainsKey("RSPH_ENABLE")) 
-            {
-                if (but.BackColor == colorOn)
-                {
-                    SetParam("RSPH_ENABLE", 0);
-                }
-                else
-                {
-                    SetParam("RSPH_ENABLE", 1);
-                }
-
-                ButtomUpdate_RSPH(but);
-            }
-            
-        }
-
-        private void ButtomUpdate_RSPH(Button but)
-        {
-            try
-            {
-                int value = (int)MainV2.comPort.MAV.param["RSPH_ENABLE"];
-                bool isDefault = (value == 0);
-
-                switch (isDefault)
-                {
-                    case true:
-                        but.BackColor = Color.Gray;
-                        break;
-                    case false:
-                        but.BackColor = colorOn;
-                        break;
-                }
-            }
-            catch 
-            {
-                but.BackColor = Color.Gray;
-            }
-        }
 
         private void butMissionStart_Click(object sender, EventArgs e)
         {
@@ -7928,7 +7886,7 @@ namespace MissionPlanner.GCSViews
                     }
             }
         }
-        private void UpdateLayoutControls()
+        private void UpdateCheckBoxIsActiveRC()
         {
             if (comboBoxDronModel.Text == "Воробєй")
             {
@@ -7951,10 +7909,6 @@ namespace MissionPlanner.GCSViews
                 if (this.tableLayoutPanelCopter.Controls.Contains(butUnaReboot))
                 {
                     this.tableLayoutPanelCopter.Controls.Remove(butUnaReboot);
-                }
-                if (!this.tableLayoutPanelCopter.Controls.Contains(butRSPH))
-                {
-                    this.tableLayoutPanelCopter.Controls.Add(butRSPH, 2, 6);
                 }
                 if (this.tableLayoutPanelCopter.Controls.Contains(butToggleSwitch))
                 {
@@ -7990,10 +7944,6 @@ namespace MissionPlanner.GCSViews
                 if (!this.tableLayoutPanelCopter.Controls.Contains(butUnaReboot))
                 {
                     this.tableLayoutPanelCopter.Controls.Add(this.butUnaReboot, 2, 6);
-                }
-                if (this.tableLayoutPanelCopter.Controls.Contains(butRSPH))
-                {
-                    this.tableLayoutPanelCopter.Controls.Remove(this.butRSPH);
                 }
                 if (!this.tableLayoutPanelCopter.Controls.Contains(butToggleSwitch))
                 {
@@ -8058,7 +8008,6 @@ namespace MissionPlanner.GCSViews
             BUT_ARM_Check();
             BUT_thrustImbalance_Check();
             ButtomUpdate_FS(butFS_Options);
-            ButtomUpdate_RSPH(butRSPH);
         }
 
         private void Copter_UI_Init()
@@ -8073,11 +8022,10 @@ namespace MissionPlanner.GCSViews
             LoadDeafoultParameters();
             LoadCustomParameters();
 
-            UpdateLayoutControls();
+            UpdateCheckBoxIsActiveRC();
 
             BUT_ARM_Check();
             ButtomUpdate_FS(butFS_Options);
-            ButtomUpdate_RSPH(butRSPH);
         }
     }
 }
