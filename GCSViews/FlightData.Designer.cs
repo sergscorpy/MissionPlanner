@@ -2992,7 +2992,6 @@ namespace MissionPlanner.GCSViews
             this.butAltHold = new Button();
             this.butUnaReboot = new Button();
             this.butRSPH = new Button();
-            this.butRSPH_ST = new Button();
             this.butMissionStart = new Button();
             this.butFS_Options = new Button();
             this.butToggleSwitch = new Button();
@@ -4033,7 +4032,7 @@ namespace MissionPlanner.GCSViews
              */
             this.butRSPH.Font = fontBut;
             this.butRSPH.Name = "butRSPH";
-            this.butRSPH.Text = "RSPH On/Off";
+            this.butRSPH.Text = "RSPH";
             this.butRSPH.ForeColor = Color.Black;
             this.butRSPH.Dock = System.Windows.Forms.DockStyle.Fill;
             this.butRSPH.Enabled = true;
@@ -4043,24 +4042,7 @@ namespace MissionPlanner.GCSViews
             this.butRSPH.FlatAppearance.BorderColor = colorDis;
             this.butRSPH.BackColor = colorOn;
             this.butRSPH.Click += new System.EventHandler(this.butRSPH_Click);
-            this.tableLayoutPanelCopter.Controls.Add(this.butRSPH, 3, 7);
-            
-            /*
-             * Button Stabilise drop SkyDroid camera
-             */
-            this.butRSPH_ST.Name = "butRSPH_ST";
-            this.butRSPH_ST.Font = fontBut;
-            this.butRSPH_ST.Text = "RSPH Switch";
-            this.butRSPH_ST.ForeColor = Color.Black;
-            this.butRSPH_ST.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.butRSPH_ST.Enabled = true;
-            this.butRSPH_ST.UseVisualStyleBackColor = false;
-            this.butRSPH_ST.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.butRSPH_ST.FlatAppearance.BorderSize = 1;
-            this.butRSPH_ST.FlatAppearance.BorderColor = colorDis;
-            this.butRSPH_ST.BackColor = colorOn;
-            this.butRSPH_ST.Click += new System.EventHandler(this.butRSPH_ST_Click);
-            this.tableLayoutPanelCopter.Controls.Add(this.butRSPH_ST, 3, 8);
+            this.tableLayoutPanelCopter.Controls.Add(this.butRSPH, 2, 6);
 
             /*
              * Button Toggle Switch
@@ -4500,7 +4482,6 @@ namespace MissionPlanner.GCSViews
         private Button butAltHold;
         private Button butUnaReboot;
         private Button butRSPH;
-        private Button butRSPH_ST;
         private Button butToggleSwitch;
         private Button butFS_Options;
         private Button butMissionStart;

@@ -7641,7 +7641,7 @@ namespace MissionPlanner.GCSViews
                 ButtomUpdateGPS(butGPS, GPS1);
             }
         }
-
+        
         private void ButtomUpdateGPS(Button butGPS, string key)
         {
             try
@@ -7732,7 +7732,7 @@ namespace MissionPlanner.GCSViews
         {
             Button but = (Button)sender;
 
-            if (MainV2.comPort.MAV.param.ContainsKey("RSPH_ENABLE"))
+            if (MainV2.comPort.MAV.param.ContainsKey("RSPH_ENABLE")) 
             {
                 if (but.BackColor == colorOn)
                 {
@@ -7745,24 +7745,7 @@ namespace MissionPlanner.GCSViews
 
                 ButtomUpdate_RSPH(but);
             }
-
-        }
-        private void butRSPH_ST_Click(object sender, EventArgs e)
-        {
-
-            if (MainV2.comPort.MAV.param.ContainsKey("RSPH_ST"))
-            {
-                int value = (int)MainV2.comPort.MAV.param["RSPH_ST"];
-                if (value == 1)
-                {
-                    SetParam("RSPH_ST", 0);
-                }
-                else
-                {
-                    SetParam("RSPH_ST", 1);
-                }
-            }
-
+            
         }
 
         private void ButtomUpdate_RSPH(Button but)
@@ -7782,7 +7765,7 @@ namespace MissionPlanner.GCSViews
                         break;
                 }
             }
-            catch
+            catch 
             {
                 but.BackColor = Color.Gray;
             }
