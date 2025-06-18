@@ -7747,6 +7747,26 @@ namespace MissionPlanner.GCSViews
             }
 
         }
+        
+        private void butRSPH_PID_Upd_Click(object sender, EventArgs e)
+        {
+            Button but = (Button)sender;
+
+            if (MainV2.comPort.MAV.param.ContainsKey("RSPH_PID_UPDATE"))
+            {
+                if (but.BackColor == colorOn)
+                {
+                    SetParam("RSPH_PID_UPDATE", 0);
+                }
+                else
+                {
+                    SetParam("RSPH_PID_UPDATE", 1);
+                }
+
+                ButtomUpdate_RSPH(but);
+            }
+
+        }
         private void butRSPH_ST_Click(object sender, EventArgs e)
         {
 
@@ -7769,7 +7789,17 @@ namespace MissionPlanner.GCSViews
         {
             try
             {
-                int value = (int)MainV2.comPort.MAV.param["RSPH_ENABLE"];
+                int value = 0;
+                switch (but.Name)
+                {
+                    case "butRSPH_PID_Upd":
+                        value = (int)MainV2.comPort.MAV.param["RSPH_PID_UPDATE"];
+                        break;
+                    case "butRSPH":
+                        value = (int)MainV2.comPort.MAV.param["RSPH_ENABLE"];
+                        break;
+
+                }
                 bool isDefault = (value == 0);
 
                 switch (isDefault)
@@ -7971,7 +8001,15 @@ namespace MissionPlanner.GCSViews
                 }
                 if (!this.tableLayoutPanelCopter.Controls.Contains(butRSPH))
                 {
-                    this.tableLayoutPanelCopter.Controls.Add(butRSPH, 2, 6);
+                    this.tableLayoutPanelCopter.Controls.Add(butRSPH, 0, 8);
+                }
+                if (!this.tableLayoutPanelCopter.Controls.Contains(butRSPH_ST))
+                {
+                    this.tableLayoutPanelCopter.Controls.Add(butRSPH_ST, 1, 8);
+                }
+                if (!this.tableLayoutPanelCopter.Controls.Contains(butRSPH_PID_Upd))
+                {
+                    this.tableLayoutPanelCopter.Controls.Add(butRSPH_PID_Upd, 2, 8);
                 }
                 if (this.tableLayoutPanelCopter.Controls.Contains(butToggleSwitch))
                 {
@@ -8011,6 +8049,14 @@ namespace MissionPlanner.GCSViews
                 if (this.tableLayoutPanelCopter.Controls.Contains(butRSPH))
                 {
                     this.tableLayoutPanelCopter.Controls.Remove(this.butRSPH);
+                }
+                if (this.tableLayoutPanelCopter.Controls.Contains(butRSPH_PID_Upd))
+                {
+                    this.tableLayoutPanelCopter.Controls.Remove(this.butRSPH_PID_Upd);
+                }
+                if (this.tableLayoutPanelCopter.Controls.Contains(butRSPH_ST))
+                {
+                    this.tableLayoutPanelCopter.Controls.Remove(this.butRSPH_ST);
                 }
                 if (!this.tableLayoutPanelCopter.Controls.Contains(butToggleSwitch))
                 {
@@ -8076,6 +8122,7 @@ namespace MissionPlanner.GCSViews
             BUT_thrustImbalance_Check();
             ButtomUpdate_FS(butFS_Options);
             ButtomUpdate_RSPH(butRSPH);
+            ButtomUpdate_RSPH(butRSPH_PID_Upd);
         }
 
         private void Copter_UI_Init()
@@ -8095,6 +8142,7 @@ namespace MissionPlanner.GCSViews
             BUT_ARM_Check();
             ButtomUpdate_FS(butFS_Options);
             ButtomUpdate_RSPH(butRSPH);
+            ButtomUpdate_RSPH(butRSPH_PID_Upd);
         }
     }
 }

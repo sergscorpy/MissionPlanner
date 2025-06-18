@@ -2992,6 +2992,7 @@ namespace MissionPlanner.GCSViews
             this.butAltHold = new Button();
             this.butUnaReboot = new Button();
             this.butRSPH = new Button();
+            this.butRSPH_PID_Upd = new Button();
             this.butRSPH_ST = new Button();
             this.butMissionStart = new Button();
             this.butFS_Options = new Button();
@@ -4027,9 +4028,26 @@ namespace MissionPlanner.GCSViews
             this.butUnaReboot.BackColor = colorOn;
             this.butUnaReboot.Click += new System.EventHandler(this.butUnaReboot_Click);
             this.tableLayoutPanelCopter.Controls.Add(this.butUnaReboot, 2, 6);
-                        
+
             /*
-             * Button Stabilise drop SkyDroid camera
+             * Button Stabilise drop SkyDroid camera (PID_Update)
+             */
+            this.butRSPH_PID_Upd.Font = fontBut;
+            this.butRSPH_PID_Upd.Name = "butRSPH_PID_Upd";
+            this.butRSPH_PID_Upd.Text = "RSPH Upd";
+            this.butRSPH_PID_Upd.ForeColor = Color.Black;
+            this.butRSPH_PID_Upd.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.butRSPH_PID_Upd.Enabled = true;
+            this.butRSPH_PID_Upd.UseVisualStyleBackColor = false;
+            this.butRSPH_PID_Upd.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.butRSPH_PID_Upd.FlatAppearance.BorderSize = 1;
+            this.butRSPH_PID_Upd.FlatAppearance.BorderColor = colorDis;
+            this.butRSPH_PID_Upd.BackColor = colorOn;
+            this.butRSPH_PID_Upd.Click += new System.EventHandler(this.butRSPH_PID_Upd_Click);
+            this.tableLayoutPanelCopter.Controls.Add(this.butRSPH_PID_Upd, 2, 8);
+
+            /*
+             * Button Stabilise drop SkyDroid camera (On <-> Off)
              */
             this.butRSPH.Font = fontBut;
             this.butRSPH.Name = "butRSPH";
@@ -4043,10 +4061,10 @@ namespace MissionPlanner.GCSViews
             this.butRSPH.FlatAppearance.BorderColor = colorDis;
             this.butRSPH.BackColor = colorOn;
             this.butRSPH.Click += new System.EventHandler(this.butRSPH_Click);
-            this.tableLayoutPanelCopter.Controls.Add(this.butRSPH, 3, 7);
-            
+            this.tableLayoutPanelCopter.Controls.Add(this.butRSPH, 0, 8);
+
             /*
-             * Button Stabilise drop SkyDroid camera
+             * Button Stabilise drop SkyDroid camera (Switch Day <-> Night);
              */
             this.butRSPH_ST.Name = "butRSPH_ST";
             this.butRSPH_ST.Font = fontBut;
@@ -4060,7 +4078,7 @@ namespace MissionPlanner.GCSViews
             this.butRSPH_ST.FlatAppearance.BorderColor = colorDis;
             this.butRSPH_ST.BackColor = colorOn;
             this.butRSPH_ST.Click += new System.EventHandler(this.butRSPH_ST_Click);
-            this.tableLayoutPanelCopter.Controls.Add(this.butRSPH_ST, 3, 8);
+            this.tableLayoutPanelCopter.Controls.Add(this.butRSPH_ST, 1, 8);
 
             /*
              * Button Toggle Switch
@@ -4500,6 +4518,7 @@ namespace MissionPlanner.GCSViews
         private Button butAltHold;
         private Button butUnaReboot;
         private Button butRSPH;
+        private Button butRSPH_PID_Upd;
         private Button butRSPH_ST;
         private Button butToggleSwitch;
         private Button butFS_Options;
