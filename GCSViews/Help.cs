@@ -18,7 +18,7 @@ namespace MissionPlanner.GCSViews
         {
             try
             {
-                CHK_showconsole.Checked = Settings.Instance.GetBoolean("showconsole");
+                //CHK_showconsole.Checked = Settings.Instance.GetBoolean("showconsole");
             }
             catch
             {
@@ -26,7 +26,7 @@ namespace MissionPlanner.GCSViews
 
             if (Program.WindowsStoreApp)
             {
-                BUT_betaupdate.Visible = false;
+                //BUT_betaupdate.Visible = false;
                 BUT_updatecheck.Visible = false;
             }
         }
@@ -49,7 +49,7 @@ namespace MissionPlanner.GCSViews
 
         private void CHK_showconsole_CheckedChanged(object sender, EventArgs e)
         {
-            Settings.Instance["showconsole"] = CHK_showconsole.Checked.ToString();
+            //Settings.Instance["showconsole"] = CHK_showconsole.Checked.ToString();
         }
 
         private void Help_Load(object sender, EventArgs e)

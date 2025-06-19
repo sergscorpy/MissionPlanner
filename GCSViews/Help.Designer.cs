@@ -30,10 +30,10 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Help));
             this.richTextBox1 = new System.Windows.Forms.RichTextBox();
-            this.CHK_showconsole = new System.Windows.Forms.CheckBox();
+            //this.CHK_showconsole = new System.Windows.Forms.CheckBox();
             this.BUT_updatecheck = new MissionPlanner.Controls.MyButton();
-            this.linkLabel1 = new System.Windows.Forms.LinkLabel();
-            this.BUT_betaupdate = new MissionPlanner.Controls.MyButton();
+            //this.linkLabel1 = new System.Windows.Forms.LinkLabel();
+            //this.BUT_betaupdate = new MissionPlanner.Controls.MyButton();
             this.SuspendLayout();
             // 
             // richTextBox1
@@ -45,10 +45,10 @@
             // 
             // CHK_showconsole
             // 
-            resources.ApplyResources(this.CHK_showconsole, "CHK_showconsole");
-            this.CHK_showconsole.Name = "CHK_showconsole";
-            this.CHK_showconsole.UseVisualStyleBackColor = true;
-            this.CHK_showconsole.CheckedChanged += new System.EventHandler(this.CHK_showconsole_CheckedChanged);
+            //resources.ApplyResources(this.CHK_showconsole, "CHK_showconsole");
+            //this.CHK_showconsole.Name = "CHK_showconsole";
+            //this.CHK_showconsole.UseVisualStyleBackColor = true;
+            //this.CHK_showconsole.CheckedChanged += new System.EventHandler(this.CHK_showconsole_CheckedChanged);
             // 
             // BUT_updatecheck
             // 
@@ -59,23 +59,23 @@
             // 
             // linkLabel1
             // 
-            resources.ApplyResources(this.linkLabel1, "linkLabel1");
-            this.linkLabel1.Name = "linkLabel1";
-            this.linkLabel1.TabStop = true;
-            this.linkLabel1.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel1_LinkClicked);
+            //resources.ApplyResources(this.linkLabel1, "linkLabel1");
+            //this.linkLabel1.Name = "linkLabel1";
+            //this.linkLabel1.TabStop = true;
+            //this.linkLabel1.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel1_LinkClicked);
             // 
             // BUT_betaupdate
             // 
-            resources.ApplyResources(this.BUT_betaupdate, "BUT_betaupdate");
-            this.BUT_betaupdate.Name = "BUT_betaupdate";
-            this.BUT_betaupdate.UseVisualStyleBackColor = true;
-            this.BUT_betaupdate.Click += new System.EventHandler(this.BUT_betaupdate_Click);
+            //resources.ApplyResources(this.BUT_betaupdate, "BUT_betaupdate");
+            //this.BUT_betaupdate.Name = "BUT_betaupdate";
+            //this.BUT_betaupdate.UseVisualStyleBackColor = true;
+            //this.BUT_betaupdate.Click += new System.EventHandler(this.BUT_betaupdate_Click);
             // 
             // Help
             // 
-            this.Controls.Add(this.BUT_betaupdate);
-            this.Controls.Add(this.linkLabel1);
-            this.Controls.Add(this.CHK_showconsole);
+            //this.Controls.Add(this.BUT_betaupdate);
+            //this.Controls.Add(this.linkLabel1);
+            //this.Controls.Add(this.CHK_showconsole);
             this.Controls.Add(this.BUT_updatecheck);
             this.Controls.Add(this.richTextBox1);
             resources.ApplyResources(this, "$this");
@@ -90,9 +90,9 @@
 
         private System.Windows.Forms.RichTextBox richTextBox1;
         private Controls.MyButton BUT_updatecheck;
-        private System.Windows.Forms.CheckBox CHK_showconsole;
-        private System.Windows.Forms.LinkLabel linkLabel1;
-        private Controls.MyButton BUT_betaupdate;
+        //private System.Windows.Forms.CheckBox CHK_showconsole;
+        //private System.Windows.Forms.LinkLabel linkLabel1;
+        //private Controls.MyButton BUT_betaupdate;
 
     }
 }
