@@ -119,90 +119,74 @@ namespace MissionPlanner.Utilities
             if (dobeta)
                 baseurl = ConfigurationManager.AppSettings["BetaUpdateLocationVersion"];
 
-            if (baseurl == "" || baseurl == null)
+            if (string.IsNullOrWhiteSpace(baseurl))
                 return;
 
-            string path = Path.GetDirectoryName(Application.ExecutablePath);
-
-            path = path + Path.DirectorySeparatorChar + "version.txt";
+            string path = Path.Combine(Path.GetDirectoryName(Application.ExecutablePath), "version.txt");
 
             log.Debug(path);
 
             // Create a request using a URL that can receive a post. 
             string requestUriString = baseurl;
-
             log.Info("Checking for update at: " + requestUriString);
 
             bool updateFound = false;
 
             // Get the response.
-            using (var response = client.GetAsync(requestUriString).GetAwaiter().GetResult())
+            try
             {
-                // Display the status.
-                log.Debug("Response status: " + response.StatusCode);
-                // Get the stream containing content returned by the server.
-
-                if (File.Exists(path))
+                using (var response = client.GetAsync(requestUriString).GetAwaiter().GetResult())
                 {
-                    var fi = new FileInfo(path);
-
-                    Version LocalVersion = new Version();
-                    Version WebVersion = new Version();
+                    // Display the status.
+                    log.Debug("Response status: " + response.StatusCode);
+                    // Get the stream containing content returned by the server.
 
                     if (File.Exists(path))
                     {
-                        using (Stream fs = File.OpenRead(path))
-                        {
-                            using (StreamReader sr = new StreamReader(fs))
-                            {
-                                LocalVersion = new Version(sr.ReadLine());
-                            }
-                        }
+                        Version LocalVersion, WebVersion;
+
+                        using (var fs = File.OpenRead(path))
+                        using (var sr = new StreamReader(fs))
+                            LocalVersion = new Version(sr.ReadLine());
+
+                        using (var sr = new StreamReader(response.Content.ReadAsStreamAsync().GetAwaiter().GetResult()))
+                            WebVersion = new Version(sr.ReadLine());
+
+                        log.Info("New file Check: local " + LocalVersion + " vs Remote " + WebVersion);
+
+                        if (LocalVersion < WebVersion)
+                            updateFound = true;
                     }
-
-                    using (StreamReader sr = new StreamReader(response.Content.ReadAsStreamAsync().GetAwaiter().GetResult()))
-                    {
-                        WebVersion = new Version(sr.ReadLine());
-                    }
-
-                    log.Info("New file Check: local " + LocalVersion + " vs Remote " + WebVersion);
-
-                    if (LocalVersion < WebVersion)
+                    else
                     {
                         updateFound = true;
+                        log.Info("Local version file does not exist: Getting " + path);
+                        // get it
                     }
                 }
-                else
-                {
-                    updateFound = true;
-                    log.Info("File does not exist: Getting " + path);
-                    // get it
-                }
+            }
+            catch (Exception ex)
+            {
+                log.Error("Failed to check for update", ex);
+                CustomMessageBox.Show("Не вдалося з'єднатися з сервером\n" +
+                                        "перевірте інтернет, якщо зв'зок стабільний\n" +
+                                        "повідомте інженерку\n" + ex.Message);
+                return; // вихід з методу, бо не вдалося перевірити оновлення
             }
 
             if (updateFound)
             {
                 // do the update in the main thread
                 MainV2.instance.Invoke((Action)delegate
-               {
-                   string extra = "";
+                {
+                    string extra = dobeta ? "BETA " : "";
+                    var dr = CustomMessageBox.Show(
+                        extra + Strings.UpdateFound + " [link;" + baseurl.Replace("version.txt", "ChangeLog.txt") + ";ChangeLog]",
+                        Strings.UpdateNow, MessageBoxButtons.YesNo);
 
-                   if (dobeta)
-                       extra = "BETA ";
-
-                   var dr = CustomMessageBox.Show(
-                       extra + Strings.UpdateFound + " [link;" + baseurl.Replace("version.txt", "ChangeLog.txt") + ";ChangeLog]",
-                       Strings.UpdateNow, MessageBoxButtons.YesNo);
-
-                   if (dr == (int)DialogResult.Yes)
-                   {
-                       DoUpdate();
-                   }
-                   else
-                   {
-                       return;
-                   }
-               });
+                    if (dr == (int)DialogResult.Yes)
+                        DoUpdate();
+                });
             }
             else if (NotifyNoUpdate)
             {
