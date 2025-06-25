@@ -168,9 +168,9 @@ namespace MissionPlanner.Utilities
             catch (Exception ex)
             {
                 log.Error("Failed to check for update", ex);
-                CustomMessageBox.Show("Не вдалося з'єднатися з сервером\n" +
+                CustomMessageBox.Show("Не вдалося з'єднатися з сервером оновлень,\n" +
                                         "перевірте інтернет, якщо зв'зок стабільний\n" +
-                                        "повідомте інженерку\n" + ex.Message);
+                                        "повідомте інженерку\n");
                 return; // вихід з методу, бо не вдалося перевірити оновлення
             }
 
