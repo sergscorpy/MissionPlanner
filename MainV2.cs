@@ -3662,24 +3662,24 @@ namespace MissionPlanner
                 System.Configuration.ConfigurationManager.AppSettings["BetaUpdateLocationVersion"] = "";
             }
 
-            try
-            {
-                // single update check per day - in a seperate thread
-                if (Settings.Instance["update_check"] != DateTime.Now.ToShortDateString())
-                {
-                    System.Threading.ThreadPool.QueueUserWorkItem(checkupdate);
-                    Settings.Instance["update_check"] = DateTime.Now.ToShortDateString();
-                }
-                else if (Settings.Instance.GetBoolean("beta_updates") == true)
-                {
-                    MissionPlanner.Utilities.Update.dobeta = true;
-                    System.Threading.ThreadPool.QueueUserWorkItem(checkupdate);
-                }
-            }
-            catch (Exception ex)
-            {
-                log.Error("Update check failed", ex);
-            }
+            //try
+            //{
+            //    // single update check per day - in a seperate thread
+            //    if (Settings.Instance["update_check"] != DateTime.Now.ToShortDateString())
+            //    {
+            //        System.Threading.ThreadPool.QueueUserWorkItem(checkupdate);
+            //        Settings.Instance["update_check"] = DateTime.Now.ToShortDateString();
+            //    }
+            //    else if (Settings.Instance.GetBoolean("beta_updates") == true)
+            //    {
+            //        MissionPlanner.Utilities.Update.dobeta = true;
+            //        System.Threading.ThreadPool.QueueUserWorkItem(checkupdate);
+            //    }
+            //}
+            //catch (Exception ex)
+            //{
+            //    log.Error("Update check failed", ex);
+            //}
 
             // play a tlog that was passed to the program/ load a bin log passed
             if (Program.args.Length > 0)
