@@ -2211,6 +2211,42 @@ namespace MissionPlanner
         [DisplayText("Callsign/Flight ID")]
         public byte[] xpdr_flight_id { get; set; }
 
+        
+        [DisplayFieldName("ssytem_time_boot.Field")]
+        [DisplayText("System Time Boot")]
+        [GroupText("Telem")]
+        public float system_time_boot { get; set; }
+
+        [DisplayFieldName("reboot_timer.Field")]
+        [DisplayText("Reboot Timer")][GroupText("Telem")]
+        public float reboot_timer
+        {
+            get
+            {
+                if (system_time_boot == -1)
+                    return 0.0f;
+
+                try
+                {
+                    if (parent != null && parent.parent.MAV.param.ContainsKey("REBOOT_TIME"))
+                    {
+                        float rebootTimeMinutes = (float)parent.parent.MAV.param["REBOOT_TIME"].Value;
+                        float rebootTimeSeconds = rebootTimeMinutes * 60.0f;
+
+                        float uptimeSeconds = system_time_boot;
+
+                        float remaining = rebootTimeSeconds - (uptimeSeconds % rebootTimeSeconds);
+                        return remaining;
+                    }
+
+                    return 0.0f;
+                }
+                catch
+                {
+                    return 0.0f;
+                }
+            }
+        }
 
         public object Clone()
         {
@@ -2551,6 +2587,7 @@ namespace MissionPlanner
                                 date1 = date1.AddMilliseconds(systime.time_unix_usec / 1000);
 
                                 gpstime = date1;
+                                system_time_boot = (int)(systime.time_boot_ms / 1000);
                             }
                             catch
                             {
