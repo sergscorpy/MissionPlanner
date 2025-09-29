@@ -229,6 +229,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Элементы решен
 EndProject
 Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "MissionPlannerSetup", "MissionPlannerSetup\MissionPlannerSetup.wixproj", "{86099AC2-D33B-478E-9A90-34C419EBA242}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PinPointMarkerPlugin", "Plugins\PinPointMarkerPlugin\PinPointMarkerPlugin.csproj", "{0F9426E9-CDF1-4E0F-A98F-55D3CDDDDEB4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -908,6 +910,14 @@ Global
 		{86099AC2-D33B-478E-9A90-34C419EBA242}.Release|Any CPU.Build.0 = Release|x86
 		{86099AC2-D33B-478E-9A90-34C419EBA242}.Release|x86.ActiveCfg = Release|x86
 		{86099AC2-D33B-478E-9A90-34C419EBA242}.Release|x86.Build.0 = Release|x86
+		{0F9426E9-CDF1-4E0F-A98F-55D3CDDDDEB4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0F9426E9-CDF1-4E0F-A98F-55D3CDDDDEB4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0F9426E9-CDF1-4E0F-A98F-55D3CDDDDEB4}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{0F9426E9-CDF1-4E0F-A98F-55D3CDDDDEB4}.Debug|x86.Build.0 = Debug|Any CPU
+		{0F9426E9-CDF1-4E0F-A98F-55D3CDDDDEB4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0F9426E9-CDF1-4E0F-A98F-55D3CDDDDEB4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0F9426E9-CDF1-4E0F-A98F-55D3CDDDDEB4}.Release|x86.ActiveCfg = Release|Any CPU
+		{0F9426E9-CDF1-4E0F-A98F-55D3CDDDDEB4}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

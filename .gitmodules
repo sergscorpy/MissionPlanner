@@ -2,3 +2,6 @@
 	path = ExtLibs/mono
 	url = https://github.com/meee1/mono.git
 	shallow = true
+[submodule "Plugins/PinPointMarkerPlugin"]
+	path = Plugins/PinPointMarkerPlugin
+	url = https://github.com/the-skif/PinPointMarkerPlugin.git
