@@ -18,7 +18,7 @@ namespace WeblinkPlugin.UI
 
             _statusLabel = new Label
             {
-                Text = "Server: - | Device: - | Lat: - | Lon: - | Sats: - | IP: - | Port: -",
+                Text = "Server: - | Device: - | Lat: - | Lon: - | Terrain: - | Sats: - | IP: - | Port: -",
                 ForeColor = Color.OrangeRed,
                 Font = new Font("Consolas", 8.5f, FontStyle.Regular),
                 Dock = DockStyle.Fill,
@@ -55,7 +55,8 @@ namespace WeblinkPlugin.UI
 
             _statusLabel.Text =
                 $"Server: {s.ServerStatus}  |  Device: {s.DeviceStatus}  |  " +
-                $"Lat: {s.Lat:F6}  |  Lon: {s.Lon:F6}  |  Sats: {s.Satellites}  |  " +
+                $"Lat: {s.Lat:F6}  |  Lon: {s.Lon:F6}  |  Terrain: {(s.TerrainAlt.HasValue ? s.TerrainAlt.Value.ToString("F1") : "-")}  |  " +
+                $"Sats: {s.Satellites}  |  " +
                 $"IP: {(string.IsNullOrEmpty(s.DeviceIp) ? "-" : s.DeviceIp)}  |  Port: {(s.DevicePort > 0 ? s.DevicePort.ToString() : "-")}";
         }
 

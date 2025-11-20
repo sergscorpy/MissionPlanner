@@ -15,6 +15,7 @@ namespace WeblinkPlugin.Core.Http.Storage
         public double Alt { get; private set; }
         public int Satellites { get; private set; }
         public int Ping { get; private set; }
+        public double? TerrainAlt { get; private set; }
         public string DeviceIp { get; private set; } = string.Empty;
         public int DevicePort { get; private set; } = 0;
 
@@ -35,6 +36,16 @@ namespace WeblinkPlugin.Core.Http.Storage
                 if (port > 0)
                     DevicePort = port;
             }
+            StateChanged?.Invoke();
+        }
+
+        public void UpdateTerrainAltitude(double? terrainAlt)
+        {
+            lock (_lock)
+            {
+                TerrainAlt = terrainAlt;
+            }
+
             StateChanged?.Invoke();
         }
 

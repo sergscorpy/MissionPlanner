@@ -4,6 +4,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using MissionPlanner.Utilities;
 using WeblinkPlugin.Core.Http;
 using WeblinkPlugin.Core.Http.Storage;
 
@@ -72,19 +73,25 @@ namespace WeblinkPlugin.UI
                 return;
             }
 
+            var terrain = srtm.getAltitude(point.Lat, point.Lng);
+            var terrainAlt = terrain.currenttype == srtm.tiletype.invalid ? (double?)null : terrain.alt;
+            state.UpdateTerrainAltitude(terrainAlt);
+
             var payload = new
             {
                 type = "user_marker",
                 lat = point.Lat,
                 lon = point.Lng,
+                terrain_alt = terrainAlt,
                 timestamp = DateTime.UtcNow.ToString("o")
             };
 
             try
             {
                 bool ok = await _server.SendDataAsync(payload);
+                var altText = terrainAlt.HasValue ? terrainAlt.Value.ToString("F1") : "-";
                 Console.WriteLine(ok
-                    ? $"[MapInteractionManager] Coordinates sent ({point.Lat:F6}, {point.Lng:F6})"
+                    ? $"[MapInteractionManager] Coordinates sent ({point.Lat:F6}, {point.Lng:F6}) Alt={altText}"
                     : "[MapInteractionManager] Send failed");
             }
             catch (Exception ex)
