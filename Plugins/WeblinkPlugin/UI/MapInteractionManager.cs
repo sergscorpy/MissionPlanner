@@ -20,6 +20,7 @@ namespace WeblinkPlugin.UI
         private readonly System.Threading.Timer _sendTimer;
         private PointLatLng? _lastUserPoint;
         private bool _isSending;
+        private bool _suppressNextClick;
 
         public MapInteractionManager(GMapControl map, MarkerManager markers, ServerManager server)
         {
@@ -32,6 +33,9 @@ namespace WeblinkPlugin.UI
             _menu.Items.Add("Видалити всі мітки", null, OnClearMarkersClicked);
             _menu.Items.Add("Закрити", null, OnCloseClicked);
 
+            _menu.Opening += (s, e) => { _suppressNextClick = false; };
+            _menu.Closed += (s, e) => { _suppressNextClick = true; };
+
             _map.MouseClick += Map_MouseClick;
 
             _sendTimer = new System.Threading.Timer(async _ => await TryResendAsync(), null, 1000, 1000);
@@ -39,12 +43,20 @@ namespace WeblinkPlugin.UI
 
         private void Map_MouseClick(object sender, MouseEventArgs e)
         {
-            if (e.Button == MouseButtons.Left)
+            if (e.Button != MouseButtons.Left)
+                return;
+
+            Console.WriteLine($"[MapInteractionManager] suppress = {_suppressNextClick}");
+
+            if (_suppressNextClick)
             {
-                var point = _map.FromLocalToLatLng(e.X, e.Y);
-                _menu.Tag = point;
-                _menu.Show(_map, e.Location);
+                _suppressNextClick = false;
+                return;
             }
+
+            var point = _map.FromLocalToLatLng(e.X, e.Y);
+            _menu.Tag = point;
+            _menu.Show(_map, e.Location);
         }
 
         private async void OnAddMarkerClicked(object sender, EventArgs e)
