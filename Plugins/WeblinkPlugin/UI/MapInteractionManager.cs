@@ -21,6 +21,8 @@ namespace WeblinkPlugin.UI
         private PointLatLng? _lastUserPoint;
         private bool _isSending;
         private bool _suppressNextClick;
+        private DateTime _mouseDownTime;
+        private readonly TimeSpan _maxClickDuration = TimeSpan.FromMilliseconds(200);
 
         public MapInteractionManager(GMapControl map, MarkerManager markers, ServerManager server)
         {
@@ -36,6 +38,7 @@ namespace WeblinkPlugin.UI
             _menu.Opening += (s, e) => { _suppressNextClick = false; };
             _menu.Closed += (s, e) => { _suppressNextClick = true; };
 
+            _map.MouseDown += Map_MouseDown;
             _map.MouseClick += Map_MouseClick;
 
             _sendTimer = new System.Threading.Timer(async _ => await TryResendAsync(), null, 1000, 1000);
@@ -46,17 +49,29 @@ namespace WeblinkPlugin.UI
             if (e.Button != MouseButtons.Left)
                 return;
 
-            Console.WriteLine($"[MapInteractionManager] suppress = {_suppressNextClick}");
-
             if (_suppressNextClick)
             {
                 _suppressNextClick = false;
                 return;
             }
 
+            var duration = DateTime.Now - _mouseDownTime;
+
+            if (duration > _maxClickDuration)
+            {
+                return;
+            }
+
             var point = _map.FromLocalToLatLng(e.X, e.Y);
             _menu.Tag = point;
             _menu.Show(_map, e.Location);
+        }
+        private void Map_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (e.Button != MouseButtons.Left)
+                return;
+
+            _mouseDownTime = DateTime.Now;
         }
 
         private async void OnAddMarkerClicked(object sender, EventArgs e)
@@ -68,6 +83,7 @@ namespace WeblinkPlugin.UI
             _lastUserPoint = point;
 
             await SendCoordinatesAsync(point);
+            _suppressNextClick = false;
         }
 
         private async Task SendCoordinatesAsync(PointLatLng point)
@@ -143,12 +159,17 @@ namespace WeblinkPlugin.UI
         {
             _markers.ClearUserMarkers();
             _lastUserPoint = null;
+            _suppressNextClick = false;
         }
 
         private void OnCloseClicked(object sender, EventArgs e)
         {
             if (sender is ToolStripMenuItem item && item.Owner is ContextMenuStrip menu)
+            {
                 menu.Close();
+                _suppressNextClick = false;
+            }
+
         }
 
         public void Dispose()
