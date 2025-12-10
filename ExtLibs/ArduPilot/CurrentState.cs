@@ -3338,6 +3338,11 @@ namespace MissionPlanner
                     case (uint)MAVLink.MAVLINK_MSG_ID.RADIO_STATUS:
 
                         {
+                            if (mavLinkMessage.sysid == 43)
+                            {
+                                break;
+                            }
+
                             var radio = mavLinkMessage.ToStructure<MAVLink.mavlink_radio_status_t>();
                             rssi = radio.rssi;
                             remrssi = radio.remrssi;
