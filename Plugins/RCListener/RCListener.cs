@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 using System.Collections;
+using System.Management;
 
 namespace RCListener
 {
@@ -296,7 +297,7 @@ namespace RCListener
 
         private IEnumerable<string> GetCandidatePorts()
         {
-            var ports = SerialPort.GetPortNames()
+            var ports = FilterPortsWithWmi(SerialPort.GetPortNames())
                 .Distinct()
                 .OrderBy(p => p)
                 .ToList();
@@ -314,6 +315,66 @@ namespace RCListener
 
             foreach (var port in ports)
                 yield return port;
+        }
+
+        private IEnumerable<string> FilterPortsWithWmi(IEnumerable<string> ports)
+        {
+            var candidates = new HashSet<string>(ports ?? Array.Empty<string>(), StringComparer.OrdinalIgnoreCase);
+            if (candidates.Count == 0)
+                return Array.Empty<string>();
+
+            try
+            {
+                var allowed = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+                using (var searcher = new ManagementObjectSearcher("SELECT Name, PNPDeviceID FROM Win32_PnPEntity WHERE Name LIKE '%(COM%'"))
+                {
+                    foreach (var obj in searcher.Get().OfType<ManagementObject>())
+                    {
+                        var name = obj["Name"]?.ToString() ?? string.Empty;
+                        var pnpId = obj["PNPDeviceID"]?.ToString() ?? string.Empty;
+
+                        var match = candidates.FirstOrDefault(port => name.IndexOf(port, StringComparison.OrdinalIgnoreCase) >= 0);
+                        if (string.IsNullOrEmpty(match))
+                            continue;
+
+                        if (!MeetsWmiCriteria(name, pnpId))
+                        {
+                            Log($"[SCAN] Skipping {match} via WMI filter ({pnpId})");
+                            continue;
+                        }
+
+                        allowed.Add(match);
+                    }
+                }
+
+                if (allowed.Count > 0)
+                    return allowed;
+
+                Log("[SCAN] WMI filter returned no matches, falling back to raw port list");
+            }
+            catch (Exception ex)
+            {
+                Log($"[SCAN] WMI filter error: {ex.Message}");
+            }
+
+            return candidates;
+        }
+
+        private bool MeetsWmiCriteria(string name, string pnpId)
+        {
+            var signature = $"{name} {pnpId}".ToUpperInvariant();
+
+            string[] blockedTokens = { "BTHENUM", "BLUETOOTH", "VIRTUAL", "COM0COM", "DEBUG" };
+            if (blockedTokens.Any(token => signature.Contains(token)))
+                return false;
+
+            string[] preferredTokens =
+            {
+                "USB\\", "USB ", "VID_", "FTDI", "SILICON LABS", "CP210", "CH340", "STM32", "RADIOMASTER"
+            };
+
+            return preferredTokens.Any(token => signature.Contains(token));
         }
 
         private void LoadLastKnownPort()
