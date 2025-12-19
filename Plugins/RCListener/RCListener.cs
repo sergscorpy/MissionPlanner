@@ -398,16 +398,7 @@ namespace RCListener
         {
             var signature = $"{name} {pnpId}".ToUpperInvariant();
 
-            string[] blockedTokens = { "BTHENUM", "BLUETOOTH", "VIRTUAL", "COM0COM", "DEBUG" };
-            if (blockedTokens.Any(token => signature.Contains(token)))
-                return false;
-
-            string[] preferredTokens =
-            {
-                "USB\\", "USB ", "VID_", "FTDI", "SILICON LABS", "CP210", "CH340", "STM32", "RADIOMASTER"
-            };
-
-            return preferredTokens.Any(token => signature.Contains(token));
+            return signature.Contains("VID_0483&PID_5740");
         }
 
         private void LoadLastKnownPort()
