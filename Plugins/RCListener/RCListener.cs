@@ -34,6 +34,9 @@ namespace RCListener
         private ManualResetEventSlim handshakeEvent = new ManualResetEventSlim(false);
         private DateTime portOpenUtc = DateTime.MinValue;
         private volatile bool scanning = false;
+        private volatile bool waitingForDeviceChange = false;
+        private volatile bool waitingNoticeShown = false;
+        private volatile bool indefiniteHandshakeWait = false;
 
         // ---- rc state ----
         private readonly ushort[] latestChannels = new ushort[24];
@@ -72,6 +75,10 @@ namespace RCListener
         {
             Log("RC Control plugin loaded");
             running = true;
+            if (Host != null)
+            {
+                try { Host.DeviceChanged += OnDeviceChanged; } catch { }
+            }
             InitStatusButton();
             LoadLastKnownPort();
             Thread.Sleep(300);
@@ -170,6 +177,8 @@ namespace RCListener
                 {
                     try
                     {
+                        waitingForDeviceChange = false;
+                        waitingNoticeShown = false;
                         DisconnectPort();
                         Thread.Sleep(200);
                         ScanPortsOnce();
@@ -217,6 +226,16 @@ namespace RCListener
             if (CurrentPortHealthy())
                 return;
 
+            if (waitingForDeviceChange)
+            {
+                if (!waitingNoticeShown)
+                {
+                    Log("[SCAN] Waiting for device change event before rescanning ports");
+                    waitingNoticeShown = true;
+                }
+                return;
+            }
+
             if (serialPort != null || connectedPort != null)
             {
                 Log("[SCAN] Current port is not healthy, forcing disconnect");
@@ -229,13 +248,26 @@ namespace RCListener
 
             try
             {
-                var ports = GetCandidatePorts().ToArray();
+                var ports = GetCandidatePorts();
+
+                if (ports.Count == 0)
+                {
+                    waitingForDeviceChange = true;
+                    waitingNoticeShown = false;
+                    Log("[SCAN] No ports matched WMI filter; waiting for device change");
+                    return;
+                }
+
+                waitingForDeviceChange = false;
+                waitingNoticeShown = false;
 
                 Log($"[SCAN] Candidate port order: {string.Join(", ", ports)}");
 
+                bool singleCandidate = ports.Count == 1;
+
                 foreach (var port in ports)
                 {
-                    if (TryOpenCandidatePort(port))
+                    if (TryOpenCandidatePort(port, singleCandidate))
                         break;
                     Thread.Sleep(100);
                 }
@@ -246,9 +278,10 @@ namespace RCListener
             }
         }
 
-        private bool TryOpenCandidatePort(string port)
+        private bool TryOpenCandidatePort(string port, bool waitIndefinitelyForHandshake)
         {
             handshakeEvent.Reset();
+            indefiniteHandshakeWait = waitIndefinitelyForHandshake;
 
             lock (portLock)
             {
@@ -271,7 +304,10 @@ namespace RCListener
                     portOpenUtc = DateTime.UtcNow;
                     handshakeConfirmed = false;
 
-                    Log($"[SCAN] Opened candidate port {port}, waiting for $RM,...");
+                    if (waitIndefinitelyForHandshake)
+                        Log($"[SCAN] Opened single candidate port {port}, awaiting $RM,... without timeout");
+                    else
+                        Log($"[SCAN] Opened candidate port {port}, waiting for $RM,...");
                 }
                 catch (Exception ex)
                 {
@@ -282,6 +318,9 @@ namespace RCListener
                     return false;
                 }
             }
+
+            if (waitIndefinitelyForHandshake)
+                return true;
 
             // ⏳ ЧЕКАЄМО handshake (поза lock, щоб SerialDataReceived міг спрацювати)
             if (!handshakeEvent.Wait(HandshakeTimeoutMs))
@@ -295,7 +334,7 @@ namespace RCListener
             return true;
         }
 
-        private IEnumerable<string> GetCandidatePorts()
+        private List<string> GetCandidatePorts()
         {
             var ports = FilterPortsWithWmi(SerialPort.GetPortNames())
                 .Distinct()
@@ -304,17 +343,11 @@ namespace RCListener
 
             if (!string.IsNullOrEmpty(lastKnownGoodPort) && ports.Contains(lastKnownGoodPort))
             {
-                yield return lastKnownGoodPort;
-                foreach (var port in ports)
-                {
-                    if (port != lastKnownGoodPort)
-                        yield return port;
-                }
-                yield break;
+                ports.Remove(lastKnownGoodPort);
+                ports.Insert(0, lastKnownGoodPort);
             }
 
-            foreach (var port in ports)
-                yield return port;
+            return ports;
         }
 
         private IEnumerable<string> FilterPortsWithWmi(IEnumerable<string> ports)
@@ -351,14 +384,14 @@ namespace RCListener
                 if (allowed.Count > 0)
                     return allowed;
 
-                Log("[SCAN] WMI filter returned no matches, falling back to raw port list");
+                Log("[SCAN] WMI filter returned no matches, stopping scan until device change");
             }
             catch (Exception ex)
             {
                 Log($"[SCAN] WMI filter error: {ex.Message}");
             }
 
-            return candidates;
+            return Array.Empty<string>();
         }
 
         private bool MeetsWmiCriteria(string name, string pnpId)
@@ -444,6 +477,7 @@ namespace RCListener
             portOpenUtc = DateTime.MinValue;
             lastDataUtc = DateTime.MinValue;
             scanning = false;
+            indefiniteHandshakeWait = false;
 
             Array.Clear(latestChannels, 0, latestChannels.Length);
             Array.Clear(ema, 0, ema.Length);
@@ -514,6 +548,7 @@ namespace RCListener
                 if (!handshakeConfirmed)
                 {
                     handshakeConfirmed = true;
+                    indefiniteHandshakeWait = false;
                     handshakeEvent.Set();
                     Log($"[SCAN] Confirmed RadioMaster on {connectedPort}, stop scanning");
                     lastKnownGoodPort = connectedPort;
@@ -689,6 +724,40 @@ namespace RCListener
         }
 
         // =========================
+        //     DEVICE CHANGE HOOK
+        // =========================
+        private void OnDeviceChanged(MainV2.WM_DEVICECHANGE_enum cause)
+        {
+            if (!running)
+                return;
+
+            try
+            {
+                Log($"[DEV] Device change detected ({cause}), restarting scan");
+                waitingForDeviceChange = false;
+                waitingNoticeShown = false;
+
+                ThreadPool.QueueUserWorkItem(_ =>
+                {
+                    try
+                    {
+                        DisconnectPort();
+                        Thread.Sleep(200);
+                        ScanPortsOnce();
+                    }
+                    catch (Exception ex)
+                    {
+                        Log($"[DEV] Device change worker error: {ex.Message}");
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                Log($"[DEV] Device change handler error: {ex.Message}");
+            }
+        }
+
+        // =========================
         //        MONITOR LOOP
         // =========================
         private void MonitorLoop()
@@ -727,6 +796,7 @@ namespace RCListener
 
                     bool handshakeTimedOut =
                         !handshakeConfirmed &&
+                        !indefiniteHandshakeWait &&
                         (DateTime.UtcNow - portOpenUtc).TotalMilliseconds > HandshakeTimeoutMs;
 
                     bool dataTimedOut =
@@ -783,6 +853,10 @@ namespace RCListener
             {
                 Log("[EXIT] Stopping RC Control plugin...");
                 running = false;
+                if (Host != null)
+                {
+                    try { Host.DeviceChanged -= OnDeviceChanged; } catch { }
+                }
 
                 try
                 {
