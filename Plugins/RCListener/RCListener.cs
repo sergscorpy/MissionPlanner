@@ -8,6 +8,7 @@ using System.Threading;
 using System.Drawing;
 using System.Windows.Forms;
 using System.Collections;
+using System.Collections.Generic;
 using System.Management;
 using RCListener.Config;
 using RCListener.Model;
@@ -288,7 +289,6 @@ namespace RCListener
                     serialPort.Open();
 
                     connectedPort = port;
-                    serialBuffer = "";
                     lastDataUtc = DateTime.UtcNow;
                     portOpenUtc = DateTime.UtcNow;
                     handshakeConfirmed = false;
@@ -459,8 +459,6 @@ namespace RCListener
             scanning = false;
             indefiniteHandshakeWait = false;
 
-            Array.Clear(latestChannels, 0, latestChannels.Length);
-            Array.Clear(ema, 0, ema.Length);
             UpdateStatusButton(false);
         }
 
