@@ -99,6 +99,8 @@
     <Compile Include="Processing\RcFrameParser.cs" />
     <Compile Include="RCListener.cs" />
     <Compile Include="Transport\GimbalCommandSender.cs" />
+    <Compile Include="Transport\PortScanner.cs" />
+    <Compile Include="Transport\SerialSession.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="OpenTK, Version=3.1.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">

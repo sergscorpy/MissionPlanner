@@ -9,7 +9,6 @@ using System.Drawing;
 using System.Windows.Forms;
 using System.Collections;
 using System.Collections.Generic;
-using System.Management;
 using RCListener.Config;
 using RCListener.Model;
 using RCListener.Processing;
@@ -20,20 +19,16 @@ namespace RCListener
     public class RCListener : Plugin
     {
         // ---- serial state ----
-        private string connectedPort;
-        private SerialPort serialPort;
+        private readonly SerialSession serialSession;
+        private readonly PortScanner portScanner;
         private Thread monitorThread;
         private Thread rcThread;
         private bool running;
-        private readonly object portLock = new object();
 
         private DateTime lastDataUtc = DateTime.MinValue;
-
-        private string lastKnownGoodPort = null;
         
         private volatile bool handshakeConfirmed = false;
         private ManualResetEventSlim handshakeEvent = new ManualResetEventSlim(false);
-        private DateTime portOpenUtc = DateTime.MinValue;
         private volatile bool scanning = false;
         private volatile bool waitingForDeviceChange = false;
         private volatile bool waitingNoticeShown = false;
@@ -69,6 +64,8 @@ namespace RCListener
             frameParser = new RcFrameParser(Log);
             channelProcessor = new ChannelProcessor();
             gimbalSender = new GimbalCommandSender(Log);
+            serialSession = new SerialSession(Log);
+            portScanner = new PortScanner(Log, lastPortCacheFile);
         }
 
         public override bool Init() => true;
@@ -82,7 +79,7 @@ namespace RCListener
                 try { Host.DeviceChanged += OnDeviceChanged; } catch { }
             }
             InitStatusButton();
-            LoadLastKnownPort();
+            portScanner.LoadLastKnownPort();
             Thread.Sleep(300);
 
             monitorThread = new Thread(MonitorLoop) { IsBackground = true };
@@ -190,25 +187,7 @@ namespace RCListener
         // =========================
         private bool CurrentPortHealthy()
         {
-            if (serialPort == null || !serialPort.IsOpen)
-                return false;
-
-            if (!handshakeConfirmed)
-                return false;
-
-            if ((DateTime.UtcNow - lastDataUtc).TotalMilliseconds > noDataTimeoutMs)
-                return false;
-
-            try
-            {
-                _ = serialPort.BytesToRead;
-            }
-            catch
-            {
-                return false;
-            }
-
-            return true;
+            return serialSession.IsHealthy(handshakeConfirmed, lastDataUtc, noDataTimeoutMs);
         }
 
         private void ScanPortsOnce()
@@ -226,7 +205,7 @@ namespace RCListener
                 return;
             }
 
-            if (serialPort != null || connectedPort != null)
+            if (serialSession.HasOpenPort)
             {
                 Log("[SCAN] Current port is not healthy, forcing disconnect");
                 DisconnectPort();
@@ -238,7 +217,7 @@ namespace RCListener
 
             try
             {
-                var ports = GetCandidatePorts();
+                var ports = portScanner.GetCandidatePorts();
 
                 if (ports.Count == 0)
                 {
@@ -273,40 +252,19 @@ namespace RCListener
             handshakeEvent.Reset();
             indefiniteHandshakeWait = waitIndefinitelyForHandshake;
 
-            lock (portLock)
-            {
-                try
-                {
-                    DisconnectPortInternal();
-                    Thread.Sleep(100);
+            DisconnectPortInternal();
+            Thread.Sleep(100);
 
-                    serialPort = new SerialPort(port, 115200)
-                    {
-                        ReadTimeout = 200,
-                        WriteTimeout = 200
-                    };
-                    serialPort.DataReceived += SerialDataReceived;
-                    serialPort.Open();
+            if (!serialSession.TryOpen(port, SerialDataReceived))
+                return false;
 
-                    connectedPort = port;
-                    lastDataUtc = DateTime.UtcNow;
-                    portOpenUtc = DateTime.UtcNow;
-                    handshakeConfirmed = false;
+            lastDataUtc = DateTime.UtcNow;
+            handshakeConfirmed = false;
 
-                    if (waitIndefinitelyForHandshake)
-                        Log($"[SCAN] Opened single candidate port {port}, awaiting $RM,... without timeout");
-                    else
-                        Log($"[SCAN] Opened candidate port {port}, waiting for $RM,...");
-                }
-                catch (Exception ex)
-                {
-                    Log($"[SCAN] Failed to open {port}: {ex.Message}");
-                    serialPort = null;
-                    connectedPort = null;
-                    handshakeConfirmed = false;
-                    return false;
-                }
-            }
+            if (waitIndefinitelyForHandshake)
+                Log($"[SCAN] Opened single candidate port {port}, awaiting $RM,... without timeout");
+            else
+                Log($"[SCAN] Opened candidate port {port}, waiting for $RM,...");
 
             if (waitIndefinitelyForHandshake)
                 return true;
@@ -323,138 +281,22 @@ namespace RCListener
             return true;
         }
 
-        private List<string> GetCandidatePorts()
-        {
-            var ports = FilterPortsWithWmi(SerialPort.GetPortNames())
-                .Distinct()
-                .OrderBy(p => p)
-                .ToList();
-
-            if (!string.IsNullOrEmpty(lastKnownGoodPort) && ports.Contains(lastKnownGoodPort))
-            {
-                ports.Remove(lastKnownGoodPort);
-                ports.Insert(0, lastKnownGoodPort);
-            }
-
-            return ports;
-        }
-
-        private IEnumerable<string> FilterPortsWithWmi(IEnumerable<string> ports)
-        {
-            var candidates = new HashSet<string>(ports ?? Array.Empty<string>(), StringComparer.OrdinalIgnoreCase);
-            if (candidates.Count == 0)
-                return Array.Empty<string>();
-
-            try
-            {
-                var allowed = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-                using (var searcher = new ManagementObjectSearcher("SELECT Name, PNPDeviceID FROM Win32_PnPEntity WHERE Name LIKE '%(COM%'"))
-                {
-                    foreach (var obj in searcher.Get().OfType<ManagementObject>())
-                    {
-                        var name = obj["Name"]?.ToString() ?? string.Empty;
-                        var pnpId = obj["PNPDeviceID"]?.ToString() ?? string.Empty;
-
-                        var match = candidates.FirstOrDefault(port => name.IndexOf(port, StringComparison.OrdinalIgnoreCase) >= 0);
-                        if (string.IsNullOrEmpty(match))
-                            continue;
-
-                        if (!MeetsWmiCriteria(name, pnpId))
-                        {
-                            Log($"[SCAN] Skipping {match} via WMI filter ({pnpId})");
-                            continue;
-                        }
-
-                        allowed.Add(match);
-                    }
-                }
-
-                if (allowed.Count > 0)
-                    return allowed;
-
-                Log("[SCAN] WMI filter returned no matches, stopping scan until device change");
-            }
-            catch (Exception ex)
-            {
-                Log($"[SCAN] WMI filter error: {ex.Message}");
-            }
-
-            return Array.Empty<string>();
-        }
-
-        private bool MeetsWmiCriteria(string name, string pnpId)
-        {
-            var signature = $"{name} {pnpId}".ToUpperInvariant();
-
-            return signature.Contains("VID_0483&PID_5740");
-        }
-
-        private void LoadLastKnownPort()
-        {
-            try
-            {
-                if (File.Exists(lastPortCacheFile))
-                {
-                    var port = File.ReadAllText(lastPortCacheFile).Trim();
-                    if (!string.IsNullOrEmpty(port))
-                    {
-                        lastKnownGoodPort = port;
-                        Log($"[CFG] Loaded last known port: {port}");
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Log($"[CFG] Failed to load last port cache: {ex.Message}");
-            }
-        }
-
-        private void PersistLastKnownPort(string port)
-        {
-            if (string.IsNullOrEmpty(port))
-                return;
-
-            try
-            {
-                File.WriteAllText(lastPortCacheFile, port);
-            }
-            catch (Exception ex)
-            {
-                Log($"[CFG] Failed to persist last port '{port}': {ex.Message}");
-            }
-        }
-
         private void DisconnectPortInternal()
         {
             try
             {
                 handshakeEvent.Reset();
 
-                if (serialPort != null)
+                if (serialSession.HasOpenPort)
                 {
-                    try { serialPort.DataReceived -= SerialDataReceived; } catch { }
-
-                    try
-                    {
-                        if (serialPort.IsOpen)
-                            serialPort.Close();
-                    }
-                    catch { }
-
-                    try { serialPort.Dispose(); } catch { }
-
-                    serialPort = null;
+                    Log($"Disconnected from {serialSession.ConnectedPort}");
                 }
 
-                if (connectedPort != null)
-                    Log($"Disconnected from {connectedPort}");
+                serialSession.Close();
             }
             catch { }
 
-            connectedPort = null;
             handshakeConfirmed = false;
-            portOpenUtc = DateTime.MinValue;
             lastDataUtc = DateTime.MinValue;
             scanning = false;
             indefiniteHandshakeWait = false;
@@ -464,30 +306,13 @@ namespace RCListener
 
         private void DisconnectPort()
         {
-            lock (portLock)
-            {
-                DisconnectPortInternal();
-                Thread.Sleep(100);
-            }
+            DisconnectPortInternal();
+            Thread.Sleep(100);
         }
 
         private bool IsPortStillPresent()
         {
-            try
-            {
-                if (serialPort == null)
-                    return false;
-
-                // try a lightweight query to check if port is responsive
-                _ = serialPort.BytesToRead;  // will throw if handle invalid
-
-                var names = SerialPort.GetPortNames();
-                return connectedPort != null && names.Contains(connectedPort);
-            }
-            catch
-            {
-                return false; // any error → port is gone or frozen
-            }
+            return serialSession.IsPortStillPresent();
         }
 
         // =========================
@@ -495,22 +320,12 @@ namespace RCListener
         // =========================
         private void SerialDataReceived(object sender, SerialDataReceivedEventArgs e)
         {
-            if (serialPort == null || !serialPort.IsOpen)
+            if (!serialSession.HasOpenPort)
                 return;
 
-            string chunk;
-            lock (portLock)
-            {
-                try
-                {
-                    chunk = serialPort.ReadExisting();
-                }
-                catch (Exception ex)
-                {
-                    Log($"SerialDataReceived read error: {ex.Message}");
-                    return;
-                }
-            }
+            var chunk = serialSession.ReadExisting();
+            if (string.IsNullOrEmpty(chunk))
+                return;
 
             foreach (var frame in frameParser.Push(chunk))
             {
@@ -521,9 +336,8 @@ namespace RCListener
                     handshakeConfirmed = true;
                     indefiniteHandshakeWait = false;
                     handshakeEvent.Set();
-                    Log($"[SCAN] Confirmed RadioMaster on {connectedPort}, stop scanning");
-                    lastKnownGoodPort = connectedPort;
-                    PersistLastKnownPort(connectedPort);
+                    Log($"[SCAN] Confirmed RadioMaster on {serialSession.ConnectedPort}, stop scanning");
+                    portScanner.RecordSuccessfulPort(serialSession.ConnectedPort);
                     UpdateStatusButton(true);
                 }
 
@@ -660,34 +474,24 @@ namespace RCListener
             {
                 try
                 {
-                    if (serialPort == null || !serialPort.IsOpen || connectedPort == null)
+                    if (!serialSession.HasOpenPort)
                     {
                         ScanPortsOnce();
                         Thread.Sleep(300);
                         continue;
                     }
 
-                    bool portAlive = true;
-                    try { _ = serialPort.BytesToRead; }
-                    catch { portAlive = false; }
+                    var portAlive = serialSession.IsPortStillPresent();
 
-                    bool namePresent = false;
-                    try
-                    {
-                        var names = SerialPort.GetPortNames();
-                        namePresent = connectedPort != null && names.Contains(connectedPort);
-                    }
-                    catch { }
-
-                    if (!portAlive || !namePresent)
-                        missingCount++;
+                    if (!portAlive) missingCount++;
                     else
                         missingCount = 0;
 
                     bool handshakeTimedOut =
                         !handshakeConfirmed &&
                         !indefiniteHandshakeWait &&
-                        (DateTime.UtcNow - portOpenUtc).TotalMilliseconds > HandshakeTimeoutMs;
+                        serialSession.PortOpenUtc != DateTime.MinValue &&
+                        (DateTime.UtcNow - serialSession.PortOpenUtc).TotalMilliseconds > HandshakeTimeoutMs;
 
                     bool dataTimedOut =
                         handshakeConfirmed &&
@@ -695,7 +499,7 @@ namespace RCListener
 
                     if (missingCount >= 10 || handshakeTimedOut || dataTimedOut)
                     {
-                        Log($"[MON] Port {connectedPort} seems lost (missingCount={missingCount}) → disconnect");
+                        Log($"[MON] Port {serialSession.ConnectedPort} seems lost (missingCount={missingCount}) → disconnect");
                         missingCount = 0;
 
                         DisconnectPort();
