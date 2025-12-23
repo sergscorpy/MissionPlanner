@@ -5,6 +5,7 @@ using System.IO.Ports;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Drawing;
 using System.Windows.Forms;
 using System.Collections;
@@ -21,14 +22,15 @@ namespace RCListener
         // ---- serial state ----
         private readonly SerialSession serialSession;
         private readonly PortScanner portScanner;
-        private Thread monitorThread;
-        private Thread rcThread;
+        private Task monitorTask;
+        private Task rcTask;
         private bool running;
+        private CancellationTokenSource lifecycleCts;
 
         private DateTime lastDataUtc = DateTime.MinValue;
         
         private volatile bool handshakeConfirmed = false;
-        private ManualResetEventSlim handshakeEvent = new ManualResetEventSlim(false);
+        private TaskCompletionSource<bool> handshakeTcs;
         private volatile bool scanning = false;
         private volatile bool waitingForDeviceChange = false;
         private volatile bool waitingNoticeShown = false;
@@ -74,18 +76,17 @@ namespace RCListener
         {
             Log("RC Control plugin loaded");
             running = true;
+            lifecycleCts = new CancellationTokenSource();
             if (Host != null)
             {
                 try { Host.DeviceChanged += OnDeviceChanged; } catch { }
             }
             InitStatusButton();
             portScanner.LoadLastKnownPort();
-            Thread.Sleep(300);
+            Task.Delay(300, lifecycleCts.Token).ConfigureAwait(false).GetAwaiter().GetResult();
 
-            monitorThread = new Thread(MonitorLoop) { IsBackground = true };
-            rcThread = new Thread(RCSendLoop) { IsBackground = true };
-            monitorThread.Start();
-            rcThread.Start();
+            monitorTask = Task.Run(() => MonitorLoopAsync(lifecycleCts.Token));
+            rcTask = Task.Run(() => RCSendLoopAsync(lifecycleCts.Token));
 
             return true;
         }
@@ -160,15 +161,18 @@ namespace RCListener
 
                 Log("[UI] Scan restart requested by user");
 
-                ThreadPool.QueueUserWorkItem(_ =>
+                Task.Run(async () =>
                 {
                     try
                     {
                         waitingForDeviceChange = false;
                         waitingNoticeShown = false;
-                        DisconnectPort();
-                        Thread.Sleep(200);
-                        ScanPortsOnce();
+                        await DisconnectPortAsync(lifecycleCts?.Token ?? CancellationToken.None);
+                        await Task.Delay(200, lifecycleCts?.Token ?? CancellationToken.None);
+                        await ScanPortsOnceAsync(lifecycleCts?.Token ?? CancellationToken.None);
+                    }
+                    catch (OperationCanceledException)
+                    {
                     }
                     catch (Exception ex)
                     {
@@ -190,7 +194,7 @@ namespace RCListener
             return serialSession.IsHealthy(handshakeConfirmed, lastDataUtc, noDataTimeoutMs);
         }
 
-        private void ScanPortsOnce()
+        private async Task ScanPortsOnceAsync(CancellationToken token)
         {
             if (CurrentPortHealthy())
                 return;
@@ -208,8 +212,8 @@ namespace RCListener
             if (serialSession.HasOpenPort)
             {
                 Log("[SCAN] Current port is not healthy, forcing disconnect");
-                DisconnectPort();
-                Thread.Sleep(200);
+                await DisconnectPortAsync(token);
+                await Task.Delay(200, token);
             }
 
             if (scanning) return;
@@ -236,9 +240,9 @@ namespace RCListener
 
                 foreach (var port in ports)
                 {
-                    if (TryOpenCandidatePort(port, singleCandidate))
+                    if (await TryOpenCandidatePortAsync(port, singleCandidate, token))
                         break;
-                    Thread.Sleep(100);
+                    await Task.Delay(100, token);
                 }
             }
             finally
@@ -247,13 +251,13 @@ namespace RCListener
             }
         }
 
-        private bool TryOpenCandidatePort(string port, bool waitIndefinitelyForHandshake)
+        private async Task<bool> TryOpenCandidatePortAsync(string port, bool waitIndefinitelyForHandshake, CancellationToken token)
         {
-            handshakeEvent.Reset();
             indefiniteHandshakeWait = waitIndefinitelyForHandshake;
+            handshakeTcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
 
             DisconnectPortInternal();
-            Thread.Sleep(100);
+            await Task.Delay(100, token);
 
             if (!serialSession.TryOpen(port, SerialDataReceived))
                 return false;
@@ -270,10 +274,12 @@ namespace RCListener
                 return true;
 
             // ⏳ ЧЕКАЄМО handshake (поза lock, щоб SerialDataReceived міг спрацювати)
-            if (!handshakeEvent.Wait(HandshakeTimeoutMs))
+            var completed = await Task.WhenAny(handshakeTcs.Task, Task.Delay(HandshakeTimeoutMs, token));
+            var handshakeOk = handshakeTcs.Task.Status == TaskStatus.RanToCompletion && handshakeTcs.Task.Result;
+            if (completed != handshakeTcs.Task || !handshakeOk)
             {
                 Log($"[SCAN] No handshake on {port}, closing");
-                DisconnectPort();
+                await DisconnectPortAsync(token);
                 return false;
             }
 
@@ -285,7 +291,7 @@ namespace RCListener
         {
             try
             {
-                handshakeEvent.Reset();
+                handshakeTcs?.TrySetCanceled();
 
                 if (serialSession.HasOpenPort)
                 {
@@ -304,10 +310,10 @@ namespace RCListener
             UpdateStatusButton(false);
         }
 
-        private void DisconnectPort()
+        private async Task DisconnectPortAsync(CancellationToken token)
         {
             DisconnectPortInternal();
-            Thread.Sleep(100);
+            await Task.Delay(100, token);
         }
 
         private bool IsPortStillPresent()
@@ -335,7 +341,7 @@ namespace RCListener
                 {
                     handshakeConfirmed = true;
                     indefiniteHandshakeWait = false;
-                    handshakeEvent.Set();
+                    handshakeTcs?.TrySetResult(true);
                     Log($"[SCAN] Confirmed RadioMaster on {serialSession.ConnectedPort}, stop scanning");
                     portScanner.RecordSuccessfulPort(serialSession.ConnectedPort);
                     UpdateStatusButton(true);
@@ -350,7 +356,7 @@ namespace RCListener
         // =========================
         //       RC OVERRIDE LOOP
         // =========================
-        private void RCSendLoop()
+        private async Task RCSendLoopAsync(CancellationToken token)
         {
             try { Thread.CurrentThread.IsBackground = true; } catch { }
             try { Thread.CurrentThread.Priority = ThreadPriority.Highest; } catch { }
@@ -362,7 +368,7 @@ namespace RCListener
             int localCount = 0;
             DateTime lastLog = DateTime.UtcNow;
 
-            while (running)
+            while (!token.IsCancellationRequested)
             {
                 double now = sw.Elapsed.TotalMilliseconds;
                 if (now >= nextSendMs)
@@ -390,7 +396,14 @@ namespace RCListener
                 //    lastLog = DateTime.UtcNow;
                 //}
 
-                Thread.SpinWait(5000);
+                try
+                {
+                    await Task.Delay(1, token);
+                }
+                catch (TaskCanceledException)
+                {
+                    break;
+                }
             }
         }
 
@@ -441,13 +454,16 @@ namespace RCListener
                 waitingForDeviceChange = false;
                 waitingNoticeShown = false;
 
-                ThreadPool.QueueUserWorkItem(_ =>
+                Task.Run(async () =>
                 {
                     try
                     {
-                        DisconnectPort();
-                        Thread.Sleep(200);
-                        ScanPortsOnce();
+                        await DisconnectPortAsync(lifecycleCts?.Token ?? CancellationToken.None);
+                        await Task.Delay(200, lifecycleCts?.Token ?? CancellationToken.None);
+                        await ScanPortsOnceAsync(lifecycleCts?.Token ?? CancellationToken.None);
+                    }
+                    catch (OperationCanceledException)
+                    {
                     }
                     catch (Exception ex)
                     {
@@ -464,20 +480,20 @@ namespace RCListener
         // =========================
         //        MONITOR LOOP
         // =========================
-        private void MonitorLoop()
+        private async Task MonitorLoopAsync(CancellationToken token)
         {
             try { Thread.CurrentThread.IsBackground = true; } catch { }
 
             int missingCount = 0;
 
-            while (running)
+            while (!token.IsCancellationRequested)
             {
                 try
                 {
                     if (!serialSession.HasOpenPort)
                     {
-                        ScanPortsOnce();
-                        Thread.Sleep(300);
+                        await ScanPortsOnceAsync(token);
+                        await Task.Delay(300, token);
                         continue;
                     }
 
@@ -502,19 +518,26 @@ namespace RCListener
                         Log($"[MON] Port {serialSession.ConnectedPort} seems lost (missingCount={missingCount}) → disconnect");
                         missingCount = 0;
 
-                        DisconnectPort();
+                        await DisconnectPortAsync(token);
 
-                        Thread.Sleep(2000);
-                        ScanPortsOnce();
+                        await Task.Delay(2000, token);
+                        await ScanPortsOnceAsync(token);
                         continue;
                     }
 
-                    Thread.Sleep(200);
+                    await Task.Delay(200, token);
                 }
                 catch (Exception ex)
                 {
                     Log($"MonitorLoop error: {ex.Message}");
-                    Thread.Sleep(500);
+                    try
+                    {
+                        await Task.Delay(500, token);
+                    }
+                    catch (TaskCanceledException)
+                    {
+                        break;
+                    }
                 }
             }
         }
@@ -547,6 +570,7 @@ namespace RCListener
             {
                 Log("[EXIT] Stopping RC Control plugin...");
                 running = false;
+                lifecycleCts?.Cancel();
                 if (Host != null)
                 {
                     try { Host.DeviceChanged -= OnDeviceChanged; } catch { }
@@ -554,18 +578,16 @@ namespace RCListener
 
                 try
                 {
-                    if (monitorThread != null && monitorThread.IsAlive)
+                    if (monitorTask != null)
                     {
-                        Log("[EXIT] Waiting for monitorThread...");
-                        if (!monitorThread.Join(1000))
-                            monitorThread.Interrupt();
+                        Log("[EXIT] Waiting for monitor task...");
+                        Task.WaitAny(new[] { monitorTask }, 1000);
                     }
 
-                    if (rcThread != null && rcThread.IsAlive)
+                    if (rcTask != null)
                     {
-                        Log("[EXIT] Waiting for rcThread...");
-                        if (!rcThread.Join(1000))
-                            rcThread.Interrupt();
+                        Log("[EXIT] Waiting for RC task...");
+                        Task.WaitAny(new[] { rcTask }, 1000);
                     }
                 }
                 catch (Exception ex)
@@ -575,8 +597,8 @@ namespace RCListener
 
                 try
                 {
-                    DisconnectPort();
-                    Thread.Sleep(100);
+                    DisconnectPortInternal();
+                    Task.Delay(100).ConfigureAwait(false).GetAwaiter().GetResult();
                 }
                 catch (Exception ex)
                 {
