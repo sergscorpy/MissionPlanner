@@ -84,9 +84,7 @@ namespace RCListener
                     controller.ConnectionChanged -= statusPresenter.SetConnected;
                     controller.ScanStateChanged -= statusPresenter.SetScanning;
                 }
-                catch
-                {
-                }
+                catch { }
 
                 controller.StopAsync().ConfigureAwait(false).GetAwaiter().GetResult();
 
@@ -94,9 +92,7 @@ namespace RCListener
                 {
                     statusPresenter.SetConnected(false);
                 }
-                catch 
-                { 
-                }
+                catch { }
 
                 try
                 {
