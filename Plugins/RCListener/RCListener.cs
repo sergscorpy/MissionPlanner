@@ -6,7 +6,6 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Drawing;
 using System.Windows.Forms;
 using System.Collections;
 using System.Collections.Generic;
@@ -14,6 +13,7 @@ using RCListener.Config;
 using RCListener.Model;
 using RCListener.Processing;
 using RCListener.Transport;
+using RCListener.Ui;
 
 namespace RCListener
 {
@@ -49,13 +49,7 @@ namespace RCListener
         private const int HandshakeTimeoutMs = 2000;
         private const int SendPeriodMs = 20;
 
-        // =========================
-        //        UI / STATUS
-        // =========================
-        private ToolStripButton rcStatusButton;
-        private readonly Color colorConnected = Color.FromArgb(0, 200, 0);
-        private readonly Color colorDisconnected = Color.FromArgb(200, 0, 0);
-        private readonly int statusIconSize = 20;
+        private readonly UiStatusPresenter statusPresenter;
 
         public override string Name => "RadioMaster RC Control";
         public override string Version => "1.6";
@@ -68,6 +62,7 @@ namespace RCListener
             gimbalSender = new GimbalCommandSender(Log);
             serialSession = new SerialSession(Log);
             portScanner = new PortScanner(Log, lastPortCacheFile);
+            statusPresenter = new UiStatusPresenter(Log, RestartScanQueue);
         }
 
         public override bool Init() => true;
@@ -81,7 +76,7 @@ namespace RCListener
             {
                 try { Host.DeviceChanged += OnDeviceChanged; } catch { }
             }
-            InitStatusButton();
+            statusPresenter.Initialize();
             portScanner.LoadLastKnownPort();
             Task.Delay(300, lifecycleCts.Token).ConfigureAwait(false).GetAwaiter().GetResult();
 
@@ -89,64 +84,6 @@ namespace RCListener
             rcTask = Task.Run(() => RCSendLoopAsync(lifecycleCts.Token));
 
             return true;
-        }
-
-        private void InitStatusButton()
-        {
-            try
-            {
-                rcStatusButton = new ToolStripButton
-                {
-                    Name = "RCLinkStatus",
-                    Text = "RC LINK",
-                    TextAlign = ContentAlignment.BottomCenter,
-                    TextImageRelation = TextImageRelation.ImageAboveText,
-                    DisplayStyle = ToolStripItemDisplayStyle.ImageAndText,
-                    Image = CreateStatusIcon(colorDisconnected),
-                    ToolTipText = "RadioMaster link status (click to rescan ports)"
-                };
-
-                rcStatusButton.Click += (s, e) => RestartScanQueue();
-
-                var idx = MainV2.instance.MainMenu.Items.IndexOfKey("MenuHelp");
-                if (idx < 0) idx = MainV2.instance.MainMenu.Items.Count - 1;
-                MainV2.instance.MainMenu.Items.Insert(idx, rcStatusButton);
-
-                Log("[UI] RC LINK indicator added to menu");
-            }
-            catch (Exception ex)
-            {
-                Log($"[UI] Failed to init status button: {ex.Message}");
-            }
-        }
-
-        private Bitmap CreateStatusIcon(Color color)
-        {
-            var bmp = new Bitmap(statusIconSize, statusIconSize);
-            using (var g = Graphics.FromImage(bmp))
-            {
-                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-                g.Clear(Color.Transparent);
-                using (var brush = new SolidBrush(color))
-                    g.FillEllipse(brush, 2, 2, statusIconSize - 4, statusIconSize - 4);
-            }
-            return bmp;
-        }
-
-        private void UpdateStatusButton(bool connected)
-        {
-            if (rcStatusButton == null) return;
-
-            try
-            {
-                var color = connected ? colorConnected : colorDisconnected;
-                rcStatusButton.Image?.Dispose();
-                rcStatusButton.Image = CreateStatusIcon(color);
-            }
-            catch (Exception ex)
-            {
-                Log($"[UI] UpdateStatusButton error: {ex.Message}");
-            }
         }
 
         private void RestartScanQueue()
@@ -307,7 +244,7 @@ namespace RCListener
             scanning = false;
             indefiniteHandshakeWait = false;
 
-            UpdateStatusButton(false);
+            statusPresenter.SetConnected(false);
         }
 
         private async Task DisconnectPortAsync(CancellationToken token)
@@ -344,7 +281,7 @@ namespace RCListener
                     handshakeTcs?.TrySetResult(true);
                     Log($"[SCAN] Confirmed RadioMaster on {serialSession.ConnectedPort}, stop scanning");
                     portScanner.RecordSuccessfulPort(serialSession.ConnectedPort);
-                    UpdateStatusButton(true);
+                    statusPresenter.SetConnected(true);
                 }
 
                 var result = channelProcessor.Process(frame);
@@ -610,12 +547,18 @@ namespace RCListener
 
                 try
                 {
-                    if (MainV2.instance != null && rcStatusButton != null)
-                    {
-                        MainV2.instance.BeginInvoke((Action)(() => UpdateStatusButton(false)));
-                    }
+                    statusPresenter.SetConnected(false);
                 }
                 catch { }
+
+                try
+                {
+                    statusPresenter.Dispose();
+                }
+                catch (Exception ex)
+                {
+                    Log($"[EXIT] UI dispose error: {ex.Message}");
+                }
 
                 Log("[EXIT] RC Control stopped cleanly");
             }
