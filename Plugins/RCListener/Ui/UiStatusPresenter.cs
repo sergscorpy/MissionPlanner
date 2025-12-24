@@ -86,6 +86,32 @@ namespace RCListener.Ui
             }
         }
 
+        public void SetScanning(bool scanning)
+        {
+            if (rcStatusButton == null)
+                return;
+
+            try
+            {
+                Action update = () =>
+                {
+                    rcStatusButton.ToolTipText = scanning
+                        ? "RadioMaster link: scanning ports… (click to rescan now)"
+                        : "RadioMaster link status (click to rescan ports)";
+                };
+
+                var form = MainV2.instance;
+                if (form != null && form.InvokeRequired)
+                    form.BeginInvoke(update);
+                else
+                    update();
+            }
+            catch (Exception ex)
+            {
+                log($"[UI] UpdateScanState error: {ex.Message}");
+            }
+        }
+
         private Bitmap CreateStatusIcon(Color color)
         {
             var bmp = new Bitmap(statusIconSize, statusIconSize);

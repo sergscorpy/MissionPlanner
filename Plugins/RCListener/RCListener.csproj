@@ -94,6 +94,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Config\RcConfig.cs" />
+    <Compile Include="Control\RcListenerController.cs" />
     <Compile Include="Model\RcFrame.cs" />
     <Compile Include="Processing\ChannelProcessor.cs" />
     <Compile Include="Processing\RcFrameParser.cs" />
@@ -124,5 +125,6 @@
   <ItemGroup>
     <WCFMetadata Include="Connected Services\" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
