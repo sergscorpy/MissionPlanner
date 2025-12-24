@@ -20,6 +20,8 @@ namespace RCListener.Control
         private CancellationTokenSource lifecycleCts;
         private Task monitorTask;
         private Task rcTask;
+        private readonly object workQueueSync = new object();
+        private Task workQueue = Task.CompletedTask;
 
         private DateTime lastDataUtc = DateTime.MinValue;
 
@@ -32,6 +34,7 @@ namespace RCListener.Control
 
         private const int NoDataTimeoutMs = 1000;
         private const int HandshakeTimeoutMs = 2000;
+        private const int SingleCandidateHandshakeTimeoutMs = 8000;
         private const int SendPeriodMs = 20;
 
         public RcListenerController(
@@ -61,6 +64,7 @@ namespace RCListener.Control
 
             lifecycleCts = new CancellationTokenSource();
             ResetState();
+            ResetWorkQueue();
 
             portScanner.LoadLastKnownPort();
 
@@ -77,7 +81,7 @@ namespace RCListener.Control
 
         public void HandleDeviceChange()
         {
-            RunIfActive(async token =>
+            EnqueueWork(async token =>
             {
                 log("[DEV] Device change detected, restarting scan");
                 waitingForDeviceChange = false;
@@ -91,7 +95,7 @@ namespace RCListener.Control
 
         public void RequestManualRescan()
         {
-            RunIfActive(async token =>
+            EnqueueWork(async token =>
             {
                 if (scanning)
                 {
@@ -127,6 +131,14 @@ namespace RCListener.Control
         private bool CurrentPortHealthy()
         {
             return serialSession.IsHealthy(handshakeConfirmed, lastDataUtc, NoDataTimeoutMs);
+        }
+
+        private void ResetWorkQueue()
+        {
+            lock (workQueueSync)
+            {
+                workQueue = Task.CompletedTask;
+            }
         }
 
         private async Task ScanPortsOnceAsync(CancellationToken token)
@@ -210,7 +222,8 @@ namespace RCListener.Control
             if (waitIndefinitelyForHandshake)
                 return true;
 
-            var completed = await Task.WhenAny(handshakeTcs.Task, Task.Delay(HandshakeTimeoutMs, token));
+            var handshakeTimeout = waitIndefinitelyForHandshake ? SingleCandidateHandshakeTimeoutMs : HandshakeTimeoutMs;
+            var completed = await Task.WhenAny(handshakeTcs.Task, Task.Delay(handshakeTimeout, token));
             var handshakeOk = handshakeTcs.Task.Status == TaskStatus.RanToCompletion && handshakeTcs.Task.Result;
             if (completed != handshakeTcs.Task || !handshakeOk)
             {
@@ -274,11 +287,12 @@ namespace RCListener.Control
                     else
                         missingCount = 0;
 
+                    int handshakeTimeout = indefiniteHandshakeWait ? SingleCandidateHandshakeTimeoutMs : HandshakeTimeoutMs;
+
                     bool handshakeTimedOut =
                         !handshakeConfirmed &&
-                        !indefiniteHandshakeWait &&
                         serialSession.PortOpenUtc != DateTime.MinValue &&
-                        (DateTime.UtcNow - serialSession.PortOpenUtc).TotalMilliseconds > HandshakeTimeoutMs;
+                        (DateTime.UtcNow - serialSession.PortOpenUtc).TotalMilliseconds > handshakeTimeout;
 
                     bool dataTimedOut =
                         handshakeConfirmed &&
@@ -440,26 +454,40 @@ namespace RCListener.Control
             }
         }
 
-        private void RunIfActive(Func<CancellationToken, Task> work, string errorContext)
+        private void EnqueueWork(Func<CancellationToken, Task> work, string errorContext)
         {
             var cts = lifecycleCts;
             if (cts == null || cts.IsCancellationRequested)
                 return;
 
-            Task.Run(async () =>
+            lock (workQueueSync)
             {
-                try
+                workQueue = workQueue.ContinueWith(async previous =>
                 {
-                    await work(cts.Token);
-                }
-                catch (OperationCanceledException)
-                {
-                }
-                catch (Exception ex)
-                {
-                    log($"{errorContext}: {ex.Message}");
-                }
-            }, cts.Token);
+                    try
+                    {
+                        await previous.ConfigureAwait(false);
+                    }
+                    catch
+                    {
+                    }
+
+                    if (cts.IsCancellationRequested)
+                        return;
+
+                    try
+                    {
+                        await work(cts.Token).ConfigureAwait(false);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                    }
+                    catch (Exception ex)
+                    {
+                        log($"{errorContext}: {ex.Message}");
+                    }
+                }, CancellationToken.None, TaskContinuationOptions.None, TaskScheduler.Default).Unwrap();
+            }
         }
 
         private async Task StopInternalAsync()
@@ -481,6 +509,21 @@ namespace RCListener.Control
             catch (Exception ex)
             {
                 log($"[EXIT] Thread join error: {ex.Message}");
+            }
+
+            try
+            {
+                Task pending;
+                lock (workQueueSync)
+                {
+                    pending = workQueue;
+                }
+
+                await Task.WhenAny(pending, Task.Delay(500));
+            }
+            catch (Exception ex)
+            {
+                log($"[EXIT] Work queue drain error: {ex.Message}");
             }
 
             try
