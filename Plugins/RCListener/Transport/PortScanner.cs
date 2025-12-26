@@ -106,13 +106,13 @@ namespace RCListener.Transport
                 if (allowed.Count > 0)
                     return allowed;
 
-                log.Log("[WMI] No ports matched VID/PID filter; falling back to all candidates");
-                return candidates;
+                log.Log("[WMI] No ports matched VID/PID filter; waiting for device change event");
+                return Array.Empty<string>();
             }
             catch (Exception ex)
             {
                 log.Log($"[WMI] FilterPortsWithWmi error: {ex.Message}");
-                return candidates;
+                return Array.Empty<string>();
             }
         }
     }
