@@ -3,6 +3,7 @@ using MissionPlanner.Plugin;
 using System;
 using System.IO;
 using RCListener.Control;
+using RCListener.Logging;
 using RCListener.Processing;
 using RCListener.Transport;
 using RCListener.Ui;
@@ -11,6 +12,7 @@ namespace RCListener
 {
     public class RCListener : Plugin
     {
+        private readonly ILogger logger;
         private readonly RcListenerController controller;
         private readonly UiStatusPresenter statusPresenter;
         private readonly string lastPortCacheFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "rc_listener_last_port.txt");
@@ -22,14 +24,16 @@ namespace RCListener
 
         public RCListener()
         {
-            var frameParser = new RcFrameParser(Log);
-            var channelProcessor = new ChannelProcessor();
-            var gimbalSender = new GimbalCommandSender(Log);
-            var serialSession = new SerialSession(Log);
-            var portScanner = new PortScanner(Log, lastPortCacheFile);
+            logger = new TimestampedLogger();
 
-            controller = new RcListenerController(Log, serialSession, portScanner, frameParser, channelProcessor, gimbalSender);
-            statusPresenter = new UiStatusPresenter(Log, () => controller.RequestManualRescan());
+            var frameParser = new RcFrameParser(logger);
+            var channelProcessor = new ChannelProcessor();
+            var gimbalSender = new GimbalCommandSender(logger);
+            var serialSession = new SerialSession(logger);
+            var portScanner = new PortScanner(logger, lastPortCacheFile);
+
+            controller = new RcListenerController(logger, serialSession, portScanner, frameParser, channelProcessor, gimbalSender);
+            statusPresenter = new UiStatusPresenter(logger, () => controller.RequestManualRescan());
 
             controller.ConnectionChanged += statusPresenter.SetConnected;
             controller.ScanStateChanged += statusPresenter.SetScanning;
@@ -39,7 +43,7 @@ namespace RCListener
 
         public override bool Loaded()
         {
-            Log("RC Control plugin loaded");
+            logger.Log("RC Control plugin loaded");
             running = true;
 
             statusPresenter.Initialize();
@@ -71,7 +75,7 @@ namespace RCListener
         {
             try
             {
-                Log("[EXIT] Stopping RC Control plugin...");
+                logger.Log("[EXIT] Stopping RC Control plugin...");
                 running = false;
 
                 if (Host != null)
@@ -100,23 +104,17 @@ namespace RCListener
                 }
                 catch (Exception ex)
                 {
-                    Log($"[EXIT] UI dispose error: {ex.Message}");
+                    logger.Log($"[EXIT] UI dispose error: {ex.Message}");
                 }
 
-                Log("[EXIT] RC Control stopped cleanly");
+                logger.Log("[EXIT] RC Control stopped cleanly");
             }
             catch (Exception ex)
             {
-                Log($"[EXIT] Unexpected error: {ex.Message}");
+                logger.Log($"[EXIT] Unexpected error: {ex.Message}");
             }
 
             return true;
-        }
-
-        private void Log(string msg)
-        {
-            try { Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] {msg}"); }
-            catch { System.Diagnostics.Debug.WriteLine(msg); }
         }
     }
 }

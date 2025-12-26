@@ -1,19 +1,20 @@
 using System;
 using System.IO.Ports;
 using System.Linq;
+using RCListener.Logging;
 
 namespace RCListener.Transport
 {
     public class SerialSession : IDisposable
     {
-        private readonly Action<string> log;
+        private readonly ILogger log;
         private readonly object portLock = new object();
         private SerialPort serialPort;
         private SerialDataReceivedEventHandler dataReceivedHandler;
 
-        public SerialSession(Action<string> log)
+        public SerialSession(ILogger log)
         {
-            this.log = log ?? (_ => { });
+            this.log = log;
         }
 
         public string ConnectedPort { get; private set; }
@@ -48,7 +49,7 @@ namespace RCListener.Transport
                 }
                 catch (Exception ex)
                 {
-                    log($"[SCAN] Failed to open {port}: {ex.Message}");
+                    log.Log($"[SCAN] Failed to open {port}: {ex.Message}");
                     CloseInternal();
                     return false;
                 }
@@ -68,7 +69,7 @@ namespace RCListener.Transport
                 }
                 catch (Exception ex)
                 {
-                    log($"SerialDataReceived read error: {ex.Message}");
+                    log.Log($"SerialDataReceived read error: {ex.Message}");
                     return null;
                 }
             }

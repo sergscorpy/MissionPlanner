@@ -95,6 +95,7 @@
   <ItemGroup>
     <Compile Include="Config\RcConfig.cs" />
     <Compile Include="Control\RcListenerController.cs" />
+    <Compile Include="Logging\ILogger.cs" />
     <Compile Include="Model\RcFrame.cs" />
     <Compile Include="Processing\ChannelProcessor.cs" />
     <Compile Include="Processing\RcFrameParser.cs" />

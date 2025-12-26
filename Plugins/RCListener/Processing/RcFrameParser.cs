@@ -1,16 +1,17 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using RCListener.Logging;
 using RCListener.Model;
 
 namespace RCListener.Processing
 {
     public class RcFrameParser
     {
-        private readonly Action<string> _log;
+        private readonly ILogger _log;
         private string _buffer = string.Empty;
 
-        public RcFrameParser(Action<string> log)
+        public RcFrameParser(ILogger log)
         {
             _log = log;
         }

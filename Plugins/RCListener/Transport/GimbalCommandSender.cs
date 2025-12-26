@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using RCListener.Config;
+using RCListener.Logging;
 
 namespace RCListener.Transport
 {
@@ -10,20 +11,20 @@ namespace RCListener.Transport
     {
         private readonly UdpClient _udpClient;
         private readonly IPEndPoint _endpoint;
-        private readonly Action<string> _log;
+        private readonly ILogger _log;
 
-        public GimbalCommandSender(Action<string> log)
+        public GimbalCommandSender(ILogger log)
         {
             _log = log;
             try
             {
                 _udpClient = new UdpClient(new IPEndPoint(IPAddress.Any, 15001));
                 _endpoint = new IPEndPoint(IPAddress.Parse(RcConfig.UdpIp), RcConfig.UdpPort);
-                _log($"UDP socket bound to port 15001 ? {RcConfig.UdpIp}:{RcConfig.UdpPort}");
+                _log.Log($"UDP socket bound to port 15001 ? {RcConfig.UdpIp}:{RcConfig.UdpPort}");
             }
             catch (Exception ex)
             {
-                _log($"Failed to init UDP socket: {ex.Message}");
+                _log.Log($"Failed to init UDP socket: {ex.Message}");
             }
         }
 
@@ -36,14 +37,14 @@ namespace RCListener.Transport
         {
             if (!PacketStore.Packets.TryGetValue(key, out var baseCmd))
             {
-                _log($"Gimbal command '{key}' not found");
+                _log.Log($"Gimbal command '{key}' not found");
                 return;
             }
 
             var signed = AppendCrc16(baseCmd);
 
             try { _udpClient?.Send(signed, signed.Length, _endpoint); }
-            catch (Exception ex) { _log($"UDP send error: {ex.Message}"); }
+            catch (Exception ex) { _log.Log($"UDP send error: {ex.Message}"); }
         }
 
         private static byte[] AppendCrc16(byte[] data)

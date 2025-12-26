@@ -4,19 +4,20 @@ using System.IO;
 using System.IO.Ports;
 using System.Linq;
 using System.Management;
+using RCListener.Logging;
 
 namespace RCListener.Transport
 {
     public class PortScanner
     {
-        private readonly Action<string> log;
+        private readonly ILogger log;
         private readonly string lastPortCacheFile;
 
         public string LastKnownGoodPort { get; private set; }
 
-        public PortScanner(Action<string> log, string cacheFilePath)
+        public PortScanner(ILogger log, string cacheFilePath)
         {
-            this.log = log ?? (_ => { });
+            this.log = log;
             lastPortCacheFile = cacheFilePath;
         }
 
@@ -30,13 +31,13 @@ namespace RCListener.Transport
                     if (!string.IsNullOrEmpty(port))
                     {
                         LastKnownGoodPort = port;
-                        log($"[CFG] Loaded last known port: {port}");
+                        log.Log($"[CFG] Loaded last known port: {port}");
                     }
                 }
             }
             catch (Exception ex)
             {
-                log($"[CFG] Failed to load last port cache: {ex.Message}");
+                log.Log($"[CFG] Failed to load last port cache: {ex.Message}");
             }
         }
 
@@ -53,7 +54,7 @@ namespace RCListener.Transport
             }
             catch (Exception ex)
             {
-                log($"[CFG] Failed to persist last port '{port}': {ex.Message}");
+                log.Log($"[CFG] Failed to persist last port '{port}': {ex.Message}");
             }
         }
 
@@ -105,12 +106,12 @@ namespace RCListener.Transport
                 if (allowed.Count > 0)
                     return allowed;
 
-                log("[WMI] No ports matched VID/PID filter; falling back to all candidates");
+                log.Log("[WMI] No ports matched VID/PID filter; falling back to all candidates");
                 return candidates;
             }
             catch (Exception ex)
             {
-                log($"[WMI] FilterPortsWithWmi error: {ex.Message}");
+                log.Log($"[WMI] FilterPortsWithWmi error: {ex.Message}");
                 return candidates;
             }
         }

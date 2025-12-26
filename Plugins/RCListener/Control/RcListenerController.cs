@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using MissionPlanner;
+using RCListener.Logging;
 using RCListener.Processing;
 using RCListener.Transport;
 
@@ -10,6 +11,7 @@ namespace RCListener.Control
 {
     public class RcListenerController : IDisposable
     {
+        private readonly ILogger logger;
         private readonly Action<string> log;
         private readonly SerialSession serialSession;
         private readonly PortScanner portScanner;
@@ -38,14 +40,14 @@ namespace RCListener.Control
         private const int SendPeriodMs = 20;
 
         public RcListenerController(
-            Action<string> log,
+            ILogger logger,
             SerialSession serialSession,
             PortScanner portScanner,
             RcFrameParser frameParser,
             ChannelProcessor channelProcessor,
             GimbalCommandSender gimbalSender)
         {
-            this.log = log ?? (_ => { });
+            this.logger = logger;
             this.serialSession = serialSession;
             this.portScanner = portScanner;
             this.frameParser = frameParser;
@@ -83,7 +85,7 @@ namespace RCListener.Control
         {
             EnqueueWork(async token =>
             {
-                log("[DEV] Device change detected, restarting scan");
+                logger.Log("[DEV] Device change detected, restarting scan");
                 waitingForDeviceChange = false;
                 waitingNoticeShown = false;
 
@@ -99,11 +101,11 @@ namespace RCListener.Control
             {
                 if (scanning)
                 {
-                    log("[UI] Scan restart requested but scan is already in progress");
+                    logger.Log("[UI] Scan restart requested but scan is already in progress");
                     return;
                 }
 
-                log("[UI] Scan restart requested by user");
+                logger.Log("[UI] Scan restart requested by user");
 
                 waitingForDeviceChange = false;
                 waitingNoticeShown = false;
@@ -150,15 +152,14 @@ namespace RCListener.Control
             {
                 if (!waitingNoticeShown)
                 {
-                    log("[SCAN] Waiting for device change event before rescanning ports");
-                    waitingNoticeShown = true;
+                    logger.Log("[SCAN] Waiting for device change event before rescanning ports"); waitingNoticeShown = true;
                 }
                 return;
             }
 
             if (serialSession.HasOpenPort)
             {
-                log("[SCAN] Current port is not healthy, forcing disconnect");
+                logger.Log("[SCAN] Current port is not healthy, forcing disconnect");
                 await DisconnectPortAsync(token);
                 await Task.Delay(200, token);
             }
@@ -176,14 +177,14 @@ namespace RCListener.Control
                 {
                     waitingForDeviceChange = true;
                     waitingNoticeShown = false;
-                    log("[SCAN] No ports matched WMI filter; waiting for device change");
+                    logger.Log("[SCAN] No ports matched WMI filter; waiting for device change");
                     return;
                 }
 
                 waitingForDeviceChange = false;
                 waitingNoticeShown = false;
 
-                log($"[SCAN] Candidate port order: {string.Join(", ", ports)}");
+                logger.Log($"[SCAN] Candidate port order: {string.Join(", ", ports)}");
 
                 bool singleCandidate = ports.Count == 1;
 
@@ -215,9 +216,9 @@ namespace RCListener.Control
             handshakeConfirmed = false;
 
             if (waitIndefinitelyForHandshake)
-                log($"[SCAN] Opened single candidate port {port}, awaiting $RM,... without timeout");
+                logger.Log($"[SCAN] Opened single candidate port {port}, awaiting $RM,... without timeout");
             else
-                log($"[SCAN] Opened candidate port {port}, waiting for $RM,...");
+                logger.Log($"[SCAN] Opened candidate port {port}, waiting for $RM,...");
 
             if (waitIndefinitelyForHandshake)
                 return true;
@@ -227,7 +228,7 @@ namespace RCListener.Control
             var handshakeOk = handshakeTcs.Task.Status == TaskStatus.RanToCompletion && handshakeTcs.Task.Result;
             if (completed != handshakeTcs.Task || !handshakeOk)
             {
-                log($"[SCAN] No handshake on {port}, closing");
+                logger.Log($"[SCAN] No handshake on {port}, closing");
                 await DisconnectPortAsync(token);
                 return false;
             }
@@ -253,7 +254,7 @@ namespace RCListener.Control
                     handshakeConfirmed = true;
                     indefiniteHandshakeWait = false;
                     handshakeTcs?.TrySetResult(true);
-                    log($"[SCAN] Confirmed RadioMaster on {serialSession.ConnectedPort}, stop scanning");
+                    logger.Log($"[SCAN] Confirmed RadioMaster on {serialSession.ConnectedPort}, stop scanning");
                     portScanner.RecordSuccessfulPort(serialSession.ConnectedPort);
                     NotifyConnectionChanged(true);
                 }
@@ -300,7 +301,7 @@ namespace RCListener.Control
 
                     if (missingCount >= 10 || handshakeTimedOut || dataTimedOut)
                     {
-                        log($"[MON] Port {serialSession.ConnectedPort} seems lost (missingCount={missingCount}) → disconnect");
+                        logger.Log($"[MON] Port {serialSession.ConnectedPort} seems lost (missingCount={missingCount}) → disconnect");
                         missingCount = 0;
 
                         await DisconnectPortAsync(token);
@@ -352,7 +353,7 @@ namespace RCListener.Control
                     }
                     catch (Exception ex)
                     {
-                        log($"RC send error: {ex.Message}");
+                        logger.Log($"RC send error: {ex.Message}");
                     }
                 }
 
@@ -408,7 +409,7 @@ namespace RCListener.Control
 
                 if (serialSession.HasOpenPort)
                 {
-                    log($"Disconnected from {serialSession.ConnectedPort}");
+                    logger.Log($"Disconnected from {serialSession.ConnectedPort}");
                 }
 
                 serialSession.Close();
@@ -484,7 +485,7 @@ namespace RCListener.Control
                     }
                     catch (Exception ex)
                     {
-                        log($"{errorContext}: {ex.Message}");
+                        logger.Log($"{errorContext}: {ex.Message}");
                     }
                 }, CancellationToken.None, TaskContinuationOptions.None, TaskScheduler.Default).Unwrap();
             }
@@ -508,7 +509,7 @@ namespace RCListener.Control
             }
             catch (Exception ex)
             {
-                log($"[EXIT] Thread join error: {ex.Message}");
+                logger.Log($"[EXIT] Thread join error: {ex.Message}");
             }
 
             try
@@ -523,7 +524,7 @@ namespace RCListener.Control
             }
             catch (Exception ex)
             {
-                log($"[EXIT] Work queue drain error: {ex.Message}");
+                logger.Log($"[EXIT] Work queue drain error: {ex.Message}");
             }
 
             try
@@ -533,14 +534,14 @@ namespace RCListener.Control
             }
             catch (Exception ex)
             {
-                log($"[EXIT] Port close error: {ex.Message}");
+                logger.Log($"[EXIT] Port close error: {ex.Message}");
             }
 
             try { gimbalSender?.Dispose(); }
-            catch (Exception ex) { log($"[EXIT] UDP dispose error: {ex.Message}"); }
+            catch (Exception ex) { logger.Log($"[EXIT] UDP dispose error: {ex.Message}"); }
 
             try { serialSession?.Dispose(); }
-            catch (Exception ex) { log($"[EXIT] Serial dispose error: {ex.Message}"); }
+            catch (Exception ex) { logger.Log($"[EXIT] Serial dispose error: {ex.Message}"); }
 
             try
             {

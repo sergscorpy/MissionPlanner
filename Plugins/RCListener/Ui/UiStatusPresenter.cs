@@ -2,12 +2,13 @@ using System;
 using System.Drawing;
 using System.Windows.Forms;
 using MissionPlanner;
+using RCListener.Logging;
 
 namespace RCListener.Ui
 {
     public class UiStatusPresenter : IDisposable
     {
-        private readonly Action<string> log;
+        private readonly ILogger log;
         private readonly Action onRescanRequested;
         private readonly Color colorConnected = Color.FromArgb(0, 200, 0);
         private readonly Color colorDisconnected = Color.FromArgb(200, 0, 0);
@@ -16,9 +17,9 @@ namespace RCListener.Ui
         private ToolStripButton rcStatusButton;
         private EventHandler clickHandler;
 
-        public UiStatusPresenter(Action<string> log, Action onRescanRequested)
+        public UiStatusPresenter(ILogger log, Action onRescanRequested)
         {
-            this.log = log ?? (_ => { });
+            this.log = log;
             this.onRescanRequested = onRescanRequested ?? (() => { });
         }
 
@@ -29,7 +30,7 @@ namespace RCListener.Ui
                 var form = MainV2.instance;
                 if (form == null)
                 {
-                    log("[UI] Main form is not available, skipping status button init");
+                    log.Log("[UI] Main form is not available, skipping status button init");
                     return;
                 }
 
@@ -51,11 +52,11 @@ namespace RCListener.Ui
                 if (idx < 0) idx = form.MainMenu.Items.Count - 1;
                 form.MainMenu.Items.Insert(idx, rcStatusButton);
 
-                log("[UI] RC LINK indicator added to menu");
+                log.Log("[UI] RC LINK indicator added to menu");
             }
             catch (Exception ex)
             {
-                log($"[UI] Failed to init status button: {ex.Message}");
+                log.Log($"[UI] Failed to init status button: {ex.Message}");
             }
         }
 
@@ -82,7 +83,7 @@ namespace RCListener.Ui
             }
             catch (Exception ex)
             {
-                log($"[UI] UpdateStatusButton error: {ex.Message}");
+                log.Log($"[UI] UpdateStatusButton error: {ex.Message}");
             }
         }
 
@@ -108,7 +109,7 @@ namespace RCListener.Ui
             }
             catch (Exception ex)
             {
-                log($"[UI] UpdateScanState error: {ex.Message}");
+                log.Log($"[UI] UpdateScanState error: {ex.Message}");
             }
         }
 
