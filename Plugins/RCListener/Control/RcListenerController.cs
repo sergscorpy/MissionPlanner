@@ -152,7 +152,8 @@ namespace RCListener.Control
             {
                 if (!waitingNoticeShown)
                 {
-                    logger.Log("[SCAN] Waiting for device change event before rescanning ports"); waitingNoticeShown = true;
+                    logger.Log("[SCAN] Waiting for device change event before rescanning ports"); 
+                    waitingNoticeShown = true;
                 }
                 return;
             }
@@ -315,7 +316,7 @@ namespace RCListener.Control
                 }
                 catch (Exception ex)
                 {
-                    log($"MonitorLoop error: {ex.Message}");
+                    logger.Log($"MonitorLoop error: {ex.Message}");
                     try
                     {
                         await Task.Delay(500, token);
