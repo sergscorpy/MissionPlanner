@@ -97,7 +97,7 @@ namespace RCListener.Camera
                     Ranges =
                     {
                         new RangeAction { Min = 1750, Max = 2000, Action = "down" },
-                        new RangeAction { Min = 1000, Max = 1749, Action = "center" }
+                        new RangeAction { Min = 1000, Max = 1249, Action = "center" }
                     }
                 },
                 [20] = new ChannelConfig
@@ -105,9 +105,9 @@ namespace RCListener.Camera
                     Name = "Zoom",
                     Ranges =
                     {
-                        new RangeAction { Min = 1750, Max = 2000, Action = "zoom_in" },
+                        new RangeAction { Min = 1750, Max = 2000, Action = "zoom_out" },
                         new RangeAction { Min = 1250, Max = 1750, Action = "zoom_stop" },
-                        new RangeAction { Min = 1000, Max = 1249, Action = "zoom_out" }
+                        new RangeAction { Min = 1000, Max = 1249, Action = "zoom_in" }
                     }
                 },
                 [21] = new ChannelConfig
@@ -115,10 +115,9 @@ namespace RCListener.Camera
                     Name = "Pitch control",
                     Ranges =
                     {
-                        new RangeAction { Min = 1750, Max = 2000, Action = "pitch_down" },
-                        new RangeAction { Min = 1526, Max = 1749, Action = "pitch_down" },
-                        new RangeAction { Min = 1475, Max = 1525, Action = "pitch_stop" },
-                        new RangeAction { Min = 1000, Max = 1474, Action = "pitch_up" }
+                        new RangeAction { Min = 1751, Max = 2000, Action = "pitch_down" },
+                        new RangeAction { Min = 1250, Max = 1750, Action = "pitch_stop" },
+                        new RangeAction { Min = 1000, Max = 1249, Action = "pitch_up" }
                     }
                 },
                 [22] = new ChannelConfig
@@ -126,7 +125,9 @@ namespace RCListener.Camera
                     Name = "Thermal control",
                     Ranges =
                     {
-                        new RangeAction { Min = 1750, Max = 2000, Action = "termal_next" }
+                        new RangeAction { Min = 1750, Max = 2000, Action = "termal_next" },
+                        //new RangeAction { Min = 1250, Max = 1750, Action = "termal_next1" },
+                        //new RangeAction { Min = 1000, Max = 1249, Action = "termal_next2" }
                     }
                 },
                 [23] = new ChannelConfig
@@ -134,7 +135,9 @@ namespace RCListener.Camera
                     Name = "Pip control",
                     Ranges =
                     {
-                        new RangeAction { Min = 1750, Max = 2000, Action = "pip_change" }
+                        new RangeAction { Min = 1750, Max = 2000, Action = "pip_change" },
+                        new RangeAction { Min = 1250, Max = 1749, Action = "pip_change1" },
+                        new RangeAction { Min = 1000, Max = 1249, Action = "pip_change2" }
                     }
                 }
             };
@@ -150,7 +153,11 @@ namespace RCListener.Camera
                 ["pitch_stop"] = Encoding.ASCII.GetBytes("#TPPG2wPTZ0065"),
                 ["pitch_down"] = Encoding.ASCII.GetBytes("#TPUG2wGSP1E6C"),
                 ["termal_next"] = Encoding.ASCII.GetBytes("#TPPD2wIMG0A52"),
-                ["pip_change"] = Encoding.ASCII.GetBytes("#TPPD2wPIP0A5E")
+                ["termal_next1"] = Encoding.ASCII.GetBytes("#TPPD2wIMG0A52"),
+                ["termal_next2"] = Encoding.ASCII.GetBytes("#TPPD2wIMG0A52"),
+                ["pip_change"] = Encoding.ASCII.GetBytes("#TPPD2wPIP0A5E"),
+                ["pip_change1"] = Encoding.ASCII.GetBytes("#TPPD2wPIP0A5E"),
+                ["pip_change2"] = Encoding.ASCII.GetBytes("#TPPD2wPIP0A5E")
             };
 
             return new CameraProfile(
