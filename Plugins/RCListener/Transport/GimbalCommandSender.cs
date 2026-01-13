@@ -1,8 +1,7 @@
 using System;
-using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
-using RCListener.Config;
+using RCListener.Camera;
 using RCListener.Logging;
 
 namespace RCListener.Transport
@@ -10,8 +9,10 @@ namespace RCListener.Transport
     public class GimbalCommandSender : IDisposable
     {
         private readonly UdpClient _udpClient;
-        private readonly IPEndPoint _endpoint;
         private readonly ILogger _log;
+        private readonly object sync = new object();
+        private IPEndPoint endpoint;
+        private ICameraProfile profile;
 
         public GimbalCommandSender(ILogger log)
         {
@@ -19,8 +20,7 @@ namespace RCListener.Transport
             try
             {
                 _udpClient = new UdpClient(new IPEndPoint(IPAddress.Any, 15001));
-                _endpoint = new IPEndPoint(IPAddress.Parse(RcConfig.UdpIp), RcConfig.UdpPort);
-                _log.Log($"UDP socket bound to port 15001 ? {RcConfig.UdpIp}:{RcConfig.UdpPort}");
+                _log.Log("UDP socket bound to port 15001");
             }
             catch (Exception ex)
             {
@@ -35,16 +35,51 @@ namespace RCListener.Transport
 
         public void Send(string key)
         {
-            if (!PacketStore.Packets.TryGetValue(key, out var baseCmd))
+            ICameraProfile activeProfile;
+            IPEndPoint targetEndpoint;
+
+            lock (sync)
             {
-                _log.Log($"Gimbal command '{key}' not found");
+                activeProfile = profile;
+                targetEndpoint = endpoint;
+            }
+
+            if (activeProfile == null || targetEndpoint == null)
+            {
+                _log.Log("Gimbal command skipped: camera profile is not configured");
                 return;
             }
 
-            var signed = AppendCrc16(baseCmd);
+            if (!activeProfile.TryGetCommand(key, out var baseCmd))
+            {
+                _log.Log($"Gimbal command '{key}' not found for camera {activeProfile.Name}");
+                return;
+            }
 
-            try { _udpClient?.Send(signed, signed.Length, _endpoint); }
+            var payload = activeProfile.AppendCrc16 ? AppendCrc16(baseCmd) : baseCmd;
+
+            try { _udpClient?.Send(payload, payload.Length, targetEndpoint); }
             catch (Exception ex) { _log.Log($"UDP send error: {ex.Message}"); }
+        }
+
+        public void SetProfile(ICameraProfile newProfile)
+        {
+            if (newProfile == null)
+                return;
+
+            lock (sync)
+            {
+                profile = newProfile;
+                try
+                {
+                    endpoint = new IPEndPoint(IPAddress.Parse(newProfile.UdpIp), newProfile.UdpPort);
+                }
+                catch (Exception ex)
+                {
+                    endpoint = null;
+                    _log.Log($"Invalid camera endpoint for {newProfile.Name}: {ex.Message}");
+                }
+            }
         }
 
         private static byte[] AppendCrc16(byte[] data)
@@ -102,24 +137,6 @@ namespace RCListener.Transport
             0x7C26,0x6C07,0x5C64,0x4C45,0x3CA2,0x2C83,0x1CE0,0x0CC1,
             0xEF1F,0xFF3E,0xCF5D,0xDF7C,0xAF9B,0xBFBA,0x8FD9,0x9FF8,
             0x6E17,0x7E36,0x4E55,0x5E74,0x2E93,0x3EB2,0x0ED1,0x1EF0
-        };
-    }
-
-    public static class PacketStore
-    {
-        public static readonly Dictionary<string, byte[]> Packets = new Dictionary<string, byte[]>
-        {
-            ["down"] = new byte[] { 0x55, 0x66, 0x01, 0x01, 0x00, 0x00, 0x00, 0x08, 0x04, },
-            ["down_45"] = new byte[] { 0x55, 0x66, 0x01, 0x04, 0x00, 0x00, 0x00, 0x0E, 0x00, 0x00, 0x3E, 0xFE },
-            ["center"] = new byte[] { 0x55, 0x66, 0x01, 0x01, 0x00, 0x00, 0x00, 0x08, 0x01 },
-            ["zoom_in"] = new byte[] { 0x55, 0x66, 0x01, 0x01, 0x00, 0x00, 0x00, 0x05, 0x01 },
-            ["zoom_stop"] = new byte[] { 0x55, 0x66, 0x01, 0x01, 0x00, 0x00, 0x00, 0x05, 0x00 },
-            ["zoom_out"] = new byte[] { 0x55, 0x66, 0x01, 0x01, 0x00, 0x00, 0x00, 0x05, 0xFF },
-            ["pitch_up_40"] = new byte[] { 0x55, 0x66, 0x01, 0x02, 0x00, 0x00, 0x00, 0x07, 0x00, 0xD8 },
-            ["pitch_up_80"] = new byte[] { 0x55, 0x66, 0x01, 0x02, 0x00, 0x00, 0x00, 0x07, 0x00, 0xB0 },
-            ["pitch_stop"] = new byte[] { 0x55, 0x66, 0x01, 0x02, 0x00, 0x00, 0x00, 0x07, 0x00, 0x00 },
-            ["pitch_down_40"] = new byte[] { 0x55, 0x66, 0x01, 0x02, 0x00, 0x00, 0x00, 0x07, 0x00, 0x28 },
-            ["pitch_down_80"] = new byte[] { 0x55, 0x66, 0x01, 0x02, 0x00, 0x00, 0x00, 0x07, 0x00, 0x50 }
         };
     }
 }

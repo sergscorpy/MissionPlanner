@@ -9,7 +9,7 @@ namespace RCListener.Ui
     public class UiStatusPresenter : IDisposable
     {
         private readonly ILogger log;
-        private readonly Action onRescanRequested;
+        private readonly Action onClick;
         private readonly Color colorConnected = Color.FromArgb(0, 200, 0);
         private readonly Color colorDisconnected = Color.FromArgb(200, 0, 0);
         private readonly int statusIconSize = 20;
@@ -17,10 +17,10 @@ namespace RCListener.Ui
         private ToolStripButton rcStatusButton;
         private EventHandler clickHandler;
 
-        public UiStatusPresenter(ILogger log, Action onRescanRequested)
+        public UiStatusPresenter(ILogger log, Action onClick)
         {
             this.log = log;
-            this.onRescanRequested = onRescanRequested ?? (() => { });
+            this.onClick = onClick ?? (() => { });
         }
 
         public void Initialize()
@@ -42,10 +42,10 @@ namespace RCListener.Ui
                     TextImageRelation = TextImageRelation.ImageAboveText,
                     DisplayStyle = ToolStripItemDisplayStyle.ImageAndText,
                     Image = CreateStatusIcon(colorDisconnected),
-                    ToolTipText = "RadioMaster link status (click to rescan ports)"
+                    ToolTipText = "RadioMaster link status (click to open RC tab)"
                 };
 
-                clickHandler = (s, e) => onRescanRequested();
+                clickHandler = (s, e) => onClick();
                 rcStatusButton.Click += clickHandler;
 
                 var idx = form.MainMenu.Items.IndexOfKey("MenuHelp");
@@ -97,8 +97,8 @@ namespace RCListener.Ui
                 Action update = () =>
                 {
                     rcStatusButton.ToolTipText = scanning
-                        ? "RadioMaster link: scanning ports… (click to rescan now)"
-                        : "RadioMaster link status (click to rescan ports)";
+                        ? "RadioMaster link: scanning ports... (click to open RC tab)"
+                        : "RadioMaster link status (click to open RC tab)";
                 };
 
                 var form = MainV2.instance;

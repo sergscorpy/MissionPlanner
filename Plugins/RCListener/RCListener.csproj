@@ -93,6 +93,10 @@
     <ProjectReference Include="..\\..\\ExtLibs\\Interfaces\\Interfaces.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Camera\CameraProfile.cs" />
+    <Compile Include="Camera\CameraProfiles.cs" />
+    <Compile Include="Camera\CameraSelectionService.cs" />
+    <Compile Include="Camera\ICameraProfile.cs" />
     <Compile Include="Config\RcConfig.cs" />
     <Compile Include="Control\RcListenerController.cs" />
     <Compile Include="Logging\ILogger.cs" />
@@ -100,9 +104,13 @@
     <Compile Include="Processing\ChannelProcessor.cs" />
     <Compile Include="Processing\RcFrameParser.cs" />
     <Compile Include="RCListener.cs" />
+    <Compile Include="RcListenerContext.cs" />
     <Compile Include="Transport\GimbalCommandSender.cs" />
     <Compile Include="Transport\PortScanner.cs" />
     <Compile Include="Transport\SerialSession.cs" />
+    <Compile Include="Ui\RcLinkView.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
     <Compile Include="Ui\UiStatusPresenter.cs" />
   </ItemGroup>
   <ItemGroup>

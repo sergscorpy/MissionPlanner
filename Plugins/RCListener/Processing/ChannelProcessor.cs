@@ -12,7 +12,16 @@ namespace RCListener.Processing
         private readonly ushort[] _latestChannels = new ushort[24];
         private readonly Dictionary<int, string> _lastRangeAction = new Dictionary<int, string>();
         private readonly object _sync = new object();
+        private IReadOnlyDictionary<int, ChannelConfig> channelConfig = new Dictionary<int, ChannelConfig>();
 
+        public void UpdateChannelConfig(IReadOnlyDictionary<int, ChannelConfig> channels)
+        {
+            lock (_sync)
+            {
+                channelConfig = channels ?? new Dictionary<int, ChannelConfig>();
+                _lastRangeAction.Clear();
+            }
+        }
         public ushort[] SnapshotChannels()
         {
             lock (_sync)
@@ -46,7 +55,7 @@ namespace RCListener.Processing
 
                 for (int ch = 19; ch <= 24; ch++)
                 {
-                    if (!RcConfig.Channels.TryGetValue(ch, out var cfg))
+                    if (!channelConfig.TryGetValue(ch, out var cfg))
                         continue;
 
                     int val = _latestChannels[ch - 1];

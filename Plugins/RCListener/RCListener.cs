@@ -3,10 +3,12 @@ using MissionPlanner.Plugin;
 using System;
 using System.IO;
 using RCListener.Control;
+using RCListener.Camera;
 using RCListener.Logging;
 using RCListener.Processing;
 using RCListener.Transport;
 using RCListener.Ui;
+using MissionPlanner.Controls;
 
 namespace RCListener
 {
@@ -31,12 +33,19 @@ namespace RCListener
             var gimbalSender = new GimbalCommandSender(logger);
             var serialSession = new SerialSession(logger);
             var portScanner = new PortScanner(logger, lastPortCacheFile);
+            var cameraSelection = new CameraSelectionService(logger, channelProcessor, gimbalSender);
 
             controller = new RcListenerController(logger, serialSession, portScanner, frameParser, channelProcessor, gimbalSender);
-            statusPresenter = new UiStatusPresenter(logger, () => controller.RequestManualRescan());
+            statusPresenter = new UiStatusPresenter(logger, () => MainV2.View?.ShowScreen("RCLink"));
 
             controller.ConnectionChanged += statusPresenter.SetConnected;
             controller.ScanStateChanged += statusPresenter.SetScanning;
+
+            RcListenerContext.CameraSelection = cameraSelection;
+            RcListenerContext.RequestRescan = () => controller.RequestManualRescan();
+            RcListenerContext.Logger = logger;
+
+            cameraSelection.Initialize();
         }
 
         public override bool Init() => true;
@@ -45,6 +54,15 @@ namespace RCListener
         {
             logger.Log("RC Control plugin loaded");
             running = true;
+
+            try
+            {
+                MainV2.View?.AddScreen(new MainSwitcher.Screen("RCLink", typeof(RcLinkView), false));
+            }
+            catch (Exception ex)
+            {
+                logger.Log($"[UI] Failed to register RC tab: {ex.Message}");
+            }
 
             statusPresenter.Initialize();
             controller.Start();
@@ -106,6 +124,10 @@ namespace RCListener
                 {
                     logger.Log($"[EXIT] UI dispose error: {ex.Message}");
                 }
+
+                RcListenerContext.CameraSelection = null;
+                RcListenerContext.RequestRescan = null;
+                RcListenerContext.Logger = null;
 
                 logger.Log("[EXIT] RC Control stopped cleanly");
             }
