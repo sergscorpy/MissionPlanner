@@ -4,6 +4,7 @@ using System;
 using System.IO;
 using RCListener.Control;
 using RCListener.Camera;
+using RCListener.Gripper;
 using RCListener.Logging;
 using RCListener.Processing;
 using RCListener.Transport;
@@ -18,6 +19,7 @@ namespace RCListener
         private readonly RcListenerController controller;
         private readonly UiStatusPresenter statusPresenter;
         private readonly string lastPortCacheFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "rc_listener_last_port.txt");
+        private readonly GripperControlService gripperControl;
         private bool running;
 
         public override string Name => "RadioMaster RC Control";
@@ -34,14 +36,16 @@ namespace RCListener
             var serialSession = new SerialSession(logger);
             var portScanner = new PortScanner(logger, lastPortCacheFile);
             var cameraSelection = new CameraSelectionService(logger, channelProcessor, gimbalSender);
+            gripperControl = new GripperControlService(logger, channelProcessor);
 
-            controller = new RcListenerController(logger, serialSession, portScanner, frameParser, channelProcessor, gimbalSender);
+            controller = new RcListenerController(logger, serialSession, portScanner, frameParser, channelProcessor, gimbalSender, gripperControl);
             statusPresenter = new UiStatusPresenter(logger, () => MainV2.View?.ShowScreen("RCLink"));
 
             controller.ConnectionChanged += statusPresenter.SetConnected;
             controller.ScanStateChanged += statusPresenter.SetScanning;
 
             RcListenerContext.CameraSelection = cameraSelection;
+            RcListenerContext.GripperControl = gripperControl;
             RcListenerContext.RequestRescan = () => controller.RequestManualRescan();
             RcListenerContext.Logger = logger;
 
@@ -126,8 +130,18 @@ namespace RCListener
                 }
 
                 RcListenerContext.CameraSelection = null;
+                RcListenerContext.GripperControl = null;
                 RcListenerContext.RequestRescan = null;
                 RcListenerContext.Logger = null;
+
+                try
+                {
+                    gripperControl?.Dispose();
+                }
+                catch (Exception ex)
+                {
+                    logger.Log($"[EXIT] Gripper dispose error: {ex.Message}");
+                }
 
                 logger.Log("[EXIT] RC Control stopped cleanly");
             }

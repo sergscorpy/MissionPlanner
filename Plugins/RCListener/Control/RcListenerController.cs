@@ -6,6 +6,7 @@ using MissionPlanner;
 using RCListener.Logging;
 using RCListener.Processing;
 using RCListener.Transport;
+using RCListener.Gripper;
 
 namespace RCListener.Control
 {
@@ -18,6 +19,7 @@ namespace RCListener.Control
         private readonly RcFrameParser frameParser;
         private readonly ChannelProcessor channelProcessor;
         private readonly GimbalCommandSender gimbalSender;
+        private readonly GripperControlService gripperControl;
 
         private CancellationTokenSource lifecycleCts;
         private Task monitorTask;
@@ -45,7 +47,8 @@ namespace RCListener.Control
             PortScanner portScanner,
             RcFrameParser frameParser,
             ChannelProcessor channelProcessor,
-            GimbalCommandSender gimbalSender)
+            GimbalCommandSender gimbalSender,
+            GripperControlService gripperControl)
         {
             this.logger = logger;
             this.serialSession = serialSession;
@@ -53,6 +56,7 @@ namespace RCListener.Control
             this.frameParser = frameParser;
             this.channelProcessor = channelProcessor;
             this.gimbalSender = gimbalSender;
+            this.gripperControl = gripperControl;
         }
 
         public event Action<bool> ConnectionChanged;
@@ -262,7 +266,12 @@ namespace RCListener.Control
 
                 var result = channelProcessor.Process(frame);
                 foreach (var action in result.Actions)
+                {
+                    if (gripperControl?.TryHandleAction(action) == true)
+                        continue;
+
                     gimbalSender.Send(action);
+                }
             }
         }
 

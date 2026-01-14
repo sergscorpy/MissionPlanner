@@ -13,14 +13,39 @@ namespace RCListener.Processing
         private readonly Dictionary<int, string> _lastRangeAction = new Dictionary<int, string>();
         private readonly object _sync = new object();
         private IReadOnlyDictionary<int, ChannelConfig> channelConfig = new Dictionary<int, ChannelConfig>();
-
+        private IReadOnlyDictionary<int, ChannelConfig> cameraConfig = new Dictionary<int, ChannelConfig>();
+        private IReadOnlyDictionary<int, ChannelConfig> supplementalConfig = new Dictionary<int, ChannelConfig>();
+        
         public void UpdateChannelConfig(IReadOnlyDictionary<int, ChannelConfig> channels)
         {
             lock (_sync)
             {
-                channelConfig = channels ?? new Dictionary<int, ChannelConfig>();
-                _lastRangeAction.Clear();
+                cameraConfig = channels ?? new Dictionary<int, ChannelConfig>();
+                RebuildChannelConfig();
             }
+        }
+
+        public void UpdateSupplementalChannelConfig(IReadOnlyDictionary<int, ChannelConfig> channels)
+        {
+            lock (_sync)
+            {
+                supplementalConfig = channels ?? new Dictionary<int, ChannelConfig>();
+                RebuildChannelConfig();
+            }
+        }
+
+        private void RebuildChannelConfig()
+        {
+            var merged = new Dictionary<int, ChannelConfig>();
+
+            foreach (var pair in cameraConfig)
+                merged[pair.Key] = pair.Value;
+
+            foreach (var pair in supplementalConfig)
+                merged[pair.Key] = pair.Value;
+
+            channelConfig = merged;
+            _lastRangeAction.Clear();
         }
         public ushort[] SnapshotChannels()
         {
@@ -53,11 +78,13 @@ namespace RCListener.Processing
                 for (int i = Math.Min(frame.Channels.Length, 24); i < 24; i++)
                     _latestChannels[i] = 0;
 
-                for (int ch = 19; ch <= 24; ch++)
+                foreach (var entry in channelConfig)
                 {
-                    if (!channelConfig.TryGetValue(ch, out var cfg))
+                    int ch = entry.Key;
+                    if (ch <= 0 || ch > _latestChannels.Length)
                         continue;
 
+                    var cfg = entry.Value;
                     int val = _latestChannels[ch - 1];
                     string matched = null;
 
