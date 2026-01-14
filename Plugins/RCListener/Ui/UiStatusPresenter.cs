@@ -62,7 +62,8 @@ namespace RCListener.Ui
 
         public void SetConnected(bool connected)
         {
-            if (rcStatusButton == null)
+            var button = rcStatusButton;
+            if (button == null)
                 return;
 
             try
@@ -71,8 +72,11 @@ namespace RCListener.Ui
 
                 Action update = () =>
                 {
-                    rcStatusButton.Image?.Dispose();
-                    rcStatusButton.Image = CreateStatusIcon(color);
+                    if (button == null || button.IsDisposed)
+                        return;
+
+                    button.Image?.Dispose();
+                    button.Image = CreateStatusIcon(color);
                 };
 
                 var form = MainV2.instance;
@@ -89,14 +93,18 @@ namespace RCListener.Ui
 
         public void SetScanning(bool scanning)
         {
-            if (rcStatusButton == null)
+            var button = rcStatusButton;
+            if (button == null)
                 return;
 
             try
             {
                 Action update = () =>
                 {
-                    rcStatusButton.ToolTipText = scanning
+                    if (button == null || button.IsDisposed)
+                        return;
+
+                    button.ToolTipText = scanning
                         ? "RadioMaster link: scanning ports... (click to open RC tab)"
                         : "RadioMaster link status (click to open RC tab)";
                 };
