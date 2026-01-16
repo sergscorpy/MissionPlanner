@@ -29,12 +29,18 @@ namespace RCListener.Ui
             {
                 Dock = DockStyle.Top,
                 AutoSize = true,
-                ColumnCount = 2,
+                ColumnCount = 8,
                 RowCount = 5,
                 Padding = new Padding(20),
             };
             layout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
-            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+            layout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+
+            var PercentN = 100 / (layout.ColumnCount - 2);
+            for (int i = 0; i < (layout.ColumnCount - 2); i++)
+            {
+                layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, PercentN));
+            }
 
             var title = new Label
             {
@@ -82,7 +88,7 @@ namespace RCListener.Ui
 
             rescanButton = new Button
             {
-                Text = "Пересканувати порти",
+                Text = "Rescan COM ports",
                 AutoSize = true,
                 Dock = DockStyle.Left
             };
@@ -234,7 +240,7 @@ namespace RCListener.Ui
 
             gripperGroup.Controls.Add(gripperLayout);
             layout.Controls.Add(gripperGroup, 0, 4);
-            layout.SetColumnSpan(gripperGroup, 2);
+            layout.SetColumnSpan(gripperGroup, 3);
 
             Controls.Add(layout);
 
