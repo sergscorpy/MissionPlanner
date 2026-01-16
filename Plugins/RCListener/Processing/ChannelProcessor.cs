@@ -45,7 +45,35 @@ namespace RCListener.Processing
                 merged[pair.Key] = pair.Value;
 
             channelConfig = merged;
+            WarmRangeActions();
+        }
+
+        private void WarmRangeActions()
+        {
             _lastRangeAction.Clear();
+
+            foreach (var entry in channelConfig)
+            {
+                int ch = entry.Key;
+                if (ch <= 0 || ch > _latestChannels.Length)
+                    continue;
+
+                var cfg = entry.Value;
+                int val = _latestChannels[ch - 1];
+                string matched = null;
+
+                foreach (var range in cfg.Ranges)
+                {
+                    if (val >= range.Min && val <= range.Max)
+                    {
+                        matched = range.Action;
+                        break;
+                    }
+                }
+
+                if (matched != null)
+                    _lastRangeAction[ch] = matched;
+            }
         }
         public ushort[] SnapshotChannels()
         {
