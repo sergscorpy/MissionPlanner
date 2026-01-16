@@ -55,6 +55,21 @@ namespace RCListener.Ui
                     ToolTipText = "RadioMaster link status (click to open RC tab)"
                 };
 
+                var templateButton = form.MenuFlightData;
+                if (templateButton != null)
+                {
+                    rcStatusButton.AutoSize = templateButton.AutoSize;
+                    rcStatusButton.Size = templateButton.Size;
+                    rcStatusButton.Margin = templateButton.Margin;
+                    rcStatusButton.Padding = templateButton.Padding;
+                    rcStatusButton.TextAlign = templateButton.TextAlign;
+                    rcStatusButton.TextImageRelation = templateButton.TextImageRelation;
+                    rcStatusButton.DisplayStyle = templateButton.DisplayStyle;
+                    rcStatusButton.ImageScaling = templateButton.ImageScaling;
+                    rcStatusButton.ImageTransparentColor = templateButton.ImageTransparentColor;
+                    rcStatusButton.Font = templateButton.Font;
+                }
+
                 clickHandler = (s, e) => onClick();
                 rcStatusButton.Click += clickHandler;
 
