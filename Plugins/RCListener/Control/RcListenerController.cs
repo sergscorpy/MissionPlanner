@@ -12,6 +12,12 @@ namespace RCListener.Control
 {
     public class RcListenerController : IDisposable
     {
+        public enum ConnectionState
+        {
+            Disconnected,
+            WaitingForHandshake,
+            Connected
+        }
         private readonly ILogger logger;
         private readonly Action<string> log;
         private readonly SerialSession serialSession;
@@ -59,7 +65,7 @@ namespace RCListener.Control
             this.gripperControl = gripperControl;
         }
 
-        public event Action<bool> ConnectionChanged;
+        public event Action<ConnectionState> ConnectionStateChanged;
 
         public event Action<bool> ScanStateChanged;
 
@@ -225,6 +231,8 @@ namespace RCListener.Control
             else
                 logger.Log($"[SCAN] Opened candidate port {port}, waiting for $RM,...");
 
+            NotifyConnectionState(ConnectionState.WaitingForHandshake);
+
             if (waitIndefinitelyForHandshake)
                 return true;
 
@@ -261,7 +269,7 @@ namespace RCListener.Control
                     handshakeTcs?.TrySetResult(true);
                     logger.Log($"[SCAN] Confirmed RadioMaster on {serialSession.ConnectedPort}, stop scanning");
                     portScanner.RecordSuccessfulPort(serialSession.ConnectedPort);
-                    NotifyConnectionChanged(true);
+                    NotifyConnectionState(ConnectionState.Connected);
                 }
 
                 var result = channelProcessor.Process(frame);
@@ -432,7 +440,7 @@ namespace RCListener.Control
             lastDataUtc = DateTime.MinValue;
             indefiniteHandshakeWait = false;
 
-            NotifyConnectionChanged(false);
+            NotifyConnectionState(ConnectionState.Disconnected);
         }
 
         private async Task DisconnectPortAsync(CancellationToken token)
@@ -441,11 +449,11 @@ namespace RCListener.Control
             await Task.Delay(100, token);
         }
 
-        private void NotifyConnectionChanged(bool connected)
+        private void NotifyConnectionState(ConnectionState state)
         {
             try
             {
-                ConnectionChanged?.Invoke(connected);
+                ConnectionStateChanged?.Invoke(state);
             }
             catch
             {

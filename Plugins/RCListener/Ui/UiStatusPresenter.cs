@@ -1,8 +1,10 @@
 using System;
 using System.Drawing;
+using System.IO;
 using System.Windows.Forms;
 using MissionPlanner;
 using RCListener.Logging;
+using RCListener.Control;
 
 namespace RCListener.Ui
 {
@@ -10,12 +12,14 @@ namespace RCListener.Ui
     {
         private readonly ILogger log;
         private readonly Action onClick;
-        private readonly Color colorConnected = Color.FromArgb(0, 200, 0);
-        private readonly Color colorDisconnected = Color.FromArgb(200, 0, 0);
-        private readonly int statusIconSize = 20;
+        private readonly string statusIconDir =
+            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Plugins", "RCListener", "Ui", "Image");
 
         private ToolStripButton rcStatusButton;
         private EventHandler clickHandler;
+        private Image connectedIcon;
+        private Image waitingIcon;
+        private Image disconnectedIcon;
 
         public UiStatusPresenter(ILogger log, Action onClick)
         {
@@ -34,6 +38,8 @@ namespace RCListener.Ui
                     return;
                 }
 
+                EnsureIconsLoaded();
+
                 rcStatusButton = new ToolStripButton
                 {
                     Name = "RCLinkStatus",
@@ -41,7 +47,7 @@ namespace RCListener.Ui
                     TextAlign = ContentAlignment.BottomCenter,
                     TextImageRelation = TextImageRelation.ImageAboveText,
                     DisplayStyle = ToolStripItemDisplayStyle.ImageAndText,
-                    Image = CreateStatusIcon(colorDisconnected),
+                    Image = disconnectedIcon,
                     ToolTipText = "RadioMaster link status (click to open RC tab)"
                 };
 
@@ -60,7 +66,7 @@ namespace RCListener.Ui
             }
         }
 
-        public void SetConnected(bool connected)
+        public void SetConnectionState(RcListenerController.ConnectionState state)
         {
             var button = rcStatusButton;
             if (button == null)
@@ -68,15 +74,14 @@ namespace RCListener.Ui
 
             try
             {
-                var color = connected ? colorConnected : colorDisconnected;
+                var icon = GetIconForState(state);
 
                 Action update = () =>
                 {
                     if (button == null || button.IsDisposed)
                         return;
 
-                    button.Image?.Dispose();
-                    button.Image = CreateStatusIcon(color);
+                    button.Image = icon;
                 };
 
                 var form = MainV2.instance;
@@ -121,17 +126,52 @@ namespace RCListener.Ui
             }
         }
 
-        private Bitmap CreateStatusIcon(Color color)
+        private void EnsureIconsLoaded()
         {
-            var bmp = new Bitmap(statusIconSize, statusIconSize);
-            using (var g = Graphics.FromImage(bmp))
+            if (connectedIcon != null && waitingIcon != null && disconnectedIcon != null)
+                return;
+
+            connectedIcon = LoadIcon("Joystick_green.png");
+            waitingIcon = LoadIcon("Joystick_yellow.png");
+            disconnectedIcon = LoadIcon("Joystick_red.png");
+        }
+
+        private Image GetIconForState(RcListenerController.ConnectionState state)
+        {
+            switch (state)
             {
-                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-                g.Clear(Color.Transparent);
-                using (var brush = new SolidBrush(color))
-                    g.FillEllipse(brush, 2, 2, statusIconSize - 4, statusIconSize - 4);
+                case RcListenerController.ConnectionState.Connected:
+                    return connectedIcon;
+                case RcListenerController.ConnectionState.WaitingForHandshake:
+                    return waitingIcon;
+                default:
+                    return disconnectedIcon;
             }
-            return bmp;
+        }
+
+        private Image LoadIcon(string fileName)
+        {
+            var path = Path.Combine(statusIconDir, fileName);
+            if (!File.Exists(path))
+            {
+                log.Log($"[UI] Status icon missing: {path}");
+                return null;
+            }
+
+            try
+            {
+                var bytes = File.ReadAllBytes(path);
+                using (var ms = new MemoryStream(bytes))
+                using (var img = Image.FromStream(ms))
+                {
+                    return new Bitmap(img);
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Log($"[UI] Failed to load status icon {fileName}: {ex.Message}");
+                return null;
+            }
         }
 
         public void Dispose()
@@ -158,7 +198,6 @@ namespace RCListener.Ui
                         }
                     }
 
-                    rcStatusButton.Image?.Dispose();
                     rcStatusButton.Dispose();
                 }
             }
@@ -169,6 +208,12 @@ namespace RCListener.Ui
             {
                 rcStatusButton = null;
                 clickHandler = null;
+                connectedIcon?.Dispose();
+                waitingIcon?.Dispose();
+                disconnectedIcon?.Dispose();
+                connectedIcon = null;
+                waitingIcon = null;
+                disconnectedIcon = null;
             }
         }
     }

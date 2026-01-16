@@ -41,7 +41,7 @@ namespace RCListener
             controller = new RcListenerController(logger, serialSession, portScanner, frameParser, channelProcessor, gimbalSender, gripperControl);
             statusPresenter = new UiStatusPresenter(logger, () => MainV2.View?.ShowScreen("RCLink"));
 
-            controller.ConnectionChanged += statusPresenter.SetConnected;
+            controller.ConnectionStateChanged += statusPresenter.SetConnectionState;
             controller.ScanStateChanged += statusPresenter.SetScanning;
 
             RcListenerContext.CameraSelection = cameraSelection;
@@ -107,7 +107,7 @@ namespace RCListener
 
                 try
                 {
-                    controller.ConnectionChanged -= statusPresenter.SetConnected;
+                    controller.ConnectionStateChanged -= statusPresenter.SetConnectionState;
                     controller.ScanStateChanged -= statusPresenter.SetScanning;
                 }
                 catch { }
@@ -116,7 +116,7 @@ namespace RCListener
 
                 try
                 {
-                    statusPresenter.SetConnected(false);
+                    statusPresenter.SetConnectionState(RcListenerController.ConnectionState.Disconnected);
                 }
                 catch { }
 
