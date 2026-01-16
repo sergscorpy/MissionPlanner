@@ -137,6 +137,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Test\" />
+    <Folder Include="Ui\Image\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
