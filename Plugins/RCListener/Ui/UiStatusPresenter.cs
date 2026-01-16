@@ -13,7 +13,11 @@ namespace RCListener.Ui
         private readonly ILogger log;
         private readonly Action onClick;
         private readonly string statusIconDir =
-            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Plugins", "RCListener", "Ui", "Image");
+            Path.Combine(
+                Path.GetDirectoryName(typeof(UiStatusPresenter).Assembly.Location)
+                ?? AppDomain.CurrentDomain.BaseDirectory,
+                "Ui",
+                "Image");
 
         private ToolStripButton rcStatusButton;
         private EventHandler clickHandler;

@@ -137,7 +137,17 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Test\" />
-    <Folder Include="Ui\Image\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Ui\Image\Joystick_green.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Ui\Image\Joystick_red.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Ui\Image\Joystick_yellow.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
