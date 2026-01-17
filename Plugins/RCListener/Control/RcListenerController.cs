@@ -105,26 +105,6 @@ namespace RCListener.Control
             }, "[DEV] Device change worker error");
         }
 
-        public void RequestManualRescan()
-        {
-            EnqueueWork(async token =>
-            {
-                if (scanning)
-                {
-                    logger.Log("[UI] Scan restart requested but scan is already in progress");
-                    return;
-                }
-
-                logger.Log("[UI] Scan restart requested by user");
-
-                waitingForDeviceChange = false;
-                waitingNoticeShown = false;
-                await DisconnectPortAsync(token);
-                await Task.Delay(200, token);
-                await ScanPortsOnceAsync(token);
-            }, "[UI] RestartScanQueue worker error");
-        }
-
         public void Dispose()
         {
             StopInternalAsync().ConfigureAwait(false).GetAwaiter().GetResult();

@@ -46,7 +46,6 @@ namespace RCListener
 
             RcListenerContext.CameraSelection = cameraSelection;
             RcListenerContext.GripperControl = gripperControl;
-            RcListenerContext.RequestRescan = () => controller.RequestManualRescan();
             RcListenerContext.Logger = logger;
 
             cameraSelection.Initialize();
@@ -131,7 +130,6 @@ namespace RCListener
 
                 RcListenerContext.CameraSelection = null;
                 RcListenerContext.GripperControl = null;
-                RcListenerContext.RequestRescan = null;
                 RcListenerContext.Logger = null;
 
                 try

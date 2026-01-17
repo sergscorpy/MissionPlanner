@@ -9,7 +9,6 @@ namespace RCListener
     {
         public static CameraSelectionService CameraSelection { get; set; }
         public static GripperControlService GripperControl { get; set; }
-        public static Action RequestRescan { get; set; }
         public static ILogger Logger { get; set; }
     }
 }

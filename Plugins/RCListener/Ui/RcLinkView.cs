@@ -11,7 +11,6 @@ namespace RCListener.Ui
         private readonly ComboBox cameraCombo;
         private readonly Label cameraDetails;
         private readonly Label cameraLabel;
-        private readonly Button rescanButton;
         private readonly Label gripperStatusLabel;
         private readonly CheckBox gripperEnabledCheck;
         private readonly NumericUpDown gripperServoChannel;
@@ -85,15 +84,6 @@ namespace RCListener.Ui
                 TextAlign = ContentAlignment.MiddleLeft
             };
             layout.Controls.Add(cameraDetails, 1, 2);
-
-            rescanButton = new Button
-            {
-                Text = "Rescan COM ports",
-                AutoSize = true,
-                Dock = DockStyle.Left
-            };
-            rescanButton.Click += RescanButton_Click;
-            layout.Controls.Add(rescanButton, 1, 3);
 
             var gripperGroup = new GroupBox
             {
@@ -327,11 +317,6 @@ namespace RCListener.Ui
         private void HandleCameraChanged(ICameraProfile profile)
         {
             UpdateSelection(profile);
-        }
-
-        private void RescanButton_Click(object sender, EventArgs e)
-        {
-            RcListenerContext.RequestRescan?.Invoke();
         }
 
         private void LoadGripperSettings()
