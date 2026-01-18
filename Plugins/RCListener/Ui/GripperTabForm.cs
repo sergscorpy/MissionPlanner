@@ -13,6 +13,7 @@ namespace RCListener.Ui
         private const int AnimationIntervalMs = 300;
         private const int AnimationToggles = 3;
         private const int MaxServos = 4;
+        private const int DragThreshold = 4;
 
         private readonly ILogger log;
         private readonly GripperControlService gripper;
@@ -21,6 +22,10 @@ namespace RCListener.Ui
         private readonly PictureBox[] lockIcons;
         private readonly Timer animationTimer;
         private readonly AnimationState[] animationStates;
+        private bool dragPending;
+        private bool isDragging;
+        private Point dragOrigin;
+        private Point formOrigin;
 
         private Image gripEnabledOn;
         private Image gripEnabledOff;
@@ -97,6 +102,7 @@ namespace RCListener.Ui
             layout.Controls.Add(lockFlow);
 
             Controls.Add(layout);
+            AttachDragHandlers(this);
 
             LoadImages();
             UpdateFromService();
@@ -179,6 +185,7 @@ namespace RCListener.Ui
                 animationTimer.Stop();
                 animationTimer.Tick -= AnimationTimer_Tick;
                 enabledButton.Click -= EnabledButton_Click;
+                DetachDragHandlers(this);
                 DisposeImages();
             }
 
@@ -247,6 +254,69 @@ namespace RCListener.Ui
             var area = Screen.PrimaryScreen?.WorkingArea ?? new Rectangle(0, 0, 800, 600);
             Location = new Point(area.Right - Width - 20, area.Top + 20);
         }
+
+        private void AttachDragHandlers(System.Windows.Forms.Control control)
+        {
+            control.MouseDown += DragMouseDown;
+            control.MouseMove += DragMouseMove;
+            control.MouseUp += DragMouseUp;
+
+            foreach (System.Windows.Forms.Control child in control.Controls)
+                AttachDragHandlers(child);
+        }
+
+        private void DetachDragHandlers(System.Windows.Forms.Control control)
+        {
+            control.MouseDown -= DragMouseDown;
+            control.MouseMove -= DragMouseMove;
+            control.MouseUp -= DragMouseUp;
+
+            foreach (System.Windows.Forms.Control child in control.Controls)
+                DetachDragHandlers(child);
+        }
+
+        private void DragMouseDown(object sender, MouseEventArgs e)
+        {
+            if (e.Button != MouseButtons.Left)
+                return;
+
+            dragPending = true;
+            isDragging = false;
+            dragOrigin = System.Windows.Forms.Control.MousePosition;
+            formOrigin = Location;
+            Capture = true;
+        }
+
+        private void DragMouseMove(object sender, MouseEventArgs e)
+        {
+            if (!dragPending)
+                return;
+
+            var current = System.Windows.Forms.Control.MousePosition;
+            if (!isDragging)
+            {
+                if (Math.Abs(current.X - dragOrigin.X) < DragThreshold
+                    && Math.Abs(current.Y - dragOrigin.Y) < DragThreshold)
+                    return;
+
+                isDragging = true;
+            }
+
+            Location = new Point(
+                formOrigin.X + (current.X - dragOrigin.X),
+                formOrigin.Y + (current.Y - dragOrigin.Y));
+        }
+
+        private void DragMouseUp(object sender, MouseEventArgs e)
+        {
+            if (e.Button != MouseButtons.Left)
+                return;
+
+            dragPending = false;
+            isDragging = false;
+            Capture = false;
+        }
+
 
         private void LoadImages()
         {
