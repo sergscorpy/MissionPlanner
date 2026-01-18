@@ -73,10 +73,12 @@ namespace RCListener.Ui
             var lockFlow = new FlowLayoutPanel
             {
                 AutoSize = true,
-                BackColor = Color.Transparent,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
+                BackColor = BackColor,
                 FlowDirection = FlowDirection.TopDown,
                 WrapContents = false,
-                Padding = new Padding(0, 4, 0, 0)
+                Padding = new Padding(0, 4, 0, 0),
+                Margin = Padding.Empty
             };
 
             for (int i = 0; i < lockIcons.Length; i++)
@@ -94,9 +96,11 @@ namespace RCListener.Ui
             var layout = new FlowLayoutPanel
             {
                 AutoSize = true,
-                BackColor = Color.Transparent,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
+                BackColor = BackColor,
                 FlowDirection = FlowDirection.TopDown,
-                WrapContents = false
+                WrapContents = false,
+                Margin = Padding.Empty
             };
             layout.Controls.Add(enabledButton);
             layout.Controls.Add(lockFlow);
