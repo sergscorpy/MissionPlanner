@@ -284,7 +284,6 @@ namespace RCListener.Ui
             isDragging = false;
             dragOrigin = System.Windows.Forms.Control.MousePosition;
             formOrigin = Location;
-            Capture = true;
         }
 
         private void DragMouseMove(object sender, MouseEventArgs e)
@@ -300,6 +299,7 @@ namespace RCListener.Ui
                     return;
 
                 isDragging = true;
+                Capture = true;
             }
 
             Location = new Point(
