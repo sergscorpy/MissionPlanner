@@ -18,6 +18,7 @@ namespace RCListener.Logging
 
         public void Log(string message)
         {
+#if DEBUG
             var formatted = $"{prefix} {message}";
 
             try
@@ -28,6 +29,7 @@ namespace RCListener.Logging
             {
                 System.Diagnostics.Debug.WriteLine(formatted);
             }
+#endif
         }
     }
 }
