@@ -235,7 +235,10 @@ namespace RCListener.Ui
 
             bool locked = gripper.LockStates[index];
             if (!locked)
-                return dropsEmpty;
+            {
+                bool selectedOpen = gripper.SelectedServo == index + 1;
+                return selectedOpen ? dropsEmptyOrange : dropsEmpty;
+            }
 
             bool selected = gripper.SelectedServo == index + 1;
             return selected ? dropsOrange : dropsGreen;
