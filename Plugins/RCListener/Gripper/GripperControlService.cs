@@ -50,6 +50,7 @@ namespace RCListener.Gripper
         }
 
         public event Action Updated;
+        public event Action<int, bool> CommandTriggered;
 
         public bool IsEnabled { get; private set; }
 
@@ -254,6 +255,13 @@ namespace RCListener.Gripper
                     requireack: false);
 
                 log?.Log($"[GRIPPER] Command sent to servo {servo}");
+                bool isLocked = false;
+                lock (sync)
+                {
+                    if (servo > 0 && servo <= LockStates.Length)
+                        isLocked = LockStates[servo - 1];
+                }
+                RaiseCommandTriggered(servo, isLocked);
             }
             catch (Exception ex)
             {
@@ -358,6 +366,17 @@ namespace RCListener.Gripper
             try
             {
                 Updated?.Invoke();
+            }
+            catch
+            {
+            }
+        }
+
+        private void RaiseCommandTriggered(int servo, bool isLocked)
+        {
+            try
+            {
+                CommandTriggered?.Invoke(servo, isLocked);
             }
             catch
             {

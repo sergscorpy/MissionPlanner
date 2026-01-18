@@ -18,6 +18,7 @@ namespace RCListener
         private readonly ILogger logger;
         private readonly RcListenerController controller;
         private readonly UiStatusPresenter statusPresenter;
+        private readonly GripperTabPresenter gripperTabPresenter;
         private readonly string lastPortCacheFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "rc_listener_last_port.txt");
         private readonly GripperControlService gripperControl;
         private bool running;
@@ -40,6 +41,7 @@ namespace RCListener
 
             controller = new RcListenerController(logger, serialSession, portScanner, frameParser, channelProcessor, gimbalSender, gripperControl);
             statusPresenter = new UiStatusPresenter(logger, () => MainV2.View?.ShowScreen("RCLink"));
+            gripperTabPresenter = new GripperTabPresenter(logger, gripperControl);
 
             controller.ConnectionStateChanged += statusPresenter.SetConnectionState;
             controller.ScanStateChanged += statusPresenter.SetScanning;
@@ -68,6 +70,7 @@ namespace RCListener
             }
 
             statusPresenter.Initialize();
+            gripperTabPresenter.Initialize();
             controller.Start();
 
             if (Host != null)
@@ -126,6 +129,15 @@ namespace RCListener
                 catch (Exception ex)
                 {
                     logger.Log($"[EXIT] UI dispose error: {ex.Message}");
+                }
+
+                try
+                {
+                    gripperTabPresenter.Dispose();
+                }
+                catch (Exception ex)
+                {
+                    logger.Log($"[EXIT] GripperTab dispose error: {ex.Message}");
                 }
 
                 RcListenerContext.CameraSelection = null;
