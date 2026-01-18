@@ -69,9 +69,9 @@ namespace RCListener.Ui
             {
                 AutoSize = true,
                 BackColor = Color.Transparent,
-                FlowDirection = FlowDirection.LeftToRight,
+                FlowDirection = FlowDirection.TopDown,
                 WrapContents = false,
-                Padding = new Padding(4, 0, 0, 0)
+                Padding = new Padding(0, 4, 0, 0)
             };
 
             for (int i = 0; i < lockIcons.Length; i++)
@@ -80,7 +80,7 @@ namespace RCListener.Ui
                 {
                     SizeMode = PictureBoxSizeMode.AutoSize,
                     BackColor = Color.Transparent,
-                    Margin = new Padding(4, 0, 4, 0)
+                    Margin = new Padding(0, 4, 0, 4)
                 };
                 lockIcons[i] = icon;
                 lockFlow.Controls.Add(icon);
@@ -90,7 +90,7 @@ namespace RCListener.Ui
             {
                 AutoSize = true,
                 BackColor = Color.Transparent,
-                FlowDirection = FlowDirection.LeftToRight,
+                FlowDirection = FlowDirection.TopDown,
                 WrapContents = false
             };
             layout.Controls.Add(enabledButton);
