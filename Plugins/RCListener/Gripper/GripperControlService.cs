@@ -356,7 +356,7 @@ namespace RCListener.Gripper
             }
 
             bool available = lastHeartbeat != DateTime.MinValue &&
-                             (DateTime.UtcNow - lastHeartbeat).TotalSeconds < 2.5;
+                             (DateTime.UtcNow - lastHeartbeat).TotalSeconds < 5;
 
             IsDeviceAvailable = available;
         }
