@@ -55,6 +55,7 @@ namespace RCListener.Ui
             ShowInTaskbar = false;
             StartPosition = FormStartPosition.Manual;
             TopMost = true;
+            SetStyle(ControlStyles.SupportsTransparentBackColor, true);
             BackColor = Color.Magenta;
             TransparencyKey = Color.Magenta;
             AutoSize = true;
@@ -70,11 +71,10 @@ namespace RCListener.Ui
             };
             enabledButton.Click += EnabledButton_Click;
 
-            var lockFlow = new FlowLayoutPanel
+            var lockFlow = new TransparentFlowLayoutPanel
             {
                 AutoSize = true,
                 AutoSizeMode = AutoSizeMode.GrowAndShrink,
-                BackColor = BackColor,
                 FlowDirection = FlowDirection.TopDown,
                 WrapContents = false,
                 Padding = new Padding(0, 4, 0, 0),
@@ -93,11 +93,10 @@ namespace RCListener.Ui
                 lockFlow.Controls.Add(icon);
             }
 
-            var layout = new FlowLayoutPanel
+            var layout = new TransparentFlowLayoutPanel
             {
                 AutoSize = true,
                 AutoSizeMode = AutoSizeMode.GrowAndShrink,
-                BackColor = BackColor,
                 FlowDirection = FlowDirection.TopDown,
                 WrapContents = false,
                 Margin = Padding.Empty
@@ -380,6 +379,15 @@ namespace RCListener.Ui
             public bool IsLocked { get; set; }
             public bool UsePrimary { get; set; }
             public int RemainingToggles { get; set; }
+        }
+
+        private sealed class TransparentFlowLayoutPanel : FlowLayoutPanel
+        {
+            public TransparentFlowLayoutPanel()
+            {
+                SetStyle(ControlStyles.SupportsTransparentBackColor, true);
+                BackColor = Color.Transparent;
+            }
         }
     }
 }
