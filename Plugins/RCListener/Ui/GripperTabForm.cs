@@ -236,11 +236,11 @@ namespace RCListener.Ui
             bool locked = gripper.LockStates[index];
             if (!locked)
             {
-                bool selectedOpen = gripper.SelectedServo == index + 1;
+                bool selectedOpen = gripper.IsEnabled && gripper.SelectedServo == index + 1;
                 return selectedOpen ? dropsEmptyOrange : dropsEmpty;
             }
 
-            bool selected = gripper.SelectedServo == index + 1;
+            bool selected = gripper.IsEnabled && gripper.SelectedServo == index + 1;
             return selected ? dropsOrange : dropsGreen;
         }
 
