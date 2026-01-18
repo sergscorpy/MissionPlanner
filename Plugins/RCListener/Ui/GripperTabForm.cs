@@ -3,6 +3,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using MissionPlanner;
 using RCListener.Gripper;
 using RCListener.Logging;
 
@@ -257,6 +258,13 @@ namespace RCListener.Ui
 
         private void PositionForm()
         {
+            var main = MainV2.instance;
+            if (main != null && !main.IsDisposed)
+            {
+                Location = main.DesktopLocation;
+                return;
+            }
+
             var area = Screen.PrimaryScreen?.WorkingArea ?? new Rectangle(0, 0, 800, 600);
             Location = new Point(area.Right - Width - 20, area.Top + 20);
         }
