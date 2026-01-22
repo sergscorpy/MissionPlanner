@@ -71,7 +71,7 @@ namespace WeblinkPlugin.Core.Http
                     }
 
                     var deviceStatus = await _deviceClient.PingAsync();
-                    if (deviceStatus?.status == "connected")
+                    if (deviceStatus?.Status == "connected")
                     {
                         state.UpdateStatus(state.ServerStatus, "Device connected");
 
