@@ -42,7 +42,7 @@ namespace WeblinkPlugin
                 return false;
             }
 
-            _server = new ServerManager("http://127.0.0.1:5000");
+            _server = new ServerManager("http://127.0.0.1:9999");
 
             _server.TelemetryUpdated += (lat, lon) =>
             {

@@ -107,11 +107,9 @@ namespace WeblinkPlugin.UI
 
             var payload = new
             {
-                type = "user_marker",
                 lat = point.Lat,
                 lon = point.Lng,
-                terrain_alt = terrainAlt,
-                timestamp = DateTime.UtcNow.ToString("o")
+                alt = terrainAlt
             };
 
             try

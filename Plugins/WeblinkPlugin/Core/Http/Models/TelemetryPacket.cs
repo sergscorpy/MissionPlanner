@@ -11,9 +11,5 @@ namespace WeblinkPlugin.Core.Http.Models
         public double Alt { get; set; }
 
         public int Sats { get; set; }
-
-        public double Hdop { get; set; }
-
-        public string Timestamp { get; set; } = string.Empty;
     }
 }

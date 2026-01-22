@@ -57,7 +57,7 @@ namespace WeblinkPlugin.Core.Http
                     deviceConnected ? "Orchestrator connected" : "Orchestrator disconnected",
                     state.DeviceStatus,
                     orchestratorStatus.Device_ip,
-                    orchestratorStatus.Device_port
+                    9999
                 );
 
                 if (deviceConnected && !string.IsNullOrEmpty(orchestratorStatus.Device_ip))
@@ -132,8 +132,8 @@ namespace WeblinkPlugin.Core.Http
             {
                 var state = SharedState.Instance;
                 string targetUrl = !string.IsNullOrEmpty(state.DeviceIp) && state.DevicePort > 0
-                    ? $"http://{state.DeviceIp}:{state.DevicePort}/api/marker"
-                    : "http://localhost:8080/api/marker";
+                    ? $"http://{state.DeviceIp}:{state.DevicePort}/starlink/gps/location"
+                    : "http://localhost:8080/starlink/gps/location";
 
                 using (var http = new HttpClient())
                 {

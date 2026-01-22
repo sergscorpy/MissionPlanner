@@ -19,21 +19,14 @@ namespace WeblinkPlugin.Core.Http
 
         public async Task<DeviceStatus> PingAsync()
         {
-            var url = string.Format("{0}/api/status/ping", BaseUrl);
+            var url = string.Format("{0}/", BaseUrl);
             return await GetJsonAsync<DeviceStatus>(url);
         }
 
         public async Task<TelemetryPacket> GetTelemetryAsync()
         {
-            var url = string.Format("{0}/api/telemetry", BaseUrl);
+            var url = string.Format("{0}/starlink/gps/location", BaseUrl);
             return await GetJsonAsync<TelemetryPacket>(url);
-        }
-
-        public async Task<bool> RestartAsync()
-        {
-            var url = string.Format("{0}/api/restart", BaseUrl);
-            var payload = new { command = "restart" };
-            return await PostJsonAsync(url, payload);
         }
 
         public bool Matches(string ip, int port)

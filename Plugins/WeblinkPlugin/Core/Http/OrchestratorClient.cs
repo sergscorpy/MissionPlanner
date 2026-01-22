@@ -18,7 +18,7 @@ namespace WeblinkPlugin.Core.Http
 
         public async Task<OrchestratorStatus> PingAsync()
         {
-            var url = string.Format("{0}/api/status/ping", _baseUrl);
+            var url = string.Format("{0}/", _baseUrl);
             return await GetJsonAsync<OrchestratorStatus>(url);
         }
 
