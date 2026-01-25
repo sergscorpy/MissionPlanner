@@ -7015,8 +7015,7 @@ namespace MissionPlanner.GCSViews
                     CheckCustom(button.Name);
                     if (!this.tableLayoutPanelCopter.Controls.Contains(this.dataGridView))
                     {
-                        this.tableLayoutPanelCopter.Controls.Add(this.dataGridView, 0, 2);
-                        this.tableLayoutPanelCopter.RowStyles[2].Height = 96F;
+                        ShowCopterDataGridView();
                     }
                 }
                 else
@@ -7024,8 +7023,7 @@ namespace MissionPlanner.GCSViews
                     Check(button.Name);
                     if (this.tableLayoutPanelCopter.Controls.Contains(this.dataGridView) && !chBox_ExpMod.Checked)
                     {
-                        this.tableLayoutPanelCopter.Controls.Remove(this.dataGridView);
-                        this.tableLayoutPanelCopter.RowStyles[2].Height = 0F;
+                        HideCopterDataGridView();
                     }
                 }
             }
@@ -7048,8 +7046,7 @@ namespace MissionPlanner.GCSViews
                         buttTrue.AutoSize = true;
                         if (this.tableLayoutPanelCopter.Controls.Contains(this.dataGridView) && !chBox_ExpMod.Checked)
                         {
-                            this.tableLayoutPanelCopter.Controls.Remove(this.dataGridView);
-                            this.tableLayoutPanelCopter.RowStyles[2].Height = 0F;
+                            HideCopterDataGridView();
                         }
                     }
                     else
@@ -7058,8 +7055,7 @@ namespace MissionPlanner.GCSViews
                         //buttTrue.AutoSize = true;
                         if (!this.tableLayoutPanelCopter.Controls.Contains(this.dataGridView))
                         {
-                            this.tableLayoutPanelCopter.Controls.Add(this.dataGridView, 0, 2);
-                            this.tableLayoutPanelCopter.RowStyles[2].Height = 96F;
+                            ShowCopterDataGridView();
                         }
                     }
                 }
@@ -7095,9 +7091,9 @@ namespace MissionPlanner.GCSViews
             }
             var currentParams = new List<float>
             {
-                {Convert.ToSingle(Convert.ToDecimal(dataGridView.Rows[0].Cells[2].Value)) },
-                {Convert.ToSingle(Convert.ToDecimal(dataGridView.Rows[1].Cells[2].Value)) },
-                {Convert.ToSingle(Convert.ToDecimal(dataGridView.Rows[2].Cells[2].Value)) }
+                {Convert.ToSingle(GetCopterCurrentParamValue("ANGLE_MAX")) },
+                {Convert.ToSingle(GetCopterCurrentParamValue("LOIT_SPEED")) },
+                {Convert.ToSingle(GetCopterCurrentParamValue("WPNAV_SPEED")) }
             };
             key = DefaultModeList.FirstOrDefault(x => x.Value.SequenceEqual(currentParams)).Key;
             return key;
@@ -7124,9 +7120,9 @@ namespace MissionPlanner.GCSViews
 
             var inputParams = new Dictionary<string, float>
             {
-                { "ANGLE_MAX", Convert.ToSingle(Convert.ToDecimal(dataGridView.Rows[0].Cells[1].Value)) },
-                { "LOIT_SPEED", Convert.ToSingle(Convert.ToDecimal(dataGridView.Rows[1].Cells[1].Value)) },
-                { "WPNAV_SPEED", Convert.ToSingle(Convert.ToDecimal(dataGridView.Rows[2].Cells[1].Value)) }
+                { "ANGLE_MAX", Convert.ToSingle(GetCopterCustomParamValue("ANGLE_MAX")) },
+                { "LOIT_SPEED", Convert.ToSingle(GetCopterCustomParamValue("LOIT_SPEED")) },
+                { "WPNAV_SPEED", Convert.ToSingle(GetCopterCustomParamValue("WPNAV_SPEED")) }
             };
 
             bool needToUpdate = false;
@@ -7270,8 +7266,7 @@ namespace MissionPlanner.GCSViews
                 chBox_ExpMod.ForeColor = System.Drawing.SystemColors.WindowFrame;
                 if (!this.tableLayoutPanelCopter.Controls.Contains(this.dataGridView))
                 {
-                    this.tableLayoutPanelCopter.Controls.Add(this.dataGridView, 0, 2);
-                    this.tableLayoutPanelCopter.RowStyles[2].Height = 96F;
+                    ShowCopterDataGridView();
                 }
             }
             else
@@ -7280,8 +7275,7 @@ namespace MissionPlanner.GCSViews
                 chBox_ExpMod.ForeColor = System.Drawing.SystemColors.Window;
                 if (this.tableLayoutPanelCopter.Controls.Contains(this.dataGridView) && !buttTrue.AutoSize)
                 {
-                    this.tableLayoutPanelCopter.Controls.Remove(this.dataGridView);
-                    this.tableLayoutPanelCopter.RowStyles[2].Height = 0F;
+                    HideCopterDataGridView();
                 }
             }
         }
@@ -7321,9 +7315,9 @@ namespace MissionPlanner.GCSViews
         {
             if (!_parameters.TryGetValue("Custom", out var customParams)) return;
 
-            dataGridView.Rows[0].Cells[1].Value = Convert.ToDecimal(customParams["ANGLE_MAX"], CultureInfo.InvariantCulture);
-            dataGridView.Rows[1].Cells[1].Value = Convert.ToDecimal(customParams["LOIT_SPEED"], CultureInfo.InvariantCulture);
-            dataGridView.Rows[2].Cells[1].Value = Convert.ToDecimal(customParams["WPNAV_SPEED"], CultureInfo.InvariantCulture);
+            SetCopterCustomParamValue("ANGLE_MAX", Convert.ToDecimal(customParams["ANGLE_MAX"], CultureInfo.InvariantCulture));
+            SetCopterCustomParamValue("LOIT_SPEED", Convert.ToDecimal(customParams["LOIT_SPEED"], CultureInfo.InvariantCulture));
+            SetCopterCustomParamValue("WPNAV_SPEED", Convert.ToDecimal(customParams["WPNAV_SPEED"], CultureInfo.InvariantCulture));
 
             numericRtlAlt.Value = Convert.ToDecimal(_rtlAlt / 100);
         }

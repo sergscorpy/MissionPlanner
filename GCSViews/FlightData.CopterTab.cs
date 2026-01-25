@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace MissionPlanner.GCSViews
@@ -30,13 +32,22 @@ namespace MissionPlanner.GCSViews
         private const int CopterTablePadding = 4;
         private const int CopterTableMargin = 0;
         private const int CopterDataGridRowTemplateHeight = 35;
+        private const int CopterDataGridRowIndex = 2;
+        private const int CopterDataGridColumnSpan = 4;
+        private const int CopterCustomColumnIndex = 1;
+        private const int CopterCurrentColumnIndex = 2;
 
         private static readonly CopterParamDescriptor[] CopterParamDescriptors =
-{
+        {
             new CopterParamDescriptor("Angle Max", "ANGLE_MAX", 1000, 8000),
             new CopterParamDescriptor("Loit Speed", "LOIT_SPEED", 20, 50000),
             new CopterParamDescriptor("Mission Speed", "WPNAV_SPEED", 10, 50000)
         };
+
+        private static readonly IReadOnlyDictionary<string, int> CopterParamRowLookup =
+            CopterParamDescriptors
+                .Select((descriptor, index) => new { descriptor.ParamName, Index = index })
+                .ToDictionary(entry => entry.ParamName, entry => entry.Index);
 
         private List<KeyValuePair<string, string>> BuildCopterModelItems()
         {
@@ -138,9 +149,9 @@ namespace MissionPlanner.GCSViews
 
         private void InitializeCopterDataGridView()
         {
-            tableLayoutPanelCopter.SetColumnSpan(dataGridView, 4);
+            tableLayoutPanelCopter.SetColumnSpan(dataGridView, CopterDataGridColumnSpan);
             tableLayoutPanelCopter.SetRowSpan(dataGridView, 1);
-            tableLayoutPanelCopter.Controls.Add(dataGridView, 0, 2);
+            tableLayoutPanelCopter.Controls.Add(dataGridView, 0, CopterDataGridRowIndex);
             dataGridView.AllowUserToAddRows = false;
             dataGridView.RowHeadersVisible = false;
             dataGridView.AllowUserToResizeColumns = false;
@@ -184,6 +195,60 @@ namespace MissionPlanner.GCSViews
 
             dataGridView.RowTemplate.Height = CopterDataGridRowTemplateHeight;
             dataGridView.EditingControlShowing += DataGridView_EditingControlShowing;
+        }
+
+        private int GetCopterParamRowIndex(string paramName)
+        {
+            if (!CopterParamRowLookup.TryGetValue(paramName, out var rowIndex))
+            {
+                throw new ArgumentOutOfRangeException(nameof(paramName), paramName, "Unknown copter param.");
+            }
+
+            return rowIndex;
+        }
+
+        private decimal GetCopterCustomParamValue(string paramName)
+        {
+            int rowIndex = GetCopterParamRowIndex(paramName);
+            return Convert.ToDecimal(dataGridView.Rows[rowIndex].Cells[CopterCustomColumnIndex].Value);
+        }
+
+        private decimal GetCopterCurrentParamValue(string paramName)
+        {
+            int rowIndex = GetCopterParamRowIndex(paramName);
+            return Convert.ToDecimal(dataGridView.Rows[rowIndex].Cells[CopterCurrentColumnIndex].Value);
+        }
+
+        private void SetCopterCustomParamValue(string paramName, decimal value)
+        {
+            int rowIndex = GetCopterParamRowIndex(paramName);
+            dataGridView.Rows[rowIndex].Cells[CopterCustomColumnIndex].Value = value;
+        }
+
+        private void ShowCopterDataGridView()
+        {
+            if (!tableLayoutPanelCopter.Controls.Contains(dataGridView))
+            {
+                tableLayoutPanelCopter.Controls.Add(dataGridView, 0, CopterDataGridRowIndex);
+            }
+
+            if (tableLayoutPanelCopter.RowStyles.Count > CopterDataGridRowIndex)
+            {
+                tableLayoutPanelCopter.RowStyles[CopterDataGridRowIndex].Height = CopterDataGridRowHeight;
+            }
+        }
+
+        private void HideCopterDataGridView()
+        {
+            if (tableLayoutPanelCopter.Controls.Contains(dataGridView))
+            {
+                tableLayoutPanelCopter.Controls.Remove(dataGridView);
+            }
+
+            if (tableLayoutPanelCopter.RowStyles.Count > CopterDataGridRowIndex)
+            {
+                tableLayoutPanelCopter.RowStyles[CopterDataGridRowIndex].Height = 0F;
+            }
         }
     }
 }
