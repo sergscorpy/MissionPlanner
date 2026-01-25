@@ -6,6 +6,22 @@ namespace MissionPlanner.GCSViews
 {
     public partial class FlightData
     {
+        private sealed class CopterParamDescriptor
+        {
+            public CopterParamDescriptor(string label, string paramName, decimal min, decimal max)
+            {
+                Label = label;
+                ParamName = paramName;
+                Min = min;
+                Max = max;
+            }
+
+            public string Label { get; }
+            public string ParamName { get; }
+            public decimal Min { get; }
+            public decimal Max { get; }
+        }
+
         private const int CopterColumnCount = 4;
         private const int CopterRowCount = 15;
         private const int CopterRowHeight = 32;
@@ -14,6 +30,13 @@ namespace MissionPlanner.GCSViews
         private const int CopterTablePadding = 4;
         private const int CopterTableMargin = 0;
         private const int CopterDataGridRowTemplateHeight = 35;
+
+        private static readonly CopterParamDescriptor[] CopterParamDescriptors =
+{
+            new CopterParamDescriptor("Angle Max", "ANGLE_MAX", 1000, 8000),
+            new CopterParamDescriptor("Loit Speed", "LOIT_SPEED", 20, 50000),
+            new CopterParamDescriptor("Mission Speed", "WPNAV_SPEED", 10, 50000)
+        };
 
         private List<KeyValuePair<string, string>> BuildCopterModelItems()
         {
@@ -140,49 +163,23 @@ namespace MissionPlanner.GCSViews
             dataGridView.DefaultCellStyle.SelectionBackColor = Color.FromArgb(70, 70, 70);
             dataGridView.DefaultCellStyle.SelectionForeColor = Color.White;
 
-            dataGridView.Rows.Add("Angle Max", 0, 0);
-            dataGridView.Rows.Add("Loit Speed", 0, 0);
-            dataGridView.Rows.Add("Mission Speed", 0, 0);
-
             foreach (DataGridViewColumn column in dataGridView.Columns)
             {
                 column.SortMode = DataGridViewColumnSortMode.NotSortable;
             }
 
-            foreach (DataGridViewRow row in dataGridView.Rows)
+            foreach (var descriptor in CopterParamDescriptors)
             {
-                decimal minValue;
-                decimal maxValue;
-
-                if (row.Cells[0].Value?.ToString() == "Angle Max")
-                {
-                    minValue = 1000;
-                    maxValue = 8000;
-                }
-                else if (row.Cells[0].Value?.ToString() == "Loit Speed")
-                {
-                    minValue = 20;
-                    maxValue = 50000;
-                }
-                else if (row.Cells[0].Value?.ToString() == "Mission Speed")
-                {
-                    minValue = 10;
-                    maxValue = 50000;
-                }
-                else
-                {
-                    minValue = 0;
-                    maxValue = 0;
-                }
+                int rowIndex = dataGridView.Rows.Add(descriptor.Label, 0, 0);
 
                 var cell = new DataGridViewNumericUpDownCell
                 {
-                    Value = row.Cells[1].Value,
-                    Minimum = minValue,
-                    Maximum = maxValue
+                    Value = dataGridView.Rows[rowIndex].Cells[1].Value,
+                    Minimum = descriptor.Min,
+                    Maximum = descriptor.Max
                 };
 
-                row.Cells[1] = cell;
+                dataGridView.Rows[rowIndex].Cells[1] = cell;
             }
 
             dataGridView.RowTemplate.Height = CopterDataGridRowTemplateHeight;

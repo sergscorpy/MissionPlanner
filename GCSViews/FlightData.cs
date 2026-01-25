@@ -7788,26 +7788,19 @@ namespace MissionPlanner.GCSViews
 
             try
             {
-                if (IsComPortConnected() && MainV2.comPort.MAV.cs.firmware == Firmwares.ArduCopter2)
+                if (IsComPortConnected()
+                    && MainV2.comPort.MAV.cs.firmware == Firmwares.ArduCopter2
+                    && dataGridView.Rows.Count >= CopterParamDescriptors.Length)
                 {
-                    var angleMax = (int)MainV2.comPort.MAV.param["ANGLE_MAX"];
-                    var loitSpeed = (int)MainV2.comPort.MAV.param["LOIT_SPEED"];
-                    var wpnavSpeed = (int)MainV2.comPort.MAV.param["WPNAV_SPEED"];
-
-                    var currentAngleMax = (int)dataGridView.Rows[0].Cells[2].Value;
-                    var currentLoitSpeed = (int)dataGridView.Rows[1].Cells[2].Value;
-                    var currentWpnavSpeed = (int)dataGridView.Rows[2].Cells[2].Value;
-
-                    if ((currentAngleMax != 0 || currentAngleMax != angleMax ||
-                        (currentLoitSpeed != 0 || currentLoitSpeed != loitSpeed)) ||
-                        (currentWpnavSpeed != 0 || currentWpnavSpeed != wpnavSpeed))
+                    for (int i = 0; i < CopterParamDescriptors.Length; i++)
                     {
-                        if (angleMax != 0 && loitSpeed != 0 && wpnavSpeed != 0)
-                        {
-                            dataGridView.Rows[0].Cells[2].Value = angleMax;
-                            dataGridView.Rows[1].Cells[2].Value = loitSpeed;
-                            dataGridView.Rows[2].Cells[2].Value = wpnavSpeed;
+                        var descriptor = CopterParamDescriptors[i];
+                        var currentValue = Convert.ToInt32(dataGridView.Rows[i].Cells[2].Value ?? 0);
+                        var paramValue = (int)MainV2.comPort.MAV.param[descriptor.ParamName];
 
+                        if (paramValue != 0 && currentValue != paramValue)
+                        {
+                            dataGridView.Rows[i].Cells[2].Value = paramValue;
                             success = true;
                         }
                     }
