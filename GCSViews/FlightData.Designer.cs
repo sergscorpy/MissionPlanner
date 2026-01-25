@@ -3508,103 +3508,18 @@ namespace MissionPlanner.GCSViews
             this.butPlaneJoystick.FlatAppearance.BorderSize = 1;
             this.butPlaneJoystick.BackColor = colorDis;
             this.butPlaneJoystick.Click += new System.EventHandler(this.BUT_joystick_Click);
-            
-            /****************************************Plane End*********************************************************/
-            
-            /****************************************Copter************************************************************/
-            
-            this._comboItems = new List<KeyValuePair<string, string>>
-            {
-                new KeyValuePair<string, string>("Вампір", "vampire"),
-                new KeyValuePair<string, string>("Воробєй", "sparrow")
-            };
-            
-            int columnCount = 4;                    // Кількість стовпців
-            int rowCount = 15;                      // Кількість рядків
-            int rowHeight = 32;                     // Висота рядка
-            float columnWidth = 100 / columnCount;  // Віднносна ширина стовпця в відсотках
-            int sizeHeight = rowHeight * rowCount;  // Загальна висота таблиці
-            
-            /*
-             * Tab Copter
-             */
-            this.tabCopter.Controls.Add(this.tableLayoutPanelCopter);
-            this.tabCopter.Name = "tabCopter";
-            this.tabCopter.Text = "Copter";
-            this.tabCopter.UseVisualStyleBackColor = true;
-            
-            /*
-             * Table Layout Panel Copter 
-             */
-            this.tableLayoutPanelCopter.Name = "tableLayoutPanelCopter";
-            this.tableLayoutPanelCopter.RowCount = rowCount;
-            this.tableLayoutPanelCopter.ColumnCount = columnCount;
-            for (int i = 0; i < columnCount; i++)
-            {
-                this.tableLayoutPanelCopter.ColumnStyles.Add(
-                    new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, columnWidth));
-            }
-            for (int i = 0; i < rowCount; i++)
-            {
-                this.tableLayoutPanelCopter.RowStyles.Add(
-                    new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, rowHeight));
-            }
-            this.tableLayoutPanelCopter.RowStyles[2].Height = 96F;
-            this.tableLayoutPanelCopter.Location = new System.Drawing.Point(3, 3);
-            this.tableLayoutPanelCopter.Dock = System.Windows.Forms.DockStyle.Top;
-            this.tableLayoutPanelCopter.Size = new System.Drawing.Size(300, sizeHeight);
-            this.tableLayoutPanelCopter.Margin = new System.Windows.Forms.Padding(0);
-            this.tableLayoutPanelCopter.Padding = new System.Windows.Forms.Padding(4);
 
-            /*
-             * Combo Box Drone Model
-             */
-            this.tableLayoutPanelCopter.Controls.Add(this.comboBoxDronModel, 2, 0);
-            this.comboBoxDronModel.DataSource = _comboItems;
-            this.comboBoxDronModel.DisplayMember = "Key";
-            this.comboBoxDronModel.ValueMember = "Value";
-            this.comboBoxDronModel.DropDownStyle = ComboBoxStyle.DropDownList;
-            this.comboBoxDronModel.DropDownWidth = 100;
-            this.comboBoxDronModel.FormattingEnabled = true;
-            this.comboBoxDronModel.Dock = DockStyle.Fill;
-            this.comboBoxDronModel.Font = fontNuveric;
-            this.comboBoxDronModel.Margin = new System.Windows.Forms.Padding(3);
-            this.comboBoxDronModel.SelectedIndexChanged += comboBoxDronModel_SelectedIndexChanged;
-            
-            /*
-             * Checkbox ExpMod
-             */
-            this.tableLayoutPanelCopter.Controls.Add(this.chBox_ExpMod, 0, 0);
-            this.chBox_ExpMod.Appearance = System.Windows.Forms.Appearance.Button;
-            this.chBox_ExpMod.CheckAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.chBox_ExpMod.Margin = new System.Windows.Forms.Padding(10,2,10,2);
-            this.chBox_ExpMod.AutoSize = true;
-            this.chBox_ExpMod.Checked = false;
-            this.chBox_ExpMod.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.chBox_ExpMod.Name = "chBox_ExpMod";
-            this.chBox_ExpMod.Text = "Exp Mod";
-            this.chBox_ExpMod.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F);
-            this.chBox_ExpMod.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this.chBox_ExpMod.UseVisualStyleBackColor = true;
-            this.chBox_ExpMod.CheckedChanged += new System.EventHandler(this.chBox_ExpMod_CheckedChanged);
-            
-            /*
-             * Checkbox X9
-             */
-            this.tableLayoutPanelCopter.Controls.Add(this.chBox_X9, 3, 0);
-            this.chBox_X9.Appearance = System.Windows.Forms.Appearance.Button;
-            this.chBox_X9.CheckAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.chBox_X9.Margin = new System.Windows.Forms.Padding(10,2,10,2);
-            this.chBox_X9.AutoSize = true;
-            this.chBox_X9.Checked = false;
-            this.chBox_X9.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.chBox_X9.Name = "chBox_X9";
-            this.chBox_X9.Text = "X9";
-            this.chBox_X9.Font = fontBut;
-            this.chBox_X9.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this.chBox_X9.UseVisualStyleBackColor = true;
-            this.chBox_X9.CheckedChanged += new System.EventHandler(this.chBox_X9_CheckedChanged);
-            
+            /****************************************Plane End*********************************************************/
+
+            /****************************************Copter************************************************************/
+
+            this._comboItems = BuildCopterModelItems();
+
+            InitializeCopterTab();
+            InitializeCopterTableLayout();
+            InitializeCopterModelSelector();
+            InitializeCopterModeCheckboxes();
+
             /*
              * Label Drone Model
              */
@@ -3625,81 +3540,13 @@ namespace MissionPlanner.GCSViews
             AddButton("Sport", 0, 1);
             AddButton("Normal", 2, 1);
             AddButton("Custom", 3, 1);
-            
+
             /*
              * Data Grid View
              */
-            this.tableLayoutPanelCopter.SetColumnSpan(this.dataGridView, 4);
-            this.tableLayoutPanelCopter.SetRowSpan(this.dataGridView, 1);
-            this.tableLayoutPanelCopter.Controls.Add(this.dataGridView, 0, 2);
-            this.dataGridView.AllowUserToAddRows = false;
-            this.dataGridView.RowHeadersVisible = false;
-            this.dataGridView.AllowUserToResizeColumns = false;
-            this.dataGridView.AllowUserToResizeRows = false;
-            this.dataGridView.ColumnCount = 3;
-            this.dataGridView.ScrollBars = ScrollBars.None;
-            this.dataGridView.BackgroundColor = Color.FromArgb(30, 30, 30);
-            this.dataGridView.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
-            this.dataGridView.EditMode = DataGridViewEditMode.EditOnEnter;
-            this.dataGridView.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dataGridView.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
-            this.dataGridView.Columns[0].Name = "Param";
-            this.dataGridView.Columns[1].Name = "Custom";
-            this.dataGridView.Columns[2].Name = "Current";
-            this.dataGridView.Columns[2].ReadOnly = true;
-            this.dataGridView.Columns[0].ReadOnly = true;
 
-            this.dataGridView.DefaultCellStyle.BackColor = Color.FromArgb(45, 45, 45);
-            this.dataGridView.DefaultCellStyle.ForeColor = Color.White;
-            this.dataGridView.DefaultCellStyle.SelectionBackColor = Color.FromArgb(70, 70, 70);
-            this.dataGridView.DefaultCellStyle.SelectionForeColor = Color.White;
+            InitializeCopterDataGridView();
 
-            this.dataGridView.Rows.Add("Angle Max", 0, 0);
-            this.dataGridView.Rows.Add("Loit Speed", 0, 0);
-            this.dataGridView.Rows.Add("Mission Speed", 0, 0);
-
-            foreach (DataGridViewColumn column in this.dataGridView.Columns)
-            {
-                column.SortMode = DataGridViewColumnSortMode.NotSortable;
-            }
-
-            foreach (DataGridViewRow row in this.dataGridView.Rows)
-            {
-                decimal minValue, maxValue;
-
-                if (row.Cells[0].Value.ToString() == "Angle Max")
-                {
-                    minValue = 1000;
-                    maxValue = 8000;
-                }
-                else if (row.Cells[0].Value.ToString() == "Loit Speed")
-                {
-                    minValue = 20;
-                    maxValue = 50000;
-                }
-                else if (row.Cells[0].Value.ToString() == "Mission Speed")
-                {
-                    minValue = 10;
-                    maxValue = 50000;
-                }
-                else
-                {
-                    minValue = 0;
-                    maxValue = 0;
-                }
-
-                var cell = new DataGridViewNumericUpDownCell
-                {
-                    Value = row.Cells[1].Value,
-                    Minimum = minValue,
-                    Maximum = maxValue
-                };
-
-                row.Cells[1] = cell;
-            }
-            this.dataGridView.RowTemplate.Height = 35;
-            this.dataGridView.EditingControlShowing += DataGridView_EditingControlShowing;
-            
             /*
              * Combobox FlyModes CMB_modes
              */
