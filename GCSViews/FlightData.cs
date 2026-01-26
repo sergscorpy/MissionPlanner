@@ -7538,6 +7538,7 @@ namespace MissionPlanner.GCSViews
                 int nextValue = currentValue == 1 ? 30 : 1;
 
                 SetParam("RC_FS_TIMEOUT", nextValue);
+                SetParam("RC_OVERRIDE_TIME", nextValue);
                 UpdateButtonRC_FSTimeout();
             }
         }
