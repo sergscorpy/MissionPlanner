@@ -197,6 +197,32 @@ namespace MissionPlanner.GCSViews
             dataGridView.EditingControlShowing += DataGridView_EditingControlShowing;
         }
 
+        private void AddButton(string name, int column, int row)
+        {
+            var button = CreateButton(name);
+            tableLayoutPanelCopter.Controls.Add(button, column, row);
+            ListButtonsMods.Add(button);
+        }
+
+        private Button CreateButton(string name)
+        {
+            var button = new Button();
+            button.Name = name.Replace(" ", "_");
+            button.Dock = DockStyle.Fill;
+            button.FlatStyle = FlatStyle.Flat;
+            button.FlatAppearance.BorderSize = 1;
+            button.FlatAppearance.BorderColor = colorDis;
+            button.Font = fontBut;
+            button.Text = name;
+            button.AutoSize = false;
+            button.BackColor = colorDis;
+            button.TextAlign = ContentAlignment.MiddleCenter;
+            button.Margin = new Padding(3);
+            button.Click += new EventHandler(this.ModeClick);
+
+            return button;
+        }
+
         private int GetCopterParamRowIndex(string paramName)
         {
             if (!CopterParamRowLookup.TryGetValue(paramName, out var rowIndex))
@@ -248,6 +274,131 @@ namespace MissionPlanner.GCSViews
             if (tableLayoutPanelCopter.RowStyles.Count > CopterDataGridRowIndex)
             {
                 tableLayoutPanelCopter.RowStyles[CopterDataGridRowIndex].Height = 0F;
+            }
+        }
+
+        public class DataGridViewNumericUpDownCell : DataGridViewTextBoxCell
+        {
+            public decimal Minimum { get; set; }
+            public decimal Maximum { get; set; }
+
+            public DataGridViewNumericUpDownCell() : base()
+            {
+                Style.Format = string.Empty;
+                Minimum = 0;
+                Maximum = 1000000;
+            }
+
+            public override void InitializeEditingControl(int rowIndex, object initialFormattedValue,
+                DataGridViewCellStyle dataGridViewCellStyle)
+            {
+                base.InitializeEditingControl(rowIndex, initialFormattedValue, dataGridViewCellStyle);
+                NumericUpDownEditingControl ctl = DataGridView.EditingControl as NumericUpDownEditingControl;
+                if (ctl != null)
+                {
+                    ctl.Minimum = Minimum;
+                    ctl.Maximum = Maximum;
+                    ctl.Value = Math.Max(ctl.Minimum, Math.Min(ctl.Maximum, Convert.ToDecimal(Value)));
+                }
+            }
+
+            public override Type EditType => typeof(NumericUpDownEditingControl);
+            public override Type ValueType => typeof(decimal);
+            public override object DefaultNewRowValue => 0m;
+        }
+
+        public class NumericUpDownEditingControl : NumericUpDown, IDataGridViewEditingControl
+        {
+            private DataGridView dataGridView;
+            private bool valueChanged = false;
+            private int rowIndex;
+
+            public object EditingControlFormattedValue
+            {
+                get { return Value.ToString(); }
+                set
+                {
+                    if (decimal.TryParse(value.ToString(), out decimal result))
+                    {
+                        Value = result;
+                    }
+                }
+            }
+
+            public object GetEditingControlFormattedValue(DataGridViewDataErrorContexts context)
+            {
+                return Value.ToString();
+            }
+
+            public void ApplyCellStyleToEditingControl(DataGridViewCellStyle dataGridViewCellStyle)
+            {
+                Font = dataGridViewCellStyle.Font;
+                ForeColor = dataGridViewCellStyle.ForeColor;
+                BackColor = dataGridViewCellStyle.BackColor;
+            }
+
+            public int EditingControlRowIndex
+            {
+                get { return rowIndex; }
+                set { rowIndex = value; }
+            }
+
+            public bool EditingControlWantsInputKey(Keys key, bool dataGridViewWantsInputKey)
+            {
+                switch (key & Keys.KeyCode)
+                {
+                    case Keys.Left:
+                    case Keys.Up:
+                    case Keys.Down:
+                    case Keys.Right:
+                        return true;
+                    default:
+                        return !dataGridViewWantsInputKey;
+                }
+            }
+
+            public void PrepareEditingControlForEdit(bool selectAll)
+            {
+            }
+
+            public bool RepositionEditingControlOnValueChange => false;
+
+            public DataGridView EditingControlDataGridView
+            {
+                get { return dataGridView; }
+                set { dataGridView = value; }
+            }
+
+            public bool EditingControlValueChanged
+            {
+                get { return valueChanged; }
+                set { valueChanged = value; }
+            }
+
+            public Cursor EditingPanelCursor => base.Cursor;
+
+            protected override void OnValueChanged(EventArgs eventargs)
+            {
+                valueChanged = true;
+                EditingControlDataGridView.NotifyCurrentCellDirty(true);
+                base.OnValueChanged(eventargs);
+            }
+        }
+
+        private void DataGridView_EditingControlShowing(object sender, DataGridViewEditingControlShowingEventArgs e)
+        {
+            if (e.Control is NumericUpDownEditingControl numericUpDown)
+            {
+                numericUpDown.Enter -= NumericUpDown_Enter;
+                numericUpDown.Enter += NumericUpDown_Enter;
+            }
+        }
+
+        private void NumericUpDown_Enter(object sender, EventArgs e)
+        {
+            if (sender is NumericUpDown numericUpDown)
+            {
+                numericUpDown.Select(0, numericUpDown.Text.Length);
             }
         }
     }
