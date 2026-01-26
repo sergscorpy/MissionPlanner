@@ -6973,30 +6973,6 @@ namespace MissionPlanner.GCSViews
                 CustomMessageBox.Show(Strings.CommandFailed + ex.ToString(), Strings.ERROR);
             }
         }
-        private void AddButton(string name, int column, int row)
-        {
-            var button = CreateButton(name);
-            tableLayoutPanelCopter.Controls.Add(button, column, row);
-            ListButtonsMods.Add(button);
-        }
-        private Button CreateButton(string name)
-        {
-            var button = new Button();
-            button.Name = name.Replace(" ", "_");
-            button.Dock = System.Windows.Forms.DockStyle.Fill;
-            button.FlatStyle = FlatStyle.Flat;
-            button.FlatAppearance.BorderSize = 1;
-            button.FlatAppearance.BorderColor = colorDis;
-            button.Font = fontBut;
-            button.Text = name;
-            button.AutoSize = false;
-            button.BackColor = colorDis;
-            button.TextAlign = ContentAlignment.MiddleCenter;
-            button.Margin = new System.Windows.Forms.Padding(3);
-            button.Click += new System.EventHandler(this.ModeClick);
-
-            return button;
-        }
         private void ModeClick(object sender, EventArgs e)
         {
             try
@@ -7015,8 +6991,7 @@ namespace MissionPlanner.GCSViews
                     CheckCustom(button.Name);
                     if (!this.tableLayoutPanelCopter.Controls.Contains(this.dataGridView))
                     {
-                        this.tableLayoutPanelCopter.Controls.Add(this.dataGridView, 0, 2);
-                        this.tableLayoutPanelCopter.RowStyles[2].Height = 96F;
+                        ShowCopterDataGridView();
                     }
                 }
                 else
@@ -7024,8 +6999,7 @@ namespace MissionPlanner.GCSViews
                     Check(button.Name);
                     if (this.tableLayoutPanelCopter.Controls.Contains(this.dataGridView) && !chBox_ExpMod.Checked)
                     {
-                        this.tableLayoutPanelCopter.Controls.Remove(this.dataGridView);
-                        this.tableLayoutPanelCopter.RowStyles[2].Height = 0F;
+                        HideCopterDataGridView();
                     }
                 }
             }
@@ -7039,7 +7013,7 @@ namespace MissionPlanner.GCSViews
             if (IsComPortConnected())
             {
                 string key = null;
-                if (ListButtonsMods.All(butt => !butt.AutoSize && DataGridViewUpdate()))
+                if (ListButtonsMods.All(butt => !butt.AutoSize))
                 {
                     CollationDefaultCurrentValue(out key);
                     if (key != null && key != "Custom")
@@ -7048,8 +7022,7 @@ namespace MissionPlanner.GCSViews
                         buttTrue.AutoSize = true;
                         if (this.tableLayoutPanelCopter.Controls.Contains(this.dataGridView) && !chBox_ExpMod.Checked)
                         {
-                            this.tableLayoutPanelCopter.Controls.Remove(this.dataGridView);
-                            this.tableLayoutPanelCopter.RowStyles[2].Height = 0F;
+                            HideCopterDataGridView();
                         }
                     }
                     else
@@ -7058,26 +7031,26 @@ namespace MissionPlanner.GCSViews
                         //buttTrue.AutoSize = true;
                         if (!this.tableLayoutPanelCopter.Controls.Contains(this.dataGridView))
                         {
-                            this.tableLayoutPanelCopter.Controls.Add(this.dataGridView, 0, 2);
-                            this.tableLayoutPanelCopter.RowStyles[2].Height = 96F;
+                            ShowCopterDataGridView();
                         }
                     }
                 }
             }
+            bool isConnected = IsComPortConnected();
             foreach (var button in ListButtonsMods)
             {
-                if (button == null) return;
-
-                if (IsComPortConnected())
+                if (button == null)
                 {
-                    button.Enabled = true;
-                    button.BackColor = button.AutoSize ? colorOn : colorOff;
+                    return;
+                }
+
+                if (isConnected)
+                {
+                    UpdateCopterButtonState(button, true, button.AutoSize ? colorOn : colorOff);
                 }
                 else
                 {
-                    button.Enabled = false;
-                    button.AutoSize = false;
-                    button.BackColor = colorDis;
+                    UpdateCopterButtonState(button, false, colorDis, true);
                 }
             }
         }
@@ -7095,9 +7068,9 @@ namespace MissionPlanner.GCSViews
             }
             var currentParams = new List<float>
             {
-                {Convert.ToSingle(Convert.ToDecimal(dataGridView.Rows[0].Cells[2].Value)) },
-                {Convert.ToSingle(Convert.ToDecimal(dataGridView.Rows[1].Cells[2].Value)) },
-                {Convert.ToSingle(Convert.ToDecimal(dataGridView.Rows[2].Cells[2].Value)) }
+                {Convert.ToSingle(GetCopterCurrentParamValue("ANGLE_MAX")) },
+                {Convert.ToSingle(GetCopterCurrentParamValue("LOIT_SPEED")) },
+                {Convert.ToSingle(GetCopterCurrentParamValue("WPNAV_SPEED")) }
             };
             key = DefaultModeList.FirstOrDefault(x => x.Value.SequenceEqual(currentParams)).Key;
             return key;
@@ -7124,9 +7097,9 @@ namespace MissionPlanner.GCSViews
 
             var inputParams = new Dictionary<string, float>
             {
-                { "ANGLE_MAX", Convert.ToSingle(Convert.ToDecimal(dataGridView.Rows[0].Cells[1].Value)) },
-                { "LOIT_SPEED", Convert.ToSingle(Convert.ToDecimal(dataGridView.Rows[1].Cells[1].Value)) },
-                { "WPNAV_SPEED", Convert.ToSingle(Convert.ToDecimal(dataGridView.Rows[2].Cells[1].Value)) }
+                { "ANGLE_MAX", Convert.ToSingle(GetCopterCustomParamValue("ANGLE_MAX")) },
+                { "LOIT_SPEED", Convert.ToSingle(GetCopterCustomParamValue("LOIT_SPEED")) },
+                { "WPNAV_SPEED", Convert.ToSingle(GetCopterCustomParamValue("WPNAV_SPEED")) }
             };
 
             bool needToUpdate = false;
@@ -7266,22 +7239,20 @@ namespace MissionPlanner.GCSViews
             var buttTrue = FindButtonByName("Custom");
             if (chBox_ExpMod.Checked)
             {
-                chBox_ExpMod.BackColor = System.Drawing.Color.YellowGreen;
-                chBox_ExpMod.ForeColor = System.Drawing.SystemColors.WindowFrame;
+                chBox_ExpMod.BackColor = Color.YellowGreen;
+                chBox_ExpMod.ForeColor = SystemColors.WindowFrame;
                 if (!this.tableLayoutPanelCopter.Controls.Contains(this.dataGridView))
                 {
-                    this.tableLayoutPanelCopter.Controls.Add(this.dataGridView, 0, 2);
-                    this.tableLayoutPanelCopter.RowStyles[2].Height = 96F;
+                    ShowCopterDataGridView();
                 }
             }
             else
             {
                 chBox_ExpMod.BackColor = Color.FromArgb(45, 45, 45);
-                chBox_ExpMod.ForeColor = System.Drawing.SystemColors.Window;
+                chBox_ExpMod.ForeColor = SystemColors.Window;
                 if (this.tableLayoutPanelCopter.Controls.Contains(this.dataGridView) && !buttTrue.AutoSize)
                 {
-                    this.tableLayoutPanelCopter.Controls.Remove(this.dataGridView);
-                    this.tableLayoutPanelCopter.RowStyles[2].Height = 0F;
+                    HideCopterDataGridView();
                 }
             }
         }
@@ -7289,177 +7260,31 @@ namespace MissionPlanner.GCSViews
         {
             if (chBox_X9.Checked)
             {
-                chBox_X9.BackColor = System.Drawing.Color.YellowGreen;
-                chBox_X9.ForeColor = System.Drawing.SystemColors.WindowFrame;
+                chBox_X9.BackColor = Color.YellowGreen;
+                chBox_X9.ForeColor = SystemColors.WindowFrame;
                 if (comboBoxDronModel.Text == "Вампір")
                 {
-                    if (!this.tableLayoutPanelCopter.Controls.Contains(IsActRCVamp_1))
-                    {
-                        this.tableLayoutPanelCopter.Controls.Add(IsActRCVamp_1, 1, 7);
-                    }
-                    if (!this.tableLayoutPanelCopter.Controls.Contains(IsActRCVamp_2))
-                    {
-                        this.tableLayoutPanelCopter.Controls.Add(IsActRCVamp_2, 2, 7);
-                    }
+                    EnsureControlAdded(IsActRCVamp_1, 1, 7);
+                    EnsureControlAdded(IsActRCVamp_2, 2, 7);
                 }
             }
             else
             {
                 chBox_X9.BackColor = Color.FromArgb(45, 45, 45);
-                chBox_X9.ForeColor = System.Drawing.SystemColors.Window;
-                if (this.tableLayoutPanelCopter.Controls.Contains(IsActRCVamp_1))
-                {
-                    this.tableLayoutPanelCopter.Controls.Remove(IsActRCVamp_1);
-                }
-                if (this.tableLayoutPanelCopter.Controls.Contains(IsActRCVamp_2))
-                {
-                    this.tableLayoutPanelCopter.Controls.Remove(IsActRCVamp_2);
-                }
+                chBox_X9.ForeColor = SystemColors.Window;
+                EnsureControlRemoved(IsActRCVamp_1);
+                EnsureControlRemoved(IsActRCVamp_2);
             }
         }
         private void LoadCustomParameters()
         {
             if (!_parameters.TryGetValue("Custom", out var customParams)) return;
 
-            dataGridView.Rows[0].Cells[1].Value = Convert.ToDecimal(customParams["ANGLE_MAX"], CultureInfo.InvariantCulture);
-            dataGridView.Rows[1].Cells[1].Value = Convert.ToDecimal(customParams["LOIT_SPEED"], CultureInfo.InvariantCulture);
-            dataGridView.Rows[2].Cells[1].Value = Convert.ToDecimal(customParams["WPNAV_SPEED"], CultureInfo.InvariantCulture);
+            SetCopterCustomParamValue("ANGLE_MAX", Convert.ToDecimal(customParams["ANGLE_MAX"], CultureInfo.InvariantCulture));
+            SetCopterCustomParamValue("LOIT_SPEED", Convert.ToDecimal(customParams["LOIT_SPEED"], CultureInfo.InvariantCulture));
+            SetCopterCustomParamValue("WPNAV_SPEED", Convert.ToDecimal(customParams["WPNAV_SPEED"], CultureInfo.InvariantCulture));
 
             numericRtlAlt.Value = Convert.ToDecimal(_rtlAlt / 100);
-        }
-        public class DataGridViewNumericUpDownCell : DataGridViewTextBoxCell
-        {
-            public decimal Minimum { get; set; }
-            public decimal Maximum { get; set; }
-
-            public DataGridViewNumericUpDownCell() : base()
-            {
-                this.Style.Format = string.Empty;
-                Minimum = 0;
-                Maximum = 1000000;
-            }
-
-            public override void InitializeEditingControl(int rowIndex, object initialFormattedValue,
-                DataGridViewCellStyle dataGridViewCellStyle)
-            {
-                base.InitializeEditingControl(rowIndex, initialFormattedValue, dataGridViewCellStyle);
-                NumericUpDownEditingControl ctl = DataGridView.EditingControl as NumericUpDownEditingControl;
-                if (ctl != null)
-                {
-                    ctl.Minimum = Minimum;
-                    ctl.Maximum = Maximum;
-                    ctl.Value = Math.Max(ctl.Minimum, Math.Min(ctl.Maximum, Convert.ToDecimal(this.Value)));
-                }
-            }
-
-            public override Type EditType => typeof(NumericUpDownEditingControl);
-            public override Type ValueType => typeof(decimal);
-            public override object DefaultNewRowValue => 0m;
-        }
-
-        public class NumericUpDownEditingControl : NumericUpDown, IDataGridViewEditingControl
-        {
-            DataGridView dataGridView;
-            private bool valueChanged = false;
-            int rowIndex;
-
-            public object EditingControlFormattedValue
-            {
-                get { return this.Value.ToString(); }
-                set
-                {
-                    if (decimal.TryParse(value.ToString(), out decimal result))
-                    {
-                        this.Value = result;
-                    }
-                }
-            }
-
-            public object GetEditingControlFormattedValue(DataGridViewDataErrorContexts context)
-            {
-                return this.Value.ToString();
-            }
-
-            public void ApplyCellStyleToEditingControl(DataGridViewCellStyle dataGridViewCellStyle)
-            {
-                this.Font = dataGridViewCellStyle.Font;
-                this.ForeColor = dataGridViewCellStyle.ForeColor;
-                this.BackColor = dataGridViewCellStyle.BackColor;
-            }
-
-            public int EditingControlRowIndex
-            {
-                get { return rowIndex; }
-                set { rowIndex = value; }
-            }
-
-            public bool EditingControlWantsInputKey(Keys key, bool dataGridViewWantsInputKey)
-            {
-                switch (key & Keys.KeyCode)
-                {
-                    case Keys.Left:
-                    case Keys.Up:
-                    case Keys.Down:
-                    case Keys.Right:
-                        return true;
-                    default:
-                        return !dataGridViewWantsInputKey;
-                }
-            }
-
-            public void PrepareEditingControlForEdit(bool selectAll)
-            {
-            }
-
-            public bool RepositionEditingControlOnValueChange => false;
-
-            public DataGridView EditingControlDataGridView
-            {
-                get { return dataGridView; }
-                set { dataGridView = value; }
-            }
-
-            public bool EditingControlValueChanged
-            {
-                get { return valueChanged; }
-                set { valueChanged = value; }
-            }
-
-            public Cursor EditingPanelCursor => base.Cursor;
-
-            protected override void OnValueChanged(EventArgs eventargs)
-            {
-                valueChanged = true;
-                this.EditingControlDataGridView.NotifyCurrentCellDirty(true);
-                base.OnValueChanged(eventargs);
-            }
-        }
-        private void DataGridView_EditingControlShowing(object sender, DataGridViewEditingControlShowingEventArgs e)
-        {
-            if (e.Control is NumericUpDownEditingControl numericUpDown)
-            {
-                numericUpDown.Enter -= NumericUpDown_Enter;
-                numericUpDown.Enter += NumericUpDown_Enter;
-            }
-        }
-        private void NumericUpDown_Enter(object sender, EventArgs e)
-        {
-            if (sender is NumericUpDown numericUpDown)
-            {
-                numericUpDown.Select(0, numericUpDown.Text.Length);
-            }
-        }
-
-        private NumericUpDown CreateNumericUpDown(Point location, int min, int max)
-        {
-            return new NumericUpDown
-            {
-                Location = location,
-                Width = 60,
-                Minimum = min,
-                Maximum = max,
-                Increment = 1
-            };
         }
         private void RtlAltClick(object sender, EventArgs e)
         {
@@ -7705,6 +7530,32 @@ namespace MissionPlanner.GCSViews
             }
         }
 
+        private void butRC_FSTimeout_Click(object sender, EventArgs e)
+        {
+            if (MainV2.comPort.MAV.param.ContainsKey("RC_FS_TIMEOUT"))
+            {
+                int currentValue = (int)MainV2.comPort.MAV.param["RC_FS_TIMEOUT"];
+                int nextValue = currentValue == 1 ? 30 : 1;
+
+                SetParam("RC_FS_TIMEOUT", nextValue);
+                SetParam("RC_OVERRIDE_TIME", nextValue);
+                UpdateButtonRC_FSTimeout();
+            }
+        }
+
+        private void UpdateButtonRC_FSTimeout()
+        {
+            try
+            {
+                int value = (int)MainV2.comPort.MAV.param["RC_FS_TIMEOUT"];
+                butRC_FSTimeout.Text = value == 1 ? "FS Land" : "FS Fly";
+                butRC_FSTimeout.BackColor = value == 1 ? Color.Sienna : colorOn;
+            }
+            catch
+            {
+            }
+        }
+
         private void ButtomUpdate_FS(Button but)
         {
             try
@@ -7788,26 +7639,19 @@ namespace MissionPlanner.GCSViews
 
             try
             {
-                if (IsComPortConnected() && MainV2.comPort.MAV.cs.firmware == Firmwares.ArduCopter2)
+                if (IsComPortConnected()
+                    && MainV2.comPort.MAV.cs.firmware == Firmwares.ArduCopter2
+                    && dataGridView.Rows.Count >= CopterParamDescriptors.Length)
                 {
-                    var angleMax = (int)MainV2.comPort.MAV.param["ANGLE_MAX"];
-                    var loitSpeed = (int)MainV2.comPort.MAV.param["LOIT_SPEED"];
-                    var wpnavSpeed = (int)MainV2.comPort.MAV.param["WPNAV_SPEED"];
-
-                    var currentAngleMax = (int)dataGridView.Rows[0].Cells[2].Value;
-                    var currentLoitSpeed = (int)dataGridView.Rows[1].Cells[2].Value;
-                    var currentWpnavSpeed = (int)dataGridView.Rows[2].Cells[2].Value;
-
-                    if ((currentAngleMax != 0 || currentAngleMax != angleMax ||
-                        (currentLoitSpeed != 0 || currentLoitSpeed != loitSpeed)) ||
-                        (currentWpnavSpeed != 0 || currentWpnavSpeed != wpnavSpeed))
+                    for (int i = 0; i < CopterParamDescriptors.Length; i++)
                     {
-                        if (angleMax != 0 && loitSpeed != 0 && wpnavSpeed != 0)
-                        {
-                            dataGridView.Rows[0].Cells[2].Value = angleMax;
-                            dataGridView.Rows[1].Cells[2].Value = loitSpeed;
-                            dataGridView.Rows[2].Cells[2].Value = wpnavSpeed;
+                        var descriptor = CopterParamDescriptors[i];
+                        var currentValue = Convert.ToInt32(dataGridView.Rows[i].Cells[2].Value ?? 0);
+                        var paramValue = (int)MainV2.comPort.MAV.param[descriptor.ParamName];
 
+                        if (paramValue != 0 && currentValue != paramValue)
+                        {
+                            dataGridView.Rows[i].Cells[2].Value = paramValue;
                             success = true;
                         }
                     }
@@ -7890,96 +7734,38 @@ namespace MissionPlanner.GCSViews
         {
             if (comboBoxDronModel.Text == "Воробєй")
             {
-                if (!this.tableLayoutPanelCopter.Controls.Contains(IsActiveRC_Petr))
-                {
-                    this.tableLayoutPanelCopter.Controls.Add(IsActiveRC_Petr, 1, 7);
-                }
-                if (!this.tableLayoutPanelCopter.Controls.Contains(butForceLand))
-                {
-                    this.tableLayoutPanelCopter.Controls.Add(butForceLand, 1, 6);
-                }
-                if (!this.tableLayoutPanelCopter.Controls.Contains(BUT_thrustImbalance))
-                {
-                    this.tableLayoutPanelCopter.Controls.Add(BUT_thrustImbalance, 0, 7);
-                }
-                if (!this.tableLayoutPanelCopter.Controls.Contains(butGnGPS))
-                {
-                    this.tableLayoutPanelCopter.Controls.Add(this.butGnGPS, 2, 5);
-                }
-                if (this.tableLayoutPanelCopter.Controls.Contains(butUnaReboot))
-                {
-                    this.tableLayoutPanelCopter.Controls.Remove(butUnaReboot);
-                }
-                if (this.tableLayoutPanelCopter.Controls.Contains(butToggleSwitch))
-                {
-                    this.tableLayoutPanelCopter.Controls.Remove(butToggleSwitch);
-                }
-                if (this.tableLayoutPanelCopter.Controls.Contains(butFS_Options))
-                {
-                    this.tableLayoutPanelCopter.Controls.Remove(butFS_Options);
-                }
-                if (this.tableLayoutPanelCopter.Controls.Contains(butMissionStart))
-                {
-                    this.tableLayoutPanelCopter.Controls.Remove(butMissionStart);
-                }
+                EnsureControlAdded(IsActiveRC_Petr, 1, 7);
+                EnsureControlAdded(butForceLand, 1, 6);
+                EnsureControlAdded(BUT_thrustImbalance, 0, 7);
+                EnsureControlAdded(butGnGPS, 2, 5);
+                //EnsureControlRemoved(butUnaReboot);
+                EnsureControlRemoved(butToggleSwitch);
+                //EnsureControlRemoved(butFS_Options);
+                EnsureControlRemoved(butMissionStart);
+                EnsureControlRemoved(butRC_FSTimeout);
             }
             else
             {
-                if (this.tableLayoutPanelCopter.Controls.Contains(IsActiveRC_Petr))
-                {
-                    this.tableLayoutPanelCopter.Controls.Remove(IsActiveRC_Petr);
-                }
-                if (this.tableLayoutPanelCopter.Controls.Contains(butForceLand))
-                {
-                    this.tableLayoutPanelCopter.Controls.Remove(butForceLand);
-                }
-                if (this.tableLayoutPanelCopter.Controls.Contains(BUT_thrustImbalance))
-                {
-                    this.tableLayoutPanelCopter.Controls.Remove(BUT_thrustImbalance);
-                }
-                if (this.tableLayoutPanelCopter.Controls.Contains(butGnGPS))
-                {
-                    this.tableLayoutPanelCopter.Controls.Remove(butGnGPS);
-                }
-                if (!this.tableLayoutPanelCopter.Controls.Contains(butUnaReboot))
-                {
-                    this.tableLayoutPanelCopter.Controls.Add(this.butUnaReboot, 2, 6);
-                }
-                if (!this.tableLayoutPanelCopter.Controls.Contains(butToggleSwitch))
-                {
-                    this.tableLayoutPanelCopter.Controls.Add(this.butToggleSwitch, 2, 5);
-                }
-                if (!this.tableLayoutPanelCopter.Controls.Contains(butFS_Options))
-                {
-                    this.tableLayoutPanelCopter.Controls.Add(this.butFS_Options, 0, 7);
-                }
-                if (!this.tableLayoutPanelCopter.Controls.Contains(butMissionStart))
-                {
-                    this.tableLayoutPanelCopter.Controls.Add(this.butMissionStart, 1, 6);
-                }
+                EnsureControlRemoved(IsActiveRC_Petr);
+                EnsureControlRemoved(butForceLand);
+                EnsureControlRemoved(BUT_thrustImbalance);
+                EnsureControlRemoved(butGnGPS);
+                //EnsureControlAdded(butUnaReboot, 2, 6);
+                EnsureControlAdded(butToggleSwitch, 2, 5);
+                //EnsureControlAdded(butFS_Options, 0, 7);
+                EnsureControlAdded(butMissionStart, 1, 6);
+                EnsureControlAdded(butRC_FSTimeout, 2, 6);
             }
 
             if ((comboBoxDronModel.Text == "Вампір") && (chBox_X9.Checked))
             {
-                if (!this.tableLayoutPanelCopter.Controls.Contains(IsActRCVamp_1))
-                {
-                    this.tableLayoutPanelCopter.Controls.Add(IsActRCVamp_1, 1, 7);
-                }
-                if (!this.tableLayoutPanelCopter.Controls.Contains(IsActRCVamp_2))
-                {
-                    this.tableLayoutPanelCopter.Controls.Add(IsActRCVamp_2, 2, 7);
-                }
+                EnsureControlAdded(IsActRCVamp_1, 1, 8);
+                EnsureControlAdded(IsActRCVamp_2, 2, 8);
             }
             if (comboBoxDronModel.Text == "Воробєй")
             {
-                if (this.tableLayoutPanelCopter.Controls.Contains(IsActRCVamp_1))
-                {
-                    this.tableLayoutPanelCopter.Controls.Remove(IsActRCVamp_1);
-                }
-                if (this.tableLayoutPanelCopter.Controls.Contains(IsActRCVamp_2))
-                {
-                    this.tableLayoutPanelCopter.Controls.Remove(IsActRCVamp_2);
-                }
+                EnsureControlRemoved(IsActRCVamp_1);
+                EnsureControlRemoved(IsActRCVamp_2);
             }
         }
 
@@ -8008,6 +7794,7 @@ namespace MissionPlanner.GCSViews
             BUT_ARM_Check();
             BUT_thrustImbalance_Check();
             ButtomUpdate_FS(butFS_Options);
+            UpdateButtonRC_FSTimeout();
         }
 
         private void Copter_UI_Init()
@@ -8026,6 +7813,7 @@ namespace MissionPlanner.GCSViews
 
             BUT_ARM_Check();
             ButtomUpdate_FS(butFS_Options);
+            UpdateButtonRC_FSTimeout();
         }
     }
 }
