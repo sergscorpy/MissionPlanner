@@ -197,6 +197,38 @@ namespace MissionPlanner.GCSViews
             dataGridView.EditingControlShowing += DataGridView_EditingControlShowing;
         }
 
+        private void UpdateCopterButtonState(Button button, bool enabled, Color backColor, bool resetAutoSize = false)
+        {
+            if (button == null)
+            {
+                return;
+            }
+
+            button.Enabled = enabled;
+            button.BackColor = backColor;
+
+            if (resetAutoSize)
+            {
+                button.AutoSize = false;
+            }
+        }
+
+        private void EnsureControlAdded(Control control, int column, int row)
+        {
+            if (!tableLayoutPanelCopter.Controls.Contains(control))
+            {
+                tableLayoutPanelCopter.Controls.Add(control, column, row);
+            }
+        }
+
+        private void EnsureControlRemoved(Control control)
+        {
+            if (tableLayoutPanelCopter.Controls.Contains(control))
+            {
+                tableLayoutPanelCopter.Controls.Remove(control);
+            }
+        }
+
         private void AddButton(string name, int column, int row)
         {
             var button = CreateButton(name);

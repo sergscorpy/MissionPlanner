@@ -7036,20 +7036,21 @@ namespace MissionPlanner.GCSViews
                     }
                 }
             }
+            bool isConnected = IsComPortConnected();
             foreach (var button in ListButtonsMods)
             {
-                if (button == null) return;
-
-                if (IsComPortConnected())
+                if (button == null)
                 {
-                    button.Enabled = true;
-                    button.BackColor = button.AutoSize ? colorOn : colorOff;
+                    return;
+                }
+
+                if (isConnected)
+                {
+                    UpdateCopterButtonState(button, true, button.AutoSize ? colorOn : colorOff);
                 }
                 else
                 {
-                    button.Enabled = false;
-                    button.AutoSize = false;
-                    button.BackColor = colorDis;
+                    UpdateCopterButtonState(button, false, colorDis, true);
                 }
             }
         }
@@ -7238,8 +7239,8 @@ namespace MissionPlanner.GCSViews
             var buttTrue = FindButtonByName("Custom");
             if (chBox_ExpMod.Checked)
             {
-                chBox_ExpMod.BackColor = System.Drawing.Color.YellowGreen;
-                chBox_ExpMod.ForeColor = System.Drawing.SystemColors.WindowFrame;
+                chBox_ExpMod.BackColor = Color.YellowGreen;
+                chBox_ExpMod.ForeColor = SystemColors.WindowFrame;
                 if (!this.tableLayoutPanelCopter.Controls.Contains(this.dataGridView))
                 {
                     ShowCopterDataGridView();
@@ -7248,7 +7249,7 @@ namespace MissionPlanner.GCSViews
             else
             {
                 chBox_ExpMod.BackColor = Color.FromArgb(45, 45, 45);
-                chBox_ExpMod.ForeColor = System.Drawing.SystemColors.Window;
+                chBox_ExpMod.ForeColor = SystemColors.Window;
                 if (this.tableLayoutPanelCopter.Controls.Contains(this.dataGridView) && !buttTrue.AutoSize)
                 {
                     HideCopterDataGridView();
@@ -7259,32 +7260,20 @@ namespace MissionPlanner.GCSViews
         {
             if (chBox_X9.Checked)
             {
-                chBox_X9.BackColor = System.Drawing.Color.YellowGreen;
-                chBox_X9.ForeColor = System.Drawing.SystemColors.WindowFrame;
+                chBox_X9.BackColor = Color.YellowGreen;
+                chBox_X9.ForeColor = SystemColors.WindowFrame;
                 if (comboBoxDronModel.Text == "Вампір")
                 {
-                    if (!this.tableLayoutPanelCopter.Controls.Contains(IsActRCVamp_1))
-                    {
-                        this.tableLayoutPanelCopter.Controls.Add(IsActRCVamp_1, 1, 7);
-                    }
-                    if (!this.tableLayoutPanelCopter.Controls.Contains(IsActRCVamp_2))
-                    {
-                        this.tableLayoutPanelCopter.Controls.Add(IsActRCVamp_2, 2, 7);
-                    }
+                    EnsureControlAdded(IsActRCVamp_1, 1, 7);
+                    EnsureControlAdded(IsActRCVamp_2, 2, 7);
                 }
             }
             else
             {
                 chBox_X9.BackColor = Color.FromArgb(45, 45, 45);
-                chBox_X9.ForeColor = System.Drawing.SystemColors.Window;
-                if (this.tableLayoutPanelCopter.Controls.Contains(IsActRCVamp_1))
-                {
-                    this.tableLayoutPanelCopter.Controls.Remove(IsActRCVamp_1);
-                }
-                if (this.tableLayoutPanelCopter.Controls.Contains(IsActRCVamp_2))
-                {
-                    this.tableLayoutPanelCopter.Controls.Remove(IsActRCVamp_2);
-                }
+                chBox_X9.ForeColor = SystemColors.Window;
+                EnsureControlRemoved(IsActRCVamp_1);
+                EnsureControlRemoved(IsActRCVamp_2);
             }
         }
         private void LoadCustomParameters()
@@ -7719,96 +7708,36 @@ namespace MissionPlanner.GCSViews
         {
             if (comboBoxDronModel.Text == "Воробєй")
             {
-                if (!this.tableLayoutPanelCopter.Controls.Contains(IsActiveRC_Petr))
-                {
-                    this.tableLayoutPanelCopter.Controls.Add(IsActiveRC_Petr, 1, 7);
-                }
-                if (!this.tableLayoutPanelCopter.Controls.Contains(butForceLand))
-                {
-                    this.tableLayoutPanelCopter.Controls.Add(butForceLand, 1, 6);
-                }
-                if (!this.tableLayoutPanelCopter.Controls.Contains(BUT_thrustImbalance))
-                {
-                    this.tableLayoutPanelCopter.Controls.Add(BUT_thrustImbalance, 0, 7);
-                }
-                if (!this.tableLayoutPanelCopter.Controls.Contains(butGnGPS))
-                {
-                    this.tableLayoutPanelCopter.Controls.Add(this.butGnGPS, 2, 5);
-                }
-                if (this.tableLayoutPanelCopter.Controls.Contains(butUnaReboot))
-                {
-                    this.tableLayoutPanelCopter.Controls.Remove(butUnaReboot);
-                }
-                if (this.tableLayoutPanelCopter.Controls.Contains(butToggleSwitch))
-                {
-                    this.tableLayoutPanelCopter.Controls.Remove(butToggleSwitch);
-                }
-                if (this.tableLayoutPanelCopter.Controls.Contains(butFS_Options))
-                {
-                    this.tableLayoutPanelCopter.Controls.Remove(butFS_Options);
-                }
-                if (this.tableLayoutPanelCopter.Controls.Contains(butMissionStart))
-                {
-                    this.tableLayoutPanelCopter.Controls.Remove(butMissionStart);
-                }
+                EnsureControlAdded(IsActiveRC_Petr, 1, 7);
+                EnsureControlAdded(butForceLand, 1, 6);
+                EnsureControlAdded(BUT_thrustImbalance, 0, 7);
+                EnsureControlAdded(butGnGPS, 2, 5);
+                EnsureControlRemoved(butUnaReboot);
+                EnsureControlRemoved(butToggleSwitch);
+                EnsureControlRemoved(butFS_Options);
+                EnsureControlRemoved(butMissionStart);
             }
             else
             {
-                if (this.tableLayoutPanelCopter.Controls.Contains(IsActiveRC_Petr))
-                {
-                    this.tableLayoutPanelCopter.Controls.Remove(IsActiveRC_Petr);
-                }
-                if (this.tableLayoutPanelCopter.Controls.Contains(butForceLand))
-                {
-                    this.tableLayoutPanelCopter.Controls.Remove(butForceLand);
-                }
-                if (this.tableLayoutPanelCopter.Controls.Contains(BUT_thrustImbalance))
-                {
-                    this.tableLayoutPanelCopter.Controls.Remove(BUT_thrustImbalance);
-                }
-                if (this.tableLayoutPanelCopter.Controls.Contains(butGnGPS))
-                {
-                    this.tableLayoutPanelCopter.Controls.Remove(butGnGPS);
-                }
-                if (!this.tableLayoutPanelCopter.Controls.Contains(butUnaReboot))
-                {
-                    this.tableLayoutPanelCopter.Controls.Add(this.butUnaReboot, 2, 6);
-                }
-                if (!this.tableLayoutPanelCopter.Controls.Contains(butToggleSwitch))
-                {
-                    this.tableLayoutPanelCopter.Controls.Add(this.butToggleSwitch, 2, 5);
-                }
-                if (!this.tableLayoutPanelCopter.Controls.Contains(butFS_Options))
-                {
-                    this.tableLayoutPanelCopter.Controls.Add(this.butFS_Options, 0, 7);
-                }
-                if (!this.tableLayoutPanelCopter.Controls.Contains(butMissionStart))
-                {
-                    this.tableLayoutPanelCopter.Controls.Add(this.butMissionStart, 1, 6);
-                }
+                EnsureControlRemoved(IsActiveRC_Petr);
+                EnsureControlRemoved(butForceLand);
+                EnsureControlRemoved(BUT_thrustImbalance);
+                EnsureControlRemoved(butGnGPS);
+                EnsureControlAdded(butUnaReboot, 2, 6);
+                EnsureControlAdded(butToggleSwitch, 2, 5);
+                EnsureControlAdded(butFS_Options, 0, 7);
+                EnsureControlAdded(butMissionStart, 1, 6);
             }
 
             if ((comboBoxDronModel.Text == "Вампір") && (chBox_X9.Checked))
             {
-                if (!this.tableLayoutPanelCopter.Controls.Contains(IsActRCVamp_1))
-                {
-                    this.tableLayoutPanelCopter.Controls.Add(IsActRCVamp_1, 1, 7);
-                }
-                if (!this.tableLayoutPanelCopter.Controls.Contains(IsActRCVamp_2))
-                {
-                    this.tableLayoutPanelCopter.Controls.Add(IsActRCVamp_2, 2, 7);
-                }
+                EnsureControlAdded(IsActRCVamp_1, 1, 7);
+                EnsureControlAdded(IsActRCVamp_2, 2, 7);
             }
             if (comboBoxDronModel.Text == "Воробєй")
             {
-                if (this.tableLayoutPanelCopter.Controls.Contains(IsActRCVamp_1))
-                {
-                    this.tableLayoutPanelCopter.Controls.Remove(IsActRCVamp_1);
-                }
-                if (this.tableLayoutPanelCopter.Controls.Contains(IsActRCVamp_2))
-                {
-                    this.tableLayoutPanelCopter.Controls.Remove(IsActRCVamp_2);
-                }
+                EnsureControlRemoved(IsActRCVamp_1);
+                EnsureControlRemoved(IsActRCVamp_2);
             }
         }
 
