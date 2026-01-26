@@ -7742,6 +7742,7 @@ namespace MissionPlanner.GCSViews
                 EnsureControlRemoved(butToggleSwitch);
                 //EnsureControlRemoved(butFS_Options);
                 EnsureControlRemoved(butMissionStart);
+                EnsureControlRemoved(butRC_FSTimeout);
             }
             else
             {
@@ -7753,6 +7754,7 @@ namespace MissionPlanner.GCSViews
                 EnsureControlAdded(butToggleSwitch, 2, 5);
                 //EnsureControlAdded(butFS_Options, 0, 7);
                 EnsureControlAdded(butMissionStart, 1, 6);
+                EnsureControlAdded(butRC_FSTimeout, 2, 6);
             }
 
             if ((comboBoxDronModel.Text == "Вампір") && (chBox_X9.Checked))
