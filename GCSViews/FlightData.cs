@@ -7013,7 +7013,7 @@ namespace MissionPlanner.GCSViews
             if (IsComPortConnected())
             {
                 string key = null;
-                if (ListButtonsMods.All(butt => !butt.AutoSize && DataGridViewUpdate()))
+                if (ListButtonsMods.All(butt => !butt.AutoSize))
                 {
                     CollationDefaultCurrentValue(out key);
                     if (key != null && key != "Custom")
