@@ -2993,12 +2993,13 @@ namespace MissionPlanner.GCSViews
             this.butUnaReboot = new Button();
             this.butMissionStart = new Button();
             this.butFS_Options = new Button();
+            this.butRC_FSTimeout = new Button();
             this.butToggleSwitch = new Button();
             this.IsActiveRC_Petr = new Button();
             this.IsActRCVamp_1 = new Button();
             this.IsActRCVamp_2 = new Button();
             this.BUT_thrustImbalance = new Button();
-            
+
             /****************************************Plane*************************************************************/
 
             /*
@@ -3855,7 +3856,23 @@ namespace MissionPlanner.GCSViews
             this.butAltHold.BackColor = colorDis;
             this.butAltHold.Click += new System.EventHandler(this.butAltHold_Click);
             this.tableLayoutPanelCopter.Controls.Add(this.butAltHold, 3, 5);
-            
+
+            /*
+             * Button RC_FS_TIMEOUT
+             */
+            this.butRC_FSTimeout.Font = fontBut;
+            this.butRC_FSTimeout.Name = "butRC_FSTimeout";
+            this.butRC_FSTimeout.Text = "RC_FS_TIMEOUT";
+            this.butRC_FSTimeout.ForeColor = Color.Black;
+            this.butRC_FSTimeout.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.butRC_FSTimeout.Enabled = true;
+            this.butRC_FSTimeout.UseVisualStyleBackColor = false;
+            this.butRC_FSTimeout.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.butRC_FSTimeout.FlatAppearance.BorderSize = 1;
+            this.butRC_FSTimeout.FlatAppearance.BorderColor = colorDis;
+            this.butRC_FSTimeout.BackColor = colorOn;
+            this.butRC_FSTimeout.Click += new System.EventHandler(this.butRC_FSTimeout_Click);
+            this.tableLayoutPanelCopter.Controls.Add(this.butRC_FSTimeout, 2, 6);
             /*
              * Button UNA Reboot
              */
@@ -4313,6 +4330,7 @@ namespace MissionPlanner.GCSViews
         private Button butToggleSwitch;
         private Button butFS_Options;
         private Button butMissionStart;
+        private Button butRC_FSTimeout;
         private Button but_setmode;
         private Button BUT_thrustImbalance;
 

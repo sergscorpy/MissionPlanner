@@ -7530,6 +7530,31 @@ namespace MissionPlanner.GCSViews
             }
         }
 
+        private void butRC_FSTimeout_Click(object sender, EventArgs e)
+        {
+            if (MainV2.comPort.MAV.param.ContainsKey("RC_FS_TIMEOUT"))
+            {
+                int currentValue = (int)MainV2.comPort.MAV.param["RC_FS_TIMEOUT"];
+                int nextValue = currentValue == 1 ? 30 : 1;
+
+                SetParam("RC_FS_TIMEOUT", nextValue);
+                UpdateButtonRC_FSTimeout();
+            }
+        }
+
+        private void UpdateButtonRC_FSTimeout()
+        {
+            try
+            {
+                int value = (int)MainV2.comPort.MAV.param["RC_FS_TIMEOUT"];
+                butRC_FSTimeout.Text = $"RC_FS_TIMEOUT: {value}";
+                butRC_FSTimeout.BackColor = value == 1 ? Color.Sienna : colorOn;
+            }
+            catch
+            {
+            }
+        }
+
         private void ButtomUpdate_FS(Button but)
         {
             try
@@ -7766,6 +7791,7 @@ namespace MissionPlanner.GCSViews
             BUT_ARM_Check();
             BUT_thrustImbalance_Check();
             ButtomUpdate_FS(butFS_Options);
+            UpdateButtonRC_FSTimeout();
         }
 
         private void Copter_UI_Init()
@@ -7784,6 +7810,7 @@ namespace MissionPlanner.GCSViews
 
             BUT_ARM_Check();
             ButtomUpdate_FS(butFS_Options);
+            UpdateButtonRC_FSTimeout();
         }
     }
 }
