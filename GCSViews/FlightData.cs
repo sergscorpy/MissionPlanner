@@ -7547,7 +7547,7 @@ namespace MissionPlanner.GCSViews
             try
             {
                 int value = (int)MainV2.comPort.MAV.param["RC_FS_TIMEOUT"];
-                butRC_FSTimeout.Text = $"RC_FS_TIMEOUT: {value}";
+                butRC_FSTimeout.Text = value == 1 ? "FS Land" : "FS Fly";
                 butRC_FSTimeout.BackColor = value == 1 ? Color.Sienna : colorOn;
             }
             catch
