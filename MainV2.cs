@@ -699,31 +699,6 @@ namespace MissionPlanner
 
             InitializeComponent();
 
-            Shown += (sender, args) =>
-            {
-                BeginInvoke((Action)(() =>
-                {
-                    try
-                    {
-                        if (WindowState == FormWindowState.Minimized)
-                        {
-                            WindowState = FormWindowState.Normal;
-                        }
-
-                        Activate();
-                        BringToFront();
-
-                        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                        {
-                            NativeMethods.SetForegroundWindow(Handle);
-                        }
-                    }
-                    catch
-                    {
-                    }
-                }));
-            };
-
             //Init Theme table and load BurntKermit as a default
             ThemeManager.thmColor = new ThemeColorTable(); //Init colortable
             ThemeManager.thmColor.InitColors(); //This fills up the table with BurntKermit defaults.

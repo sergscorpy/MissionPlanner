@@ -12,9 +12,6 @@ namespace MissionPlanner
         [DllImport("user32.dll")]
         public static extern bool ShowWindow(IntPtr Handle, int showState);
 
-        [DllImport("user32.dll")]
-        public static extern bool SetForegroundWindow(IntPtr hWnd);
-
         [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
         internal static extern IntPtr RegisterDeviceNotification
         (IntPtr hRecipient,
