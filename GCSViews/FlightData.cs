@@ -7712,9 +7712,9 @@ namespace MissionPlanner.GCSViews
                 EnsureControlAdded(butForceLand, 1, 6);
                 EnsureControlAdded(BUT_thrustImbalance, 0, 7);
                 EnsureControlAdded(butGnGPS, 2, 5);
-                EnsureControlRemoved(butUnaReboot);
+                //EnsureControlRemoved(butUnaReboot);
                 EnsureControlRemoved(butToggleSwitch);
-                EnsureControlRemoved(butFS_Options);
+                //EnsureControlRemoved(butFS_Options);
                 EnsureControlRemoved(butMissionStart);
             }
             else
@@ -7723,16 +7723,16 @@ namespace MissionPlanner.GCSViews
                 EnsureControlRemoved(butForceLand);
                 EnsureControlRemoved(BUT_thrustImbalance);
                 EnsureControlRemoved(butGnGPS);
-                EnsureControlAdded(butUnaReboot, 2, 6);
+                //EnsureControlAdded(butUnaReboot, 2, 6);
                 EnsureControlAdded(butToggleSwitch, 2, 5);
-                EnsureControlAdded(butFS_Options, 0, 7);
+                //EnsureControlAdded(butFS_Options, 0, 7);
                 EnsureControlAdded(butMissionStart, 1, 6);
             }
 
             if ((comboBoxDronModel.Text == "Вампір") && (chBox_X9.Checked))
             {
-                EnsureControlAdded(IsActRCVamp_1, 1, 7);
-                EnsureControlAdded(IsActRCVamp_2, 2, 7);
+                EnsureControlAdded(IsActRCVamp_1, 1, 8);
+                EnsureControlAdded(IsActRCVamp_2, 2, 8);
             }
             if (comboBoxDronModel.Text == "Воробєй")
             {

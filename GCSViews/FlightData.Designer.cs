@@ -3871,7 +3871,7 @@ namespace MissionPlanner.GCSViews
             this.butUnaReboot.FlatAppearance.BorderColor = colorDis;
             this.butUnaReboot.BackColor = colorOn;
             this.butUnaReboot.Click += new System.EventHandler(this.butUnaReboot_Click);
-            this.tableLayoutPanelCopter.Controls.Add(this.butUnaReboot, 2, 6);
+            //this.tableLayoutPanelCopter.Controls.Add(this.butUnaReboot, 2, 6);
 
             /*
              * Button Toggle Switch
