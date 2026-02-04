@@ -344,7 +344,7 @@ namespace RCListener.Control
 
                     try
                     {
-                        if (MainV2.comPort.BaseStream?.IsOpen == true)
+                        if (MainV2.comPort.BaseStream?.IsOpen == true && CurrentPortHealthy())
                         {
                             SendRCOverride();
                         }
