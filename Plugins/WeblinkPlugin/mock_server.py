@@ -14,18 +14,16 @@ radius = 0.001
 angle = 0.0
 device_connected = True
 
+# --- RC CHANNEL MOCK ---
+channel_value = 7
 
-@device_app.route("/api/status/ping", methods=["GET"])
+
+@device_app.route("/", methods=["GET"])
 def device_ping():
-    if device_connected:
-        return jsonify({"connected": True, "sats": random.randint(10, 18)}), 200
-    else:
-        return jsonify({"connected": False, "sats": 0}), 200
+    return jsonify({"status": "connected"}), 200
 
-
-@device_app.route("/api/telemetry", methods=["GET"])
+@device_app.route("/node/telemetry", methods=["GET"])
 def telemetry():
-    """Эмулирует круговое движение и возвращает координаты"""
     global angle
     angle += 0.05
     lat = center_lat + radius * math.cos(angle)
@@ -36,6 +34,29 @@ def telemetry():
 
     data = {"lat": lat, "lon": lon, "alt": alt, "sats": sats, "ping": ping}
     return jsonify(data), 200
+
+
+@device_app.route("/starlink/location/channel", methods=["GET"])
+def get_channel():
+    return jsonify({"channel": channel_value}), 200
+
+@device_app.route("/api/channel", methods=["POST"])
+def set_channel():
+    global channel_value
+    data = request.get_json(force=True, silent=True) or {}
+    ch = data.get("channel")
+
+    try:
+        ch = int(ch)
+    except:
+        return jsonify({"ok": False, "error": "channel must be int"}), 400
+
+    if ch < 1 or ch > 16:
+        return jsonify({"ok": False, "error": "channel must be 1..16"}), 400
+
+    channel_value = ch
+    print(f"[DEVICE] Channel updated to: {channel_value}")
+    return jsonify({"ok": True, "channel": channel_value}), 200
 
 
 @device_app.route("/api/restart", methods=["POST"])
@@ -55,23 +76,15 @@ def marker():
 
 orch_app = Flask("orchestrator")
 device_ip = "127.0.0.1"
-device_port = 5001
+device_port = 8888
 device_status = "connected"
 
 
-@orch_app.route("/api/status/ping", methods=["GET"])
+@orch_app.route("/", methods=["GET"])
 def orchestrator_ping():
-    """Возвращает статус и координаты устройства"""
-    status = {
-        "status": device_status,
-        "device_ip": device_ip,
-        "device_port": device_port,
-    }
-    return jsonify(status), 200
-
+    return jsonify({"status": "connected", "ip": "127.0.0.1"}), 200
 
 # ---------------------- RUN SERVERS ----------------------
-
 
 def run_device():
     print(f"[DEVICE] Mock device running on http://{device_ip}:{device_port}")
@@ -79,8 +92,8 @@ def run_device():
 
 
 def run_orchestrator():
-    print("[ORCH] Mock orchestrator running on http://127.0.0.1:5000")
-    orch_app.run(host="127.0.0.1", port=5000, threaded=True, debug=False)
+    print("[ORCH] Mock orchestrator running on http://127.0.0.1:9999")
+    orch_app.run(host="127.0.0.1", port=9999, threaded=True, debug=False)
 
 
 if __name__ == "__main__":

@@ -5,6 +5,8 @@ using System.Linq;
 using System.Windows.Forms;
 using WeblinkPlugin.Core.Http;
 using WeblinkPlugin.UI;
+using WeblinkPlugin.Core.Rc;
+using System;
 
 namespace WeblinkPlugin
 {
@@ -16,7 +18,7 @@ namespace WeblinkPlugin
         private MapInteractionManager _mapUI;
 
         public override string Name => "Weblink Plugin";
-        public override string Version => "0.4";
+        public override string Version => "0.5";
         public override string Author => "MUGA";
 
         public override bool Init() => true;

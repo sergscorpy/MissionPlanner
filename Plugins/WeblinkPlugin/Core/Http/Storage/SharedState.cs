@@ -9,7 +9,9 @@ namespace WeblinkPlugin.Core.Http.Storage
 
         public string ServerStatus { get; private set; } = "Disconnected";
         public string DeviceStatus { get; private set; } = "Disconnected";
-
+        public string CurrentMode { get; private set; } = "starlink";
+        public int? Channel { get; private set; }
+        public int? ChannelPwm { get; private set; }
         public double Lat { get; private set; }
         public double Lon { get; private set; }
         public double Alt { get; private set; }
@@ -57,6 +59,32 @@ namespace WeblinkPlugin.Core.Http.Storage
                 Lon = lon;
                 Alt = alt;
                 Satellites = sats;
+            }
+            StateChanged?.Invoke();
+        }
+
+        public void UpdateChanel(int channel)
+        {
+            lock (_lock)
+            {
+                Channel = channel;
+            }
+            StateChanged?.Invoke();
+        }
+        public void UpdateChanelPwm(int pwm)
+        {
+            lock (_lock)
+            {
+                ChannelPwm = pwm;
+            }
+            StateChanged?.Invoke();
+        }
+
+        public void UpdateCurrentMode(string mode)
+        {
+            lock (_lock)
+            {
+                CurrentMode = mode;
             }
             StateChanged?.Invoke();
         }

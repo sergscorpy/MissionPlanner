@@ -23,10 +23,28 @@ namespace WeblinkPlugin.Core.Http
             return await GetJsonAsync<DeviceStatus>(url);
         }
 
+        public async Task<bool> SendModeAsync(string mode)
+        {
+            var url = $"{BaseUrl}/starlink/location/mode";
+
+            var payload = new ModePacket
+            {
+                Mode = mode
+            };
+
+            return await PostJsonAsync(url, payload);
+        }
+
         public async Task<TelemetryPacket> GetTelemetryAsync()
         {
             var url = string.Format("{0}/starlink/gps/location", BaseUrl);
             return await GetJsonAsync<TelemetryPacket>(url);
+        }
+
+        public async Task<ChannelPacket> GetChannelAsync()
+        {
+            var url = string.Format("{0}/starlink/location/channel", BaseUrl);
+            return await GetJsonAsync<ChannelPacket>(url);
         }
 
         public bool Matches(string ip, int port)

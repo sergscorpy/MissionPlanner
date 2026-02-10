@@ -57,7 +57,9 @@ namespace WeblinkPlugin.UI
                 $"Server: {s.ServerStatus}  |  Device: {s.DeviceStatus}  |  " +
                 $"Lat: {s.Lat:F6}  |  Lon: {s.Lon:F6}  |  Terrain: {(s.TerrainAlt.HasValue ? s.TerrainAlt.Value.ToString("F1") : "-")}  |  " +
                 $"Sats: {s.Satellites}  |  " +
-                $"IP: {(string.IsNullOrEmpty(s.DeviceIp) ? "-" : s.DeviceIp)}  |  Port: {(s.DevicePort > 0 ? s.DevicePort.ToString() : "-")}";
+                $"IP: {(string.IsNullOrEmpty(s.DeviceIp) ? "-" : s.DeviceIp)}  |  Port: {(s.DevicePort > 0 ? s.DevicePort.ToString() : "-")} | " +
+                $"Mode: {(string.IsNullOrEmpty(s.CurrentMode) ? "-" : s.CurrentMode)} | Pwm: {(s.ChannelPwm > 0 ? s.ChannelPwm.ToString() : "-")} | " +
+                $"Channel: {s.Channel}";
         }
 
         protected override void Dispose(bool disposing)
