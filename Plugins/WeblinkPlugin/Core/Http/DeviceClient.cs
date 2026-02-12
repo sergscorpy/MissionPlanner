@@ -37,7 +37,7 @@ namespace WeblinkPlugin.Core.Http
 
         public async Task<TelemetryPacket> GetTelemetryAsync()
         {
-            var url = string.Format("{0}/starlink/gps/location", BaseUrl);
+            var url = string.Format("{0}/starlink/location/gps", BaseUrl);
             return await GetJsonAsync<TelemetryPacket>(url);
         }
 
