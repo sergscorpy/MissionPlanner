@@ -584,6 +584,7 @@ namespace MissionPlanner
 
         private Form connectionStatsForm;
         private ConnectionStats _connectionStats;
+        private ServoControllerModuleOverlayService servoControllerModuleOverlayService;
 
         /// <summary>
         /// This 'Control' is the toolstrip control that holds the comport combo, baudrate combo etc
@@ -817,6 +818,8 @@ namespace MissionPlanner
             }
 
             ChangeUnits();
+
+            servoControllerModuleOverlayService = new ServoControllerModuleOverlayService(this, comPort);
 
             if (Settings.Instance["showairports"] != null)
             {
@@ -2153,6 +2156,14 @@ namespace MissionPlanner
 
             if (MONO)
                 this.Dispose();
+
+            try
+            {
+                servoControllerModuleOverlayService?.Dispose();
+            }
+            catch
+            {
+            }
         }
 
 
