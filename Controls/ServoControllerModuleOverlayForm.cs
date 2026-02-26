@@ -8,7 +8,8 @@ namespace MissionPlanner.Controls
 {
     public class ServoControllerModuleOverlayForm : Form
     {
-        private const int MaxIconsCount = 4;
+        private const int MaxIconsCount = 8;
+        private const int DefaultVisibleIconsCount = 4;
 
         private readonly TableLayoutPanel iconsLayout;
         private readonly List<PictureBox> icons = new List<PictureBox>();
@@ -16,7 +17,7 @@ namespace MissionPlanner.Controls
 
         private bool isDragging;
         private Point dragOffset;
-        private int visibleIconsCount = MaxIconsCount;
+        private int visibleIconsCount = DefaultVisibleIconsCount;
 
         public ServoControllerModuleOverlayForm()
         {
