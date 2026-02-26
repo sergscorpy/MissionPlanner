@@ -14,10 +14,13 @@ namespace MissionPlanner.Controls
         private readonly TableLayoutPanel iconsLayout;
         private readonly List<PictureBox> icons = new List<PictureBox>();
         private readonly List<ToolStripMenuItem> iconCountMenuItems = new List<ToolStripMenuItem>();
+        private readonly Image unlockedImage;
+        private readonly Image lockedImage;
 
         private bool isDragging;
         private Point dragOffset;
         private int visibleIconsCount = DefaultVisibleIconsCount;
+        private int lockMask;
 
         public ServoControllerModuleOverlayForm()
         {
@@ -43,13 +46,15 @@ namespace MissionPlanner.Controls
                 iconsLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100f / MaxIconsCount));
             }
 
-            var iconPath = ResolveDropsEmptyImagePath();
+            unlockedImage = Image.FromFile(ResolveIconImagePath("Drops_Empty.png"));
+            lockedImage = Image.FromFile(ResolveIconImagePath("Drops_Green.png"));
+
             for (var i = 0; i < MaxIconsCount; i++)
             {
                 var icon = new PictureBox
                 {
                     Dock = DockStyle.Fill,
-                    Image = Image.FromFile(iconPath),
+                    Image = unlockedImage,
                     SizeMode = PictureBoxSizeMode.Zoom,
                     Margin = new Padding(0, 4, 0, 4)
                 };
@@ -63,6 +68,25 @@ namespace MissionPlanner.Controls
             ContextMenuStrip = BuildIconsCountMenu();
             RegisterDragEvents(this);
             ApplyVisibleIconsCount();
+            ApplyLockMask();
+        }
+
+        public void UpdateLockMask(int newLockMask)
+        {
+            lockMask = newLockMask;
+
+            if (IsDisposed)
+            {
+                return;
+            }
+
+            if (InvokeRequired)
+            {
+                BeginInvoke((Action)ApplyLockMask);
+                return;
+            }
+
+            ApplyLockMask();
         }
 
         private ContextMenuStrip BuildIconsCountMenu()
@@ -110,6 +134,17 @@ namespace MissionPlanner.Controls
             for (var i = 0; i < iconCountMenuItems.Count; i++)
             {
                 iconCountMenuItems[i].Checked = i + 1 == visibleIconsCount;
+            }
+
+            ApplyLockMask();
+        }
+
+        private void ApplyLockMask()
+        {
+            for (var i = 0; i < icons.Count; i++)
+            {
+                var isLocked = (lockMask & (1 << i)) != 0;
+                icons[i].Image = isLocked ? lockedImage : unlockedImage;
             }
         }
 
@@ -169,14 +204,25 @@ namespace MissionPlanner.Controls
             }
         }
 
-        private static string ResolveDropsEmptyImagePath()
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                unlockedImage?.Dispose();
+                lockedImage?.Dispose();
+            }
+
+            base.Dispose(disposing);
+        }
+
+        private static string ResolveIconImagePath(string fileName)
         {
             var baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
             var candidatePaths = new[]
             {
-                Path.Combine(baseDirectory, "Controls", "Icon", "Drops_Empty.png"),
-                Path.Combine(baseDirectory, "..", "..", "..", "Controls", "Icon", "Drops_Empty.png"),
-                Path.Combine(baseDirectory, "..", "..", "..", "..", "Controls", "Icon", "Drops_Empty.png")
+                Path.Combine(baseDirectory, "Controls", "Icon", fileName),
+                Path.Combine(baseDirectory, "..", "..", "..", "Controls", "Icon", fileName),
+                Path.Combine(baseDirectory, "..", "..", "..", "..", "Controls", "Icon", fileName)
             };
 
             foreach (var candidatePath in candidatePaths)
@@ -188,7 +234,7 @@ namespace MissionPlanner.Controls
                 }
             }
 
-            throw new FileNotFoundException("Не вдалося знайти файл іконки Drops_Empty.png.");
+            throw new FileNotFoundException($"Не вдалося знайти файл іконки {fileName}.");
         }
     }
 }

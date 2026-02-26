@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using System.Windows.Forms;
 using MissionPlanner.Controls;
 
@@ -13,6 +14,7 @@ namespace MissionPlanner.Utilities
         private ServoControllerModuleOverlayForm overlayForm;
         private bool moduleDetected;
         private bool disposed;
+        private int lockMask;
 
         public ServoControllerModuleOverlayService(Form owner, MAVLinkInterface mavLinkInterface)
         {
@@ -25,12 +27,27 @@ namespace MissionPlanner.Utilities
 
         private void OnPacketReceived(object sender, MAVLink.MAVLinkMessage message)
         {
-            if (disposed || moduleDetected)
+            if (disposed)
             {
                 return;
             }
 
-            if ((MAVLink.MAVLINK_MSG_ID)message.msgid != MAVLink.MAVLINK_MSG_ID.HEARTBEAT)
+            var messageId = (MAVLink.MAVLINK_MSG_ID)message.msgid;
+            if (messageId == MAVLink.MAVLINK_MSG_ID.HEARTBEAT)
+            {
+                HandleHeartbeat(message);
+                return;
+            }
+
+            if (messageId == MAVLink.MAVLINK_MSG_ID.NAMED_VALUE_INT)
+            {
+                HandleNamedValueInt(message);
+            }
+        }
+
+        private void HandleHeartbeat(MAVLink.MAVLinkMessage message)
+        {
+            if (moduleDetected)
             {
                 return;
             }
@@ -41,8 +58,32 @@ namespace MissionPlanner.Utilities
             }
 
             moduleDetected = true;
-
             owner.BeginInvokeIfRequired((Action)ShowOverlay);
+        }
+
+        private void HandleNamedValueInt(MAVLink.MAVLinkMessage message)
+        {
+            if (message.sysid != 1 || message.compid != (byte)MAVLink.MAV_COMPONENT.MAV_COMP_ID_PERIPHERAL)
+            {
+                return;
+            }
+
+            var namedValueInt = message.ToStructure<MAVLink.mavlink_named_value_int_t>();
+            var name = Encoding.ASCII.GetString(namedValueInt.name).TrimEnd('\0', ' ');
+            if (!string.Equals(name, "LOCKED", StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            lockMask = namedValueInt.value;
+
+            owner.BeginInvokeIfRequired((Action)(() =>
+            {
+                if (overlayForm != null && !overlayForm.IsDisposed)
+                {
+                    overlayForm.UpdateLockMask(lockMask);
+                }
+            }));
         }
 
         private void ShowOverlay()
@@ -55,6 +96,7 @@ namespace MissionPlanner.Utilities
             if (overlayForm == null || overlayForm.IsDisposed)
             {
                 overlayForm = new ServoControllerModuleOverlayForm();
+                overlayForm.UpdateLockMask(lockMask);
                 overlayForm.Show(owner);
             }
             else
