@@ -18,6 +18,8 @@ namespace MissionPlanner.Controls
         private const int MaxRcChannel = 16;
         private const int CommandActivationThreshold = 1700;
         private const int SafetyActivationThreshold = 1700;
+        private const string PositionXSettingKey = "ServoControllerModuleOverlayForm.PositionX";
+        private const string PositionYSettingKey = "ServoControllerModuleOverlayForm.PositionY";
 
         private readonly TableLayoutPanel iconsLayout;
         private readonly PictureBox safetyIcon;
@@ -118,6 +120,7 @@ namespace MissionPlanner.Controls
 
             ContextMenuStrip = BuildContextMenu();
             RegisterDragEvents(this);
+            LoadSavedPosition();
             ApplyVisibleIconsCount();
             ApplyOverlayState();
         }
@@ -410,8 +413,16 @@ namespace MissionPlanner.Controls
             if (e.Button == MouseButtons.Left)
             {
                 isDragging = false;
+                SaveCurrentPosition();
             }
         }
+
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            SaveCurrentPosition();
+            base.OnFormClosing(e);
+        }
+
 
         protected override void Dispose(bool disposing)
         {
@@ -451,6 +462,36 @@ namespace MissionPlanner.Controls
             }
 
             throw new FileNotFoundException($"Не вдалося знайти файл іконки {fileName}.");
+        }
+
+        private void LoadSavedPosition()
+        {
+            var settings = Utilities.Settings.Instance;
+            if (!settings.ContainsKey(PositionXSettingKey) || !settings.ContainsKey(PositionYSettingKey))
+            {
+                return;
+            }
+
+            var savedX = settings.GetInt32(PositionXSettingKey, Left);
+            var savedY = settings.GetInt32(PositionYSettingKey, Top);
+            var savedBounds = new Rectangle(savedX, savedY, Width, Height);
+
+            foreach (var screen in Screen.AllScreens)
+            {
+                if (screen.WorkingArea.IntersectsWith(savedBounds))
+                {
+                    StartPosition = FormStartPosition.Manual;
+                    Location = new Point(savedX, savedY);
+                    return;
+                }
+            }
+        }
+
+        private void SaveCurrentPosition()
+        {
+            var settings = Utilities.Settings.Instance;
+            settings[PositionXSettingKey] = Left.ToString();
+            settings[PositionYSettingKey] = Top.ToString();
         }
     }
 }
