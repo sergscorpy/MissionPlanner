@@ -3,11 +3,15 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
+using log4net;
 
 namespace MissionPlanner.Controls
 {
     public class ServoControllerModuleOverlayForm : Form
     {
+        private static readonly ILog log =
+    LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
         private const int MaxIconsCount = 6;
         private const int DefaultVisibleIconsCount = 4;
         private const int MinRcChannel = 5;
@@ -44,6 +48,7 @@ namespace MissionPlanner.Controls
         private bool commandActive;
         private int selectedIconIndex = -1;
         private bool blinkIsRed;
+        private int lastSelectionChannelValue = -1;
 
         public ServoControllerModuleOverlayForm()
         {
@@ -191,6 +196,7 @@ namespace MissionPlanner.Controls
             var safetyChannelItem = BuildRcChannelMenuItem("Канал запобіжника", safetyChannelMenuItems, channel =>
             {
                 safetyChannel = channel;
+                log.Info($"Обрано канал запобіжника: CH{safetyChannel}");
                 UpdateStateFromRcChannels();
             });
 
@@ -274,6 +280,12 @@ namespace MissionPlanner.Controls
             commandActive = ReadRcChannelValue(commandChannel) > CommandActivationThreshold;
 
             var selectionChannelValue = ReadRcChannelValue(selectionChannel);
+            if (selectionChannelValue != lastSelectionChannelValue)
+            {
+                log.Info($"Значення каналу вибору CH{selectionChannel} змінено: {selectionChannelValue}");
+                lastSelectionChannelValue = selectionChannelValue;
+            }
+
             selectedIconIndex = ResolveSelectedIconIndex(selectionChannelValue);
 
             blinkTimer.Enabled = safetyActive && commandActive && selectedIconIndex >= 0;
