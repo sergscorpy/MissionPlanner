@@ -16,6 +16,7 @@ namespace MissionPlanner.Controls
         private const int SafetyActivationThreshold = 1700;
 
         private readonly TableLayoutPanel iconsLayout;
+        private readonly PictureBox safetyIcon;
         private readonly List<PictureBox> icons = new List<PictureBox>();
         private readonly List<ToolStripMenuItem> iconCountMenuItems = new List<ToolStripMenuItem>();
         private readonly List<ToolStripMenuItem> commandChannelMenuItems = new List<ToolStripMenuItem>();
@@ -28,6 +29,8 @@ namespace MissionPlanner.Controls
         private readonly Image lockedOrangeImage;
         private readonly Image unlockedRedImage;
         private readonly Image lockedRedImage;
+        private readonly Image safeOnImage;
+        private readonly Image safeOffImage;
 
         private bool isDragging;
         private Point dragOffset;
@@ -57,13 +60,13 @@ namespace MissionPlanner.Controls
             {
                 Dock = DockStyle.Fill,
                 ColumnCount = 1,
-                RowCount = MaxIconsCount,
+                RowCount = MaxIconsCount + 1,
                 Padding = new Padding(20, 15, 20, 15)
             };
 
-            for (var i = 0; i < MaxIconsCount; i++)
+            for (var i = 0; i < iconsLayout.RowCount; i++)
             {
-                iconsLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100f / MaxIconsCount));
+                iconsLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100f / iconsLayout.RowCount));
             }
 
             unlockedImage = Image.FromFile(ResolveIconImagePath("Drops_Empty.png"));
@@ -72,6 +75,18 @@ namespace MissionPlanner.Controls
             lockedOrangeImage = Image.FromFile(ResolveIconImagePath("Drops_Orange.png"));
             unlockedRedImage = Image.FromFile(ResolveIconImagePath("Drops_Empty_Red.png"));
             lockedRedImage = Image.FromFile(ResolveIconImagePath("Drops_Red.png"));
+            safeOnImage = Image.FromFile(ResolveIconImagePath("Safe_On.png"));
+            safeOffImage = Image.FromFile(ResolveIconImagePath("Safe_Off.png"));
+
+            safetyIcon = new PictureBox
+            {
+                Dock = DockStyle.Fill,
+                Image = safeOffImage,
+                SizeMode = PictureBoxSizeMode.Zoom,
+                Margin = new Padding(0, 4, 0, 4)
+            };
+
+            iconsLayout.Controls.Add(safetyIcon, 0, 0);
 
             for (var i = 0; i < MaxIconsCount; i++)
             {
@@ -84,7 +99,7 @@ namespace MissionPlanner.Controls
                 };
 
                 icons.Add(icon);
-                iconsLayout.Controls.Add(icon, 0, i);
+                iconsLayout.Controls.Add(icon, 0, i + 1);
             }
 
             Controls.Add(iconsLayout);
@@ -232,12 +247,17 @@ namespace MissionPlanner.Controls
 
         private void ApplyVisibleIconsCount()
         {
+            var visibleRowsCount = visibleIconsCount + 1;
+            safetyIcon.Visible = true;
+            iconsLayout.RowStyles[0].SizeType = SizeType.Percent;
+            iconsLayout.RowStyles[0].Height = 100f / visibleRowsCount;
+
             for (var i = 0; i < icons.Count; i++)
             {
                 var isVisible = i < visibleIconsCount;
                 icons[i].Visible = isVisible;
-                iconsLayout.RowStyles[i].SizeType = isVisible ? SizeType.Percent : SizeType.Absolute;
-                iconsLayout.RowStyles[i].Height = isVisible ? 100f / visibleIconsCount : 0f;
+                iconsLayout.RowStyles[i + 1].SizeType = isVisible ? SizeType.Percent : SizeType.Absolute;
+                iconsLayout.RowStyles[i + 1].Height = isVisible ? 100f / visibleRowsCount : 0f;
             }
 
             for (var i = 0; i < iconCountMenuItems.Count; i++)
@@ -296,6 +316,8 @@ namespace MissionPlanner.Controls
 
         private void ApplyOverlayState()
         {
+            safetyIcon.Image = safetyActive ? safeOnImage : safeOffImage;
+
             for (var i = 0; i < icons.Count; i++)
             {
                 var isLocked = (lockMask & (1 << i)) != 0;
@@ -389,6 +411,8 @@ namespace MissionPlanner.Controls
                 lockedOrangeImage?.Dispose();
                 unlockedRedImage?.Dispose();
                 lockedRedImage?.Dispose();
+                safeOnImage?.Dispose();
+                safeOffImage?.Dispose();
                 blinkTimer?.Dispose();
             }
 
