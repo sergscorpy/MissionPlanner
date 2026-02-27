@@ -95,10 +95,10 @@ namespace MissionPlanner.Utilities
 
         private void HandleRcChannels(MAVLink.MAVLinkMessage message)
         {
-            if (message.sysid != 1 || message.compid != (byte)MAVLink.MAV_COMPONENT.MAV_COMP_ID_PERIPHERAL)
-            {
-                return;
-            }
+            //if (message.sysid != 1 || message.compid != (byte)MAVLink.MAV_COMPONENT.MAV_COMP_ID_PERIPHERAL)
+            //{
+            //    return;
+            //}
 
             var rc = message.ToStructure<MAVLink.mavlink_rc_channels_t>();
             rcChannels[0] = rc.chan1_raw;
