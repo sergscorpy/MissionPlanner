@@ -20,6 +20,8 @@ namespace MissionPlanner.Controls
         private const int MaxRcChannel = 16;
         private const int CommandActivationThreshold = 1700;
         private const int SafetyActivationThreshold = 1700;
+        private const int BaseFormWidth = 150;
+        private const int BaseFormHeight = 360;
         private const string PositionXSettingKey = "ServoControllerModuleOverlayForm.PositionX";
         private const string PositionYSettingKey = "ServoControllerModuleOverlayForm.PositionY";
 
@@ -53,6 +55,8 @@ namespace MissionPlanner.Controls
         private int selectedIconIndex = -1;
         private bool blinkIsRed;
         private int lastSelectionChannelValue = -1;
+        private readonly int baseNonClientHeight;
+        private readonly int iconRowHeight;
 
         public ServoControllerModuleOverlayForm()
         {
@@ -63,7 +67,7 @@ namespace MissionPlanner.Controls
             MaximizeBox = false;
             MinimizeBox = false;
             ShowInTaskbar = false;
-            Size = new Size(150, 360);
+            Size = new Size(BaseFormWidth, BaseFormHeight);
 
             iconsLayout = new TableLayoutPanel
             {
@@ -112,6 +116,10 @@ namespace MissionPlanner.Controls
             }
 
             Controls.Add(iconsLayout);
+
+            baseNonClientHeight = Height - ClientSize.Height;
+            var availableContentHeight = Math.Max(1, ClientSize.Height - iconsLayout.Padding.Vertical);
+            iconRowHeight = Math.Max(1, availableContentHeight / (DefaultVisibleIconsCount + 1));
 
             blinkTimer = new Timer { Interval = 500 };
             blinkTimer.Tick += (_, __) =>
@@ -272,6 +280,8 @@ namespace MissionPlanner.Controls
         private void ApplyVisibleIconsCount()
         {
             var visibleRowsCount = visibleIconsCount + 1;
+            UpdateOverlayFormSize(visibleRowsCount);
+
             safetyIcon.Visible = true;
             iconsLayout.RowStyles[0].SizeType = SizeType.Percent;
             iconsLayout.RowStyles[0].Height = 100f / visibleRowsCount;
@@ -291,6 +301,14 @@ namespace MissionPlanner.Controls
 
             ApplyOverlayState();
         }
+
+        private void UpdateOverlayFormSize(int visibleRowsCount)
+        {
+            var targetClientHeight = iconsLayout.Padding.Vertical + (visibleRowsCount * iconRowHeight);
+            var targetFormHeight = baseNonClientHeight + targetClientHeight;
+            Size = new Size(BaseFormWidth, targetFormHeight);
+        }
+
 
         private void UpdateStateFromRcChannels()
         {
