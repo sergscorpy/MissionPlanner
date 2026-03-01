@@ -9,6 +9,8 @@ namespace MissionPlanner.Controls
 {
     public class ServoControllerModuleOverlayForm : Form
     {
+        private const int WsExNoActivate = 0x08000000;
+
         private static readonly ILog log =
     LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -123,6 +125,18 @@ namespace MissionPlanner.Controls
             LoadSavedPosition();
             ApplyVisibleIconsCount();
             ApplyOverlayState();
+        }
+
+        protected override bool ShowWithoutActivation => true;
+
+        protected override CreateParams CreateParams
+        {
+            get
+            {
+                var createParams = base.CreateParams;
+                createParams.ExStyle |= WsExNoActivate;
+                return createParams;
+            }
         }
 
         public void UpdateLockMask(int newLockMask)
