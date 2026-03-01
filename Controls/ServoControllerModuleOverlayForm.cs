@@ -244,7 +244,8 @@ namespace MissionPlanner.Controls
                 var rcChannel = channel;
                 var channelItem = new ToolStripMenuItem($"Канал {rcChannel}")
                 {
-                    CheckOnClick = true
+                    CheckOnClick = true,
+                    Tag = rcChannel
                 };
 
                 channelItem.Click += (_, __) =>
@@ -264,7 +265,7 @@ namespace MissionPlanner.Controls
         {
             foreach (var item in menuItems)
             {
-                item.Checked = item.Text.EndsWith(selectedChannel.ToString());
+                item.Checked = item.Tag is int channel && channel == selectedChannel;
             }
         }
 
