@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Linq;
+using System.Text;
 using System.Windows.Forms;
 using log4net;
 
@@ -24,6 +26,8 @@ namespace MissionPlanner.Controls
         private const int BaseFormHeight = 360;
         private const string PositionXSettingKey = "ServoControllerModuleOverlayForm.PositionX";
         private const string PositionYSettingKey = "ServoControllerModuleOverlayForm.PositionY";
+        private const string ProfilesListSettingKey = "ServoControllerModuleOverlayForm.Profiles";
+        private const string ProfileSettingPrefix = "ServoControllerModuleOverlayForm.Profile.";
 
         private readonly TableLayoutPanel iconsLayout;
         private readonly PictureBox safetyIcon;
@@ -57,6 +61,7 @@ namespace MissionPlanner.Controls
         private int lastSelectionChannelValue = -1;
         private readonly int baseNonClientHeight;
         private readonly int iconRowHeight;
+        private ToolStripMenuItem loadProfileMenuItem;
 
         public ServoControllerModuleOverlayForm()
         {
@@ -231,10 +236,22 @@ namespace MissionPlanner.Controls
                 UpdateStateFromRcChannels();
             });
 
+            var profilesMenuItem = new ToolStripMenuItem("Профілі");
+
+            var saveProfileMenuItem = new ToolStripMenuItem("Зберегти в профіль...");
+            saveProfileMenuItem.Click += (_, __) => SaveProfileFromDialog();
+
+            loadProfileMenuItem = new ToolStripMenuItem("Завантажити профіль");
+            loadProfileMenuItem.DropDownOpening += (_, __) => RebuildProfilesMenu();
+
+            profilesMenuItem.DropDownItems.Add(saveProfileMenuItem);
+            profilesMenuItem.DropDownItems.Add(loadProfileMenuItem);
+
             menu.Items.Add(iconsCountItem);
             menu.Items.Add(commandChannelItem);
             menu.Items.Add(safetyChannelItem);
             menu.Items.Add(selectionChannelItem);
+            menu.Items.Add(profilesMenuItem);
 
             UpdateRcChannelMenuChecks(commandChannelMenuItems, commandChannel);
             UpdateRcChannelMenuChecks(safetyChannelMenuItems, safetyChannel);
@@ -525,6 +542,133 @@ namespace MissionPlanner.Controls
             var settings = Utilities.Settings.Instance;
             settings[PositionXSettingKey] = Left.ToString();
             settings[PositionYSettingKey] = Top.ToString();
+        }
+
+        private void SaveProfileFromDialog()
+        {
+            var profileName = string.Empty;
+            if (InputBox.Show("Збереження профілю", "Введіть назву профілю:", ref profileName) != DialogResult.OK)
+            {
+                return;
+            }
+
+            profileName = profileName.Trim();
+            if (string.IsNullOrWhiteSpace(profileName))
+            {
+                MessageBox.Show("Назва профілю не може бути порожньою.", "Профілі", MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                return;
+            }
+
+            var profileNames = GetProfileNames();
+            var profileExists = profileNames.Any(name => string.Equals(name, profileName, StringComparison.OrdinalIgnoreCase));
+            if (profileExists)
+            {
+                var overwriteResult = MessageBox.Show($"Профіль '{profileName}' вже існує. Перезаписати?", "Профілі",
+                    MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                if (overwriteResult != DialogResult.Yes)
+                {
+                    return;
+                }
+
+                profileNames.RemoveAll(name => string.Equals(name, profileName, StringComparison.OrdinalIgnoreCase));
+            }
+
+            profileNames.Add(profileName);
+            SaveProfile(profileName);
+            Utilities.Settings.Instance.SetList(ProfilesListSettingKey, profileNames);
+        }
+
+        private void RebuildProfilesMenu()
+        {
+            loadProfileMenuItem.DropDownItems.Clear();
+
+            var profileNames = GetProfileNames();
+            if (profileNames.Count == 0)
+            {
+                var emptyItem = new ToolStripMenuItem("Немає збережених профілів") { Enabled = false };
+                loadProfileMenuItem.DropDownItems.Add(emptyItem);
+                return;
+            }
+
+            foreach (var profileName in profileNames.OrderBy(name => name, StringComparer.CurrentCultureIgnoreCase))
+            {
+                var item = new ToolStripMenuItem(profileName);
+                item.Click += (_, __) => LoadProfile(profileName);
+                loadProfileMenuItem.DropDownItems.Add(item);
+            }
+        }
+
+        private static List<string> GetProfileNames()
+        {
+            return Utilities.Settings.Instance.GetList(ProfilesListSettingKey)
+                .Where(name => !string.IsNullOrWhiteSpace(name))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+        }
+
+        private void SaveProfile(string profileName)
+        {
+            var settings = Utilities.Settings.Instance;
+            var profileKeyPrefix = GetProfileSettingKeyPrefix(profileName);
+
+            settings[$"{profileKeyPrefix}VisibleIconsCount"] = visibleIconsCount.ToString();
+            settings[$"{profileKeyPrefix}CommandChannel"] = commandChannel.ToString();
+            settings[$"{profileKeyPrefix}SafetyChannel"] = safetyChannel.ToString();
+            settings[$"{profileKeyPrefix}SelectionChannel"] = selectionChannel.ToString();
+        }
+
+        private void LoadProfile(string profileName)
+        {
+            var settings = Utilities.Settings.Instance;
+            var profileKeyPrefix = GetProfileSettingKeyPrefix(profileName);
+
+            var loadedVisibleIconsCount = ClampValue(
+                settings.GetInt32($"{profileKeyPrefix}VisibleIconsCount", visibleIconsCount),
+                1,
+                MaxIconsCount);
+
+            var loadedCommandChannel = ClampValue(
+                settings.GetInt32($"{profileKeyPrefix}CommandChannel", commandChannel),
+                MinRcChannel,
+                MaxRcChannel);
+
+            var loadedSafetyChannel = ClampValue(
+                settings.GetInt32($"{profileKeyPrefix}SafetyChannel", safetyChannel),
+                MinRcChannel,
+                MaxRcChannel);
+
+            var loadedSelectionChannel = ClampValue(
+                settings.GetInt32($"{profileKeyPrefix}SelectionChannel", selectionChannel),
+                MinRcChannel,
+                MaxRcChannel);
+
+            visibleIconsCount = loadedVisibleIconsCount;
+            commandChannel = loadedCommandChannel;
+            safetyChannel = loadedSafetyChannel;
+            selectionChannel = loadedSelectionChannel;
+
+            UpdateRcChannelMenuChecks(commandChannelMenuItems, commandChannel);
+            UpdateRcChannelMenuChecks(safetyChannelMenuItems, safetyChannel);
+            UpdateRcChannelMenuChecks(selectionChannelMenuItems, selectionChannel);
+
+            ApplyVisibleIconsCount();
+            UpdateStateFromRcChannels();
+        }
+
+        private static int ClampValue(int value, int min, int max)
+        {
+            return Math.Min(max, Math.Max(min, value));
+        }
+
+        private static string GetProfileSettingKeyPrefix(string profileName)
+        {
+            var encodedName = Convert.ToBase64String(Encoding.UTF8.GetBytes(profileName))
+                .TrimEnd('=')
+                .Replace('+', '-')
+                .Replace('/', '_');
+
+            return $"{ProfileSettingPrefix}{encodedName}.";
         }
     }
 }
