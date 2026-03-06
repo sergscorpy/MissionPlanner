@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text;
+using System.Threading;
 using System.Windows.Forms;
 using MissionPlanner.Controls;
 
@@ -10,12 +11,17 @@ namespace MissionPlanner.Utilities
         private readonly Form owner;
         private readonly MAVLinkInterface mavLinkInterface;
         private readonly EventHandler<MAVLink.MAVLinkMessage> packetHandler;
+        private readonly System.Threading.Timer heartbeatMonitorTimer;
+
+        private const int HeartbeatTimeoutSeconds = 30;
+        private const int HeartbeatCheckIntervalMilliseconds = 1000;
 
         private ServoControllerModuleOverlayForm overlayForm;
         private bool moduleDetected;
         private bool disposed;
         private int lockMask;
         private readonly ushort[] rcChannels = new ushort[18];
+        private long lastPeripheralHeartbeatUtcTicks;
 
         public ServoControllerModuleOverlayService(Form owner, MAVLinkInterface mavLinkInterface)
         {
@@ -24,6 +30,9 @@ namespace MissionPlanner.Utilities
 
             packetHandler = OnPacketReceived;
             this.mavLinkInterface.OnPacketReceived += packetHandler;
+
+            heartbeatMonitorTimer = new System.Threading.Timer(CheckHeartbeatTimeout, null,
+                HeartbeatCheckIntervalMilliseconds, HeartbeatCheckIntervalMilliseconds);
         }
 
         private void OnPacketReceived(object sender, MAVLink.MAVLinkMessage message)
@@ -54,18 +63,48 @@ namespace MissionPlanner.Utilities
 
         private void HandleHeartbeat(MAVLink.MAVLinkMessage message)
         {
-            if (moduleDetected)
+            if (!IsPeripheralHeartbeat(message))
             {
                 return;
             }
 
-            if (message.sysid != 1 || message.compid != (byte)MAVLink.MAV_COMPONENT.MAV_COMP_ID_PERIPHERAL)
+            Interlocked.Exchange(ref lastPeripheralHeartbeatUtcTicks, DateTime.UtcNow.Ticks);
+
+            if (moduleDetected)
             {
                 return;
             }
 
             moduleDetected = true;
             owner.BeginInvokeIfRequired((Action)ShowOverlay);
+        }
+
+        private static bool IsPeripheralHeartbeat(MAVLink.MAVLinkMessage message)
+        {
+            return message.sysid == 1 && message.compid == (byte)MAVLink.MAV_COMPONENT.MAV_COMP_ID_PERIPHERAL;
+        }
+
+        private void CheckHeartbeatTimeout(object state)
+        {
+            if (disposed || !moduleDetected)
+            {
+                return;
+            }
+
+            var heartbeatTicks = Interlocked.Read(ref lastPeripheralHeartbeatUtcTicks);
+            if (heartbeatTicks <= 0)
+            {
+                return;
+            }
+
+            var heartbeatAge = DateTime.UtcNow - new DateTime(heartbeatTicks, DateTimeKind.Utc);
+            if (heartbeatAge.TotalSeconds <= HeartbeatTimeoutSeconds)
+            {
+                return;
+            }
+
+            moduleDetected = false;
+            owner.BeginInvokeIfRequired((Action)CloseOverlay);
         }
 
         private void HandleNamedValueInt(MAVLink.MAVLinkMessage message)
@@ -150,6 +189,18 @@ namespace MissionPlanner.Utilities
             }
         }
 
+        private void CloseOverlay()
+        {
+            if (overlayForm == null || overlayForm.IsDisposed)
+            {
+                return;
+            }
+
+            overlayForm.Close();
+            overlayForm.Dispose();
+            overlayForm = null;
+        }
+
         public void Dispose()
         {
             if (disposed)
@@ -159,14 +210,11 @@ namespace MissionPlanner.Utilities
 
             disposed = true;
             mavLinkInterface.OnPacketReceived -= packetHandler;
+            heartbeatMonitorTimer?.Dispose();
 
             owner.BeginInvokeIfRequired((Action)(() =>
             {
-                if (overlayForm != null && !overlayForm.IsDisposed)
-                {
-                    overlayForm.Close();
-                    overlayForm.Dispose();
-                }
+                CloseOverlay();
             }));
         }
     }
