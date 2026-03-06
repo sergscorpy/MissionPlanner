@@ -28,6 +28,11 @@ namespace MissionPlanner.Controls
         private const string PositionYSettingKey = "ServoControllerModuleOverlayForm.PositionY";
         private const string ProfilesListSettingKey = "ServoControllerModuleOverlayForm.Profiles";
         private const string ProfileSettingPrefix = "ServoControllerModuleOverlayForm.Profile.";
+        private const string DefaultProfileName = "Default";
+        private const int DefaultProfileVisibleIconsCount = 2;
+        private const int DefaultProfileCommandChannel = 11;
+        private const int DefaultProfileSafetyChannel = 12;
+        private const int DefaultProfileSelectionChannel = 5;
 
         private readonly TableLayoutPanel iconsLayout;
         private readonly PictureBox safetyIcon;
@@ -61,7 +66,8 @@ namespace MissionPlanner.Controls
         private int lastSelectionChannelValue = -1;
         private readonly int baseNonClientHeight;
         private readonly int iconRowHeight;
-        private ToolStripMenuItem loadProfileMenuItem;
+        private ToolStripMenuItem profilesMenuItem;
+        private string activeProfileName = DefaultProfileName;
 
         public ServoControllerModuleOverlayForm()
         {
@@ -132,6 +138,9 @@ namespace MissionPlanner.Controls
                 blinkIsRed = !blinkIsRed;
                 ApplyOverlayState();
             };
+
+            EnsureDefaultProfileExists();
+            LoadAndActivateProfile(DefaultProfileName);
 
             ContextMenuStrip = BuildContextMenu();
             RegisterDragEvents(this);
@@ -236,16 +245,8 @@ namespace MissionPlanner.Controls
                 UpdateStateFromRcChannels();
             });
 
-            var profilesMenuItem = new ToolStripMenuItem("Профілі");
-
-            var saveProfileMenuItem = new ToolStripMenuItem("Зберегти в профіль...");
-            saveProfileMenuItem.Click += (_, __) => SaveProfileFromDialog();
-
-            loadProfileMenuItem = new ToolStripMenuItem("Завантажити профіль");
-            loadProfileMenuItem.DropDownOpening += (_, __) => RebuildProfilesMenu();
-
-            profilesMenuItem.DropDownItems.Add(saveProfileMenuItem);
-            profilesMenuItem.DropDownItems.Add(loadProfileMenuItem);
+            profilesMenuItem = new ToolStripMenuItem("Профілі");
+            profilesMenuItem.DropDownOpening += (_, __) => RebuildProfilesMenu();
 
             menu.Items.Add(iconsCountItem);
             menu.Items.Add(commandChannelItem);
@@ -576,26 +577,82 @@ namespace MissionPlanner.Controls
 
             profileNames.Add(profileName);
             SaveProfile(profileName);
-            Utilities.Settings.Instance.SetList(ProfilesListSettingKey, profileNames);
+            SaveProfileNames(profileNames);
+            activeProfileName = profileName;
         }
 
         private void RebuildProfilesMenu()
         {
-            loadProfileMenuItem.DropDownItems.Clear();
+            profilesMenuItem.DropDownItems.Clear();
+
+            var currentActiveProfileName = string.IsNullOrWhiteSpace(activeProfileName) ? DefaultProfileName : activeProfileName;
+            var activeProfileItem = new ToolStripMenuItem(currentActiveProfileName);
+            var saveActiveProfileItem = new ToolStripMenuItem("Зберегти");
+            saveActiveProfileItem.Click += (_, __) => SaveProfile(currentActiveProfileName);
+            activeProfileItem.DropDownItems.Add(saveActiveProfileItem);
+            profilesMenuItem.DropDownItems.Add(activeProfileItem);
+
+            profilesMenuItem.DropDownItems.Add(new ToolStripSeparator());
 
             var profileNames = GetProfileNames();
-            if (profileNames.Count == 0)
+            var availableProfileNames = profileNames
+                .Where(name => !string.Equals(name, currentActiveProfileName, StringComparison.OrdinalIgnoreCase))
+                .OrderBy(name => name, StringComparer.CurrentCultureIgnoreCase)
+                .ToList();
+
+            if (availableProfileNames.Count == 0)
             {
-                var emptyItem = new ToolStripMenuItem("Немає збережених профілів") { Enabled = false };
-                loadProfileMenuItem.DropDownItems.Add(emptyItem);
+                var emptyItem = new ToolStripMenuItem("(пусто)") { Enabled = false };
+                profilesMenuItem.DropDownItems.Add(emptyItem);
+            }
+            else
+            {
+                foreach (var profileName in availableProfileNames)
+                {
+                    var profileItem = new ToolStripMenuItem(profileName);
+                    var loadItem = new ToolStripMenuItem("Завантажити");
+                    loadItem.Click += (_, __) => LoadAndActivateProfile(profileName);
+
+                    var deleteItem = new ToolStripMenuItem("Видалити");
+                    deleteItem.Click += (_, __) => DeleteProfile(profileName);
+
+                    profileItem.DropDownItems.Add(loadItem);
+                    profileItem.DropDownItems.Add(deleteItem);
+                    profilesMenuItem.DropDownItems.Add(profileItem);
+                }
+            }
+
+            profilesMenuItem.DropDownItems.Add(new ToolStripSeparator());
+
+            var newProfileMenuItem = new ToolStripMenuItem("Новий..");
+            newProfileMenuItem.Click += (_, __) => SaveProfileFromDialog();
+            profilesMenuItem.DropDownItems.Add(newProfileMenuItem);
+        }
+
+        private void LoadAndActivateProfile(string profileName)
+        {
+            LoadProfile(profileName);
+            activeProfileName = profileName;
+        }
+
+        private void DeleteProfile(string profileName)
+        {
+            var deleteResult = MessageBox.Show($"Видалити профіль '{profileName}'?", "Профілі",
+                MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (deleteResult != DialogResult.Yes)
+            {
                 return;
             }
 
-            foreach (var profileName in profileNames.OrderBy(name => name, StringComparer.CurrentCultureIgnoreCase))
+            var profileNames = GetProfileNames();
+            profileNames.RemoveAll(name => string.Equals(name, profileName, StringComparison.OrdinalIgnoreCase));
+            SaveProfileNames(profileNames);
+            RemoveProfileSettings(profileName);
+
+            if (string.Equals(activeProfileName, profileName, StringComparison.OrdinalIgnoreCase))
             {
-                var item = new ToolStripMenuItem(profileName);
-                item.Click += (_, __) => LoadProfile(profileName);
-                loadProfileMenuItem.DropDownItems.Add(item);
+                EnsureDefaultProfileExists();
+                LoadAndActivateProfile(DefaultProfileName);
             }
         }
 
@@ -605,6 +662,18 @@ namespace MissionPlanner.Controls
                 .Where(name => !string.IsNullOrWhiteSpace(name))
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToList();
+        }
+
+        private static void SaveProfileNames(List<string> profileNames)
+        {
+            var settings = Utilities.Settings.Instance;
+            if (profileNames == null || profileNames.Count == 0)
+            {
+                settings.Remove(ProfilesListSettingKey);
+                return;
+            }
+
+            settings.SetList(ProfilesListSettingKey, profileNames);
         }
 
         private void SaveProfile(string profileName)
@@ -669,6 +738,36 @@ namespace MissionPlanner.Controls
                 .Replace('/', '_');
 
             return $"{ProfileSettingPrefix}{encodedName}.";
+        }
+
+        private static void RemoveProfileSettings(string profileName)
+        {
+            var settings = Utilities.Settings.Instance;
+            var profileKeyPrefix = GetProfileSettingKeyPrefix(profileName);
+
+            settings.Remove($"{profileKeyPrefix}VisibleIconsCount");
+            settings.Remove($"{profileKeyPrefix}CommandChannel");
+            settings.Remove($"{profileKeyPrefix}SafetyChannel");
+            settings.Remove($"{profileKeyPrefix}SelectionChannel");
+        }
+
+        private static void EnsureDefaultProfileExists()
+        {
+            var profileNames = GetProfileNames();
+            if (profileNames.Any(name => string.Equals(name, DefaultProfileName, StringComparison.OrdinalIgnoreCase)))
+            {
+                return;
+            }
+
+            profileNames.Add(DefaultProfileName);
+            SaveProfileNames(profileNames);
+
+            var settings = Utilities.Settings.Instance;
+            var profileKeyPrefix = GetProfileSettingKeyPrefix(DefaultProfileName);
+            settings[$"{profileKeyPrefix}VisibleIconsCount"] = DefaultProfileVisibleIconsCount.ToString();
+            settings[$"{profileKeyPrefix}CommandChannel"] = DefaultProfileCommandChannel.ToString();
+            settings[$"{profileKeyPrefix}SafetyChannel"] = DefaultProfileSafetyChannel.ToString();
+            settings[$"{profileKeyPrefix}SelectionChannel"] = DefaultProfileSelectionChannel.ToString();
         }
     }
 }
