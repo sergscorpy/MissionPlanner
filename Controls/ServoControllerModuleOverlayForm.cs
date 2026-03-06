@@ -172,10 +172,15 @@ namespace MissionPlanner.Controls
 
             if (InvokeRequired)
             {
-                BeginInvoke((Action)ApplyOverlayState);
+                BeginInvoke((Action)(() =>
+                {
+                    EnsureVisibleIconsCountCoversLockedIcons();
+                    ApplyOverlayState();
+                }));
                 return;
             }
 
+            EnsureVisibleIconsCountCoversLockedIcons();
             ApplyOverlayState();
         }
 
@@ -399,6 +404,32 @@ namespace MissionPlanner.Controls
                     icons[i].Image = isLocked ? lockedImage : unlockedImage;
                 }
             }
+        }
+
+        private void EnsureVisibleIconsCountCoversLockedIcons()
+        {
+            var requiredVisibleIconsCount = GetRequiredVisibleIconsCountFromLockMask();
+            if (requiredVisibleIconsCount <= visibleIconsCount)
+            {
+                return;
+            }
+
+            visibleIconsCount = requiredVisibleIconsCount;
+            ApplyVisibleIconsCount();
+        }
+
+        private int GetRequiredVisibleIconsCountFromLockMask()
+        {
+            for (var i = MaxIconsCount - 1; i >= 0; i--)
+            {
+                var isLocked = (lockMask & (1 << i)) != 0;
+                if (isLocked)
+                {
+                    return i + 1;
+                }
+            }
+
+            return 0;
         }
 
         private Image ResolveSelectedIconImage(bool isLocked, bool showRed)
