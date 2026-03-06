@@ -27,6 +27,7 @@ namespace MissionPlanner.Controls
         private const string PositionXSettingKey = "ServoControllerModuleOverlayForm.PositionX";
         private const string PositionYSettingKey = "ServoControllerModuleOverlayForm.PositionY";
         private const string ProfilesListSettingKey = "ServoControllerModuleOverlayForm.Profiles";
+        private const string ActiveProfileSettingKey = "ServoControllerModuleOverlayForm.ActiveProfile";
         private const string ProfileSettingPrefix = "ServoControllerModuleOverlayForm.Profile.";
         private const string DefaultProfileName = "Default";
         private const int DefaultProfileVisibleIconsCount = 2;
@@ -140,7 +141,7 @@ namespace MissionPlanner.Controls
             };
 
             EnsureDefaultProfileExists();
-            LoadAndActivateProfile(DefaultProfileName);
+            LoadAndActivateProfile(GetInitialProfileName());
 
             ContextMenuStrip = BuildContextMenu();
             RegisterDragEvents(this);
@@ -609,7 +610,7 @@ namespace MissionPlanner.Controls
             profileNames.Add(profileName);
             SaveProfile(profileName);
             SaveProfileNames(profileNames);
-            activeProfileName = profileName;
+            SetActiveProfileName(profileName);
         }
 
         private void RebuildProfilesMenu()
@@ -662,8 +663,35 @@ namespace MissionPlanner.Controls
 
         private void LoadAndActivateProfile(string profileName)
         {
-            LoadProfile(profileName);
+            var resolvedProfileName = ResolveExistingProfileName(profileName);
+            LoadProfile(resolvedProfileName);
+            SetActiveProfileName(resolvedProfileName);
+        }
+
+        private static string GetInitialProfileName()
+        {
+            var savedProfileName = Utilities.Settings.Instance.GetString(ActiveProfileSettingKey, DefaultProfileName).Trim();
+            return string.IsNullOrWhiteSpace(savedProfileName) ? DefaultProfileName : savedProfileName;
+        }
+
+        private static string ResolveExistingProfileName(string profileName)
+        {
+            if (string.IsNullOrWhiteSpace(profileName))
+            {
+                return DefaultProfileName;
+            }
+
+            var profileNames = GetProfileNames();
+            var existingProfileName = profileNames.FirstOrDefault(name =>
+                string.Equals(name, profileName, StringComparison.OrdinalIgnoreCase));
+
+            return string.IsNullOrWhiteSpace(existingProfileName) ? DefaultProfileName : existingProfileName;
+        }
+
+        private void SetActiveProfileName(string profileName)
+        {
             activeProfileName = profileName;
+            Utilities.Settings.Instance[ActiveProfileSettingKey] = profileName;
         }
 
         private void DeleteProfile(string profileName)
