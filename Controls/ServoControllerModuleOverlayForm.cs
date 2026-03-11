@@ -24,8 +24,16 @@ namespace MissionPlanner.Controls
         private const int SafetyActivationThreshold = 1700;
         private const int BaseFormWidth = 150;
         private const int BaseFormHeight = 360;
+        private const int BaseLayoutHorizontalPadding = 20;
+        private const int BaseLayoutVerticalPadding = 15;
+        private const int DefaultScalePercent = 100;
+        private const int MinScalePercent = 50;
+        private const int MaxScalePercent = 200;
+        private const int ScaleStepPercent = 10;
+        private const int BaseScaleControlsHeight = 34;
         private const string PositionXSettingKey = "ServoControllerModuleOverlayForm.PositionX";
         private const string PositionYSettingKey = "ServoControllerModuleOverlayForm.PositionY";
+        private const string ScalePercentSettingKey = "ServoControllerModuleOverlayForm.ScalePercent";
         private const string ProfilesListSettingKey = "ServoControllerModuleOverlayForm.Profiles";
         private const string ActiveProfileSettingKey = "ServoControllerModuleOverlayForm.ActiveProfile";
         private const string ProfileSettingPrefix = "ServoControllerModuleOverlayForm.Profile.";
@@ -35,6 +43,9 @@ namespace MissionPlanner.Controls
         private const int DefaultProfileSafetyChannel = 12;
         private const int DefaultProfileSelectionChannel = 5;
 
+        private readonly Panel scaleControlsPanel;
+        private readonly Label scaleLabel;
+        private readonly TrackBar scaleTrackBar;
         private readonly TableLayoutPanel iconsLayout;
         private readonly PictureBox safetyIcon;
         private readonly List<PictureBox> icons = new List<PictureBox>();
@@ -66,9 +77,10 @@ namespace MissionPlanner.Controls
         private bool blinkIsRed;
         private int lastSelectionChannelValue = -1;
         private readonly int baseNonClientHeight;
-        private readonly int iconRowHeight;
+        private readonly int baseIconRowHeight;
         private ToolStripMenuItem profilesMenuItem;
         private string activeProfileName = DefaultProfileName;
+        private int scalePercent = DefaultScalePercent;
 
         public ServoControllerModuleOverlayForm()
         {
@@ -81,12 +93,56 @@ namespace MissionPlanner.Controls
             ShowInTaskbar = false;
             Size = new Size(BaseFormWidth, BaseFormHeight);
 
+            scaleLabel = new Label
+            {
+                AutoSize = true,
+                Text = "100%",
+                Anchor = AnchorStyles.Left,
+                Margin = new Padding(0, 0, 0, 0)
+            };
+
+            scaleTrackBar = new TrackBar
+            {
+                Minimum = MinScalePercent,
+                Maximum = MaxScalePercent,
+                TickFrequency = ScaleStepPercent,
+                SmallChange = ScaleStepPercent,
+                LargeChange = ScaleStepPercent,
+                AutoSize = false,
+                Dock = DockStyle.Fill,
+                Margin = new Padding(0),
+                Height = 24
+            };
+            scaleTrackBar.ValueChanged += (_, __) =>
+            {
+                SetScale(scaleTrackBar.Value);
+            };
+
+            var scaleLayout = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                ColumnCount = 2,
+                RowCount = 1,
+                Padding = new Padding(6, 4, 6, 4)
+            };
+            scaleLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f));
+            scaleLayout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+            scaleLayout.Controls.Add(scaleTrackBar, 0, 0);
+            scaleLayout.Controls.Add(scaleLabel, 1, 0);
+
+            scaleControlsPanel = new Panel
+            {
+                Dock = DockStyle.Top
+            };
+            scaleControlsPanel.Controls.Add(scaleLayout);
+
             iconsLayout = new TableLayoutPanel
             {
                 Dock = DockStyle.Fill,
                 ColumnCount = 1,
                 RowCount = MaxIconsCount + 1,
-                Padding = new Padding(20, 15, 20, 15)
+                Padding = new Padding(BaseLayoutHorizontalPadding, BaseLayoutVerticalPadding,
+                    BaseLayoutHorizontalPadding, BaseLayoutVerticalPadding)
             };
 
             for (var i = 0; i < iconsLayout.RowCount; i++)
@@ -128,10 +184,14 @@ namespace MissionPlanner.Controls
             }
 
             Controls.Add(iconsLayout);
+            Controls.Add(scaleControlsPanel);
 
             baseNonClientHeight = Height - ClientSize.Height;
             var availableContentHeight = Math.Max(1, ClientSize.Height - iconsLayout.Padding.Vertical);
-            iconRowHeight = Math.Max(1, availableContentHeight / (DefaultVisibleIconsCount + 1));
+            baseIconRowHeight = Math.Max(1, availableContentHeight / (DefaultVisibleIconsCount + 1));
+
+            LoadScaleSetting();
+            scaleTrackBar.Value = scalePercent;
 
             blinkTimer = new Timer { Interval = 500 };
             blinkTimer.Tick += (_, __) =>
@@ -146,6 +206,7 @@ namespace MissionPlanner.Controls
             ContextMenuStrip = BuildContextMenu();
             RegisterDragEvents(this);
             LoadSavedPosition();
+            ApplyScale();
             ApplyVisibleIconsCount();
             ApplyOverlayState();
         }
@@ -251,6 +312,7 @@ namespace MissionPlanner.Controls
                 UpdateStateFromRcChannels();
             });
 
+
             profilesMenuItem = new ToolStripMenuItem("Профілі");
             profilesMenuItem.DropDownOpening += (_, __) => RebuildProfilesMenu();
 
@@ -328,9 +390,53 @@ namespace MissionPlanner.Controls
 
         private void UpdateOverlayFormSize(int visibleRowsCount)
         {
-            var targetClientHeight = iconsLayout.Padding.Vertical + (visibleRowsCount * iconRowHeight);
-            var targetFormHeight = baseNonClientHeight + targetClientHeight;
-            Size = new Size(BaseFormWidth, targetFormHeight);
+            var scaledIconRowHeight = GetScaledSize(baseIconRowHeight);
+            var targetIconsClientHeight = iconsLayout.Padding.Vertical + (visibleRowsCount * scaledIconRowHeight);
+            var targetScaleControlsHeight = GetScaledSize(BaseScaleControlsHeight);
+            var targetFormHeight = baseNonClientHeight + targetIconsClientHeight + targetScaleControlsHeight;
+            Size = new Size(GetScaledSize(BaseFormWidth), targetFormHeight);
+        }
+
+        private void SetScale(int newScalePercent)
+        {
+            var clampedScalePercent = ClampValue(newScalePercent, MinScalePercent, MaxScalePercent);
+            if (clampedScalePercent == scalePercent)
+            {
+                return;
+            }
+
+            scalePercent = clampedScalePercent;
+            SaveScaleSetting();
+            ApplyScale();
+            ApplyVisibleIconsCount();
+        }
+
+        private void ApplyScale()
+        {
+            var scaledHorizontalPadding = GetScaledSize(BaseLayoutHorizontalPadding);
+            var scaledVerticalPadding = GetScaledSize(BaseLayoutVerticalPadding);
+            iconsLayout.Padding = new Padding(scaledHorizontalPadding, scaledVerticalPadding,
+                scaledHorizontalPadding, scaledVerticalPadding);
+
+            scaleControlsPanel.Height = GetScaledSize(BaseScaleControlsHeight);
+            scaleTrackBar.Value = scalePercent;
+            scaleLabel.Text = $"{scalePercent}%";
+        }
+
+        private int GetScaledSize(int baseValue)
+        {
+            return Math.Max(1, (int)Math.Round(baseValue * (scalePercent / 100.0)));
+        }
+
+        private void LoadScaleSetting()
+        {
+            var savedScalePercent = Utilities.Settings.Instance.GetInt32(ScalePercentSettingKey, DefaultScalePercent);
+            scalePercent = ClampValue(savedScalePercent, MinScalePercent, MaxScalePercent);
+        }
+
+        private void SaveScaleSetting()
+        {
+            Utilities.Settings.Instance[ScalePercentSettingKey] = scalePercent.ToString();
         }
 
 
