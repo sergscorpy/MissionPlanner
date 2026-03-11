@@ -44,7 +44,6 @@ namespace MissionPlanner.Controls
         private const int DefaultProfileSelectionChannel = 5;
 
         private readonly Panel scaleControlsPanel;
-        private readonly Label scaleLabel;
         private readonly DomainUpDown scaleDomainUpDown;
         private readonly TableLayoutPanel iconsLayout;
         private readonly PictureBox safetyIcon;
@@ -93,14 +92,6 @@ namespace MissionPlanner.Controls
             ShowInTaskbar = false;
             Size = new Size(BaseFormWidth, BaseFormHeight);
 
-            scaleLabel = new Label
-            {
-                AutoSize = true,
-                Text = "Масштаб:",
-                Anchor = AnchorStyles.Left,
-                Margin = new Padding(0, 0, 0, 0)
-            };
-
             scaleDomainUpDown = new DomainUpDown
             {
                 ReadOnly = true,
@@ -131,15 +122,12 @@ namespace MissionPlanner.Controls
             var scaleLayout = new TableLayoutPanel
             {
                 Dock = DockStyle.Fill,
-                ColumnCount = 2,
+                ColumnCount = 1,
                 RowCount = 1,
                 Padding = new Padding(6, 4, 6, 4)
             };
-            scaleLayout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             scaleLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f));
-            scaleLayout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
-            scaleLayout.Controls.Add(scaleLabel, 0, 0);
-            scaleLayout.Controls.Add(scaleDomainUpDown, 1, 0);
+            scaleLayout.Controls.Add(scaleDomainUpDown, 0, 0);
 
             scaleControlsPanel = new Panel
             {
