@@ -96,7 +96,7 @@ namespace MissionPlanner.Controls
 
         public ServoControllerModuleOverlayForm()
         {
-            Text = "Плата контролю";
+            Text = "Скиди";
             TopMost = true;
             StartPosition = FormStartPosition.CenterScreen;
             FormBorderStyle = FormBorderStyle.FixedToolWindow;
@@ -286,11 +286,11 @@ namespace MissionPlanner.Controls
         {
             var menu = new ContextMenuStrip();
 
-            var iconsCountItem = new ToolStripMenuItem("Кількість іконок");
+            var iconsCountItem = new ToolStripMenuItem("Кількість скидів");
             for (var i = 1; i <= MaxIconsCount; i++)
             {
                 var count = i;
-                var item = new ToolStripMenuItem($"Іконка {count}")
+                var item = new ToolStripMenuItem($"Скид {count}")
                 {
                     CheckOnClick = true
                 };
