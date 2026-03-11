@@ -27,7 +27,7 @@ namespace MissionPlanner.Controls
         private const int BaseLayoutHorizontalPadding = 20;
         private const int BaseLayoutVerticalPadding = 15;
         private const int DefaultScalePercent = 100;
-        private const int MinScalePercent = 50;
+        private const int MinScalePercent = 100;
         private const int MaxScalePercent = 200;
         private const int ScaleStepPercent = 10;
         private const int BaseScaleControlsHeight = 34;
@@ -45,7 +45,7 @@ namespace MissionPlanner.Controls
 
         private readonly Panel scaleControlsPanel;
         private readonly Label scaleLabel;
-        private readonly TrackBar scaleTrackBar;
+        private readonly DomainUpDown scaleDomainUpDown;
         private readonly TableLayoutPanel iconsLayout;
         private readonly PictureBox safetyIcon;
         private readonly List<PictureBox> icons = new List<PictureBox>();
@@ -96,26 +96,36 @@ namespace MissionPlanner.Controls
             scaleLabel = new Label
             {
                 AutoSize = true,
-                Text = "100%",
+                Text = "Масштаб:",
                 Anchor = AnchorStyles.Left,
                 Margin = new Padding(0, 0, 0, 0)
             };
 
-            scaleTrackBar = new TrackBar
+            scaleDomainUpDown = new DomainUpDown
             {
-                Minimum = MinScalePercent,
-                Maximum = MaxScalePercent,
-                TickFrequency = ScaleStepPercent,
-                SmallChange = ScaleStepPercent,
-                LargeChange = ScaleStepPercent,
-                AutoSize = false,
+                ReadOnly = true,
+                Wrap = false,
+                TextAlign = HorizontalAlignment.Center,
                 Dock = DockStyle.Fill,
-                Margin = new Padding(0),
-                Height = 24
+                Margin = new Padding(0)
             };
-            scaleTrackBar.ValueChanged += (_, __) =>
+            for (var scaleValue = MinScalePercent; scaleValue <= MaxScalePercent; scaleValue += ScaleStepPercent)
             {
-                SetScale(scaleTrackBar.Value);
+                scaleDomainUpDown.Items.Add($"{scaleValue}%");
+            }
+
+            scaleDomainUpDown.SelectedItemChanged += (_, __) =>
+            {
+                if (scaleDomainUpDown.SelectedItem == null)
+                {
+                    return;
+                }
+
+                var selectedValueText = scaleDomainUpDown.SelectedItem.ToString()?.TrimEnd('%');
+                if (int.TryParse(selectedValueText, out var newScalePercent))
+                {
+                    SetScale(newScalePercent);
+                }
             };
 
             var scaleLayout = new TableLayoutPanel
@@ -125,10 +135,11 @@ namespace MissionPlanner.Controls
                 RowCount = 1,
                 Padding = new Padding(6, 4, 6, 4)
             };
+            scaleLayout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             scaleLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f));
             scaleLayout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
-            scaleLayout.Controls.Add(scaleTrackBar, 0, 0);
-            scaleLayout.Controls.Add(scaleLabel, 1, 0);
+            scaleLayout.Controls.Add(scaleLabel, 0, 0);
+            scaleLayout.Controls.Add(scaleDomainUpDown, 1, 0);
 
             scaleControlsPanel = new Panel
             {
@@ -191,7 +202,7 @@ namespace MissionPlanner.Controls
             baseIconRowHeight = Math.Max(1, availableContentHeight / (DefaultVisibleIconsCount + 1));
 
             LoadScaleSetting();
-            scaleTrackBar.Value = scalePercent;
+            SetScaleDomainSelection(scalePercent);
 
             blinkTimer = new Timer { Interval = 500 };
             blinkTimer.Tick += (_, __) =>
@@ -399,7 +410,7 @@ namespace MissionPlanner.Controls
 
         private void SetScale(int newScalePercent)
         {
-            var clampedScalePercent = ClampValue(newScalePercent, MinScalePercent, MaxScalePercent);
+            var clampedScalePercent = NormalizeScalePercentToStep(newScalePercent);
             if (clampedScalePercent == scalePercent)
             {
                 return;
@@ -419,8 +430,25 @@ namespace MissionPlanner.Controls
                 scaledHorizontalPadding, scaledVerticalPadding);
 
             scaleControlsPanel.Height = GetScaledSize(BaseScaleControlsHeight);
-            scaleTrackBar.Value = scalePercent;
-            scaleLabel.Text = $"{scalePercent}%";
+            SetScaleDomainSelection(scalePercent);
+        }
+
+        private static int NormalizeScalePercentToStep(int value)
+        {
+            var clampedValue = ClampValue(value, MinScalePercent, MaxScalePercent);
+            var normalizedStep = (int)Math.Round((clampedValue - MinScalePercent) / (double)ScaleStepPercent);
+            return MinScalePercent + (normalizedStep * ScaleStepPercent);
+        }
+
+        private void SetScaleDomainSelection(int value)
+        {
+            var scaleItemText = $"{value}%";
+            if (!Equals(scaleDomainUpDown.SelectedItem, scaleItemText))
+            {
+                scaleDomainUpDown.SelectedItem = scaleItemText;
+            }
+
+            scaleDomainUpDown.Text = scaleItemText;
         }
 
         private int GetScaledSize(int baseValue)
@@ -431,7 +459,7 @@ namespace MissionPlanner.Controls
         private void LoadScaleSetting()
         {
             var savedScalePercent = Utilities.Settings.Instance.GetInt32(ScalePercentSettingKey, DefaultScalePercent);
-            scalePercent = ClampValue(savedScalePercent, MinScalePercent, MaxScalePercent);
+            scalePercent = NormalizeScalePercentToStep(savedScalePercent);
         }
 
         private void SaveScaleSetting()
