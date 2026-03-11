@@ -11,6 +11,19 @@ namespace MissionPlanner.Controls
 {
     public class ServoControllerModuleOverlayForm : Form
     {
+        private sealed class InvertedDomainUpDown : DomainUpDown
+        {
+            public override void UpButton()
+            {
+                base.DownButton();
+            }
+
+            public override void DownButton()
+            {
+                base.UpButton();
+            }
+        }
+
         private const int WsExNoActivate = 0x08000000;
 
         private static readonly ILog log =
@@ -92,7 +105,7 @@ namespace MissionPlanner.Controls
             ShowInTaskbar = false;
             Size = new Size(BaseFormWidth, BaseFormHeight);
 
-            scaleDomainUpDown = new DomainUpDown
+            scaleDomainUpDown = new InvertedDomainUpDown
             {
                 ReadOnly = true,
                 Wrap = false,
