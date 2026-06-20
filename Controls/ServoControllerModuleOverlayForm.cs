@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using log4net;
+using MPResources = MissionPlanner.Properties.Resources;
 
 namespace MissionPlanner.Controls
 {
@@ -162,14 +162,14 @@ namespace MissionPlanner.Controls
                 iconsLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100f / iconsLayout.RowCount));
             }
 
-            unlockedImage = Image.FromFile(ResolveIconImagePath("Drops_Empty.png"));
-            lockedImage = Image.FromFile(ResolveIconImagePath("Drops_Green.png"));
-            unlockedOrangeImage = Image.FromFile(ResolveIconImagePath("Drops_Empty_Orange.png"));
-            lockedOrangeImage = Image.FromFile(ResolveIconImagePath("Drops_Orange.png"));
-            unlockedRedImage = Image.FromFile(ResolveIconImagePath("Drops_Empty_Red.png"));
-            lockedRedImage = Image.FromFile(ResolveIconImagePath("Drops_Red.png"));
-            safeOnImage = Image.FromFile(ResolveIconImagePath("Safe_On.png"));
-            safeOffImage = Image.FromFile(ResolveIconImagePath("Safe_Off.png"));
+            unlockedImage = MPResources.servo_drops_empty;
+            lockedImage = MPResources.servo_drops_green;
+            unlockedOrangeImage = MPResources.servo_drops_empty_orange;
+            lockedOrangeImage = MPResources.servo_drops_orange;
+            unlockedRedImage = MPResources.servo_drops_empty_red;
+            lockedRedImage = MPResources.servo_drops_red;
+            safeOnImage = MPResources.servo_safe_on;
+            safeOffImage = MPResources.servo_safe_off;
 
             safetyIcon = new PictureBox
             {
@@ -658,28 +658,6 @@ namespace MissionPlanner.Controls
             }
 
             base.Dispose(disposing);
-        }
-
-        private static string ResolveIconImagePath(string fileName)
-        {
-            var baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
-            var candidatePaths = new[]
-            {
-                Path.Combine(baseDirectory, "Controls", "Icon", fileName),
-                Path.Combine(baseDirectory, "..", "..", "..", "Controls", "Icon", fileName),
-                Path.Combine(baseDirectory, "..", "..", "..", "..", "Controls", "Icon", fileName)
-            };
-
-            foreach (var candidatePath in candidatePaths)
-            {
-                var fullPath = Path.GetFullPath(candidatePath);
-                if (File.Exists(fullPath))
-                {
-                    return fullPath;
-                }
-            }
-
-            throw new FileNotFoundException($"Не вдалося знайти файл іконки {fileName}.");
         }
 
         private void LoadSavedPosition()
