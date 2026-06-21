@@ -8,14 +8,14 @@ using MissionPlanner.ArduPilot.Mavlink;
 namespace MissionPlanner.Utilities
 {
     /// <summary>
-    /// Keeps FS_DR_ENABLE synchronized with the GPS fix state on HeavyShot firmware.
+    /// Keeps FS_THR_ENABLE synchronized with the GPS fix state on HeavyShot firmware.
     /// A fresh firmware banner is required after every detected heartbeat outage.
     /// </summary>
     internal sealed class HeavyShotGpsFailsafeManager
     {
-        private const string ParameterName = "FS_DR_ENABLE";
+        private const string ParameterName = "FS_THR_ENABLE";
         private const int DisabledValue = 0;
-        private const int RtlValue = 2;
+        private const int RtlValue = 1;
 
         private static readonly TimeSpan HeartbeatTimeout = TimeSpan.FromSeconds(5);
         private static readonly TimeSpan GpsStateDebounce = TimeSpan.FromSeconds(2);
