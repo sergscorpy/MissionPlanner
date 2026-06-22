@@ -108,6 +108,7 @@ namespace MissionPlanner.Utilities
 
         private void ResetForNewLinkLocked(MAVLinkInterface port, byte sysid, byte compid)
         {
+            SetHudStatusLocked(-1);
             RemoveBannerSubscriptionLocked();
             sessionGeneration++;
             activePort = port;
@@ -118,6 +119,7 @@ namespace MissionPlanner.Utilities
             consecutiveHeartbeats = 0;
             nextBannerRequest = DateTime.MinValue;
             ResetGpsStateLocked();
+            SetHudStatusLocked(-1);
             Log.InfoFormat("HeavyShot GPS failsafe: confirming MAVLink heartbeat for {0}:{1}", sysid, compid);
         }
 
@@ -129,6 +131,7 @@ namespace MissionPlanner.Utilities
                     return;
 
                 Log.Warn("HeavyShot GPS failsafe: autopilot heartbeat lost; firmware validation invalidated");
+                SetHudStatusLocked(-1);
                 RemoveBannerSubscriptionLocked();
                 sessionGeneration++;
                 state = LinkState.NoLink;
@@ -188,12 +191,14 @@ namespace MissionPlanner.Utilities
                 {
                     state = LinkState.Active;
                     ResetGpsStateLocked();
+                    SetHudStatusLocked(-1);
                     Log.Info("HeavyShot GPS failsafe: supported firmware confirmed: " + text);
                 }
                 else
                 {
                     state = LinkState.UnsupportedFirmware;
                     ResetGpsStateLocked();
+                    SetHudStatusLocked(-1);
                     Log.Info("HeavyShot GPS failsafe: firmware is not supported: " + text);
                 }
             }
@@ -273,7 +278,10 @@ namespace MissionPlanner.Utilities
                 lock (sync)
                 {
                     if (generation == sessionGeneration && state == LinkState.Active)
+                    {
                         synchronizedParameterValue = desiredValue;
+                        SetHudStatusLocked(desiredValue);
+                    }
                 }
 
                 Log.InfoFormat("HeavyShot GPS failsafe: {0} synchronized to {1}", ParameterName, desiredValue);
@@ -300,6 +308,21 @@ namespace MissionPlanner.Utilities
             gpsCandidateSince = DateTime.MinValue;
             synchronizedParameterValue = null;
             parameterSyncTask = null;
+        }
+
+        private void SetHudStatusLocked(int value)
+        {
+            if (activePort == null)
+                return;
+
+            try
+            {
+                activePort.MAVlist[activeSysId, activeCompId].cs.heavyshotrtl = value;
+            }
+            catch (Exception ex)
+            {
+                Log.Debug("HeavyShot GPS failsafe: unable to update HUD status", ex);
+            }
         }
 
         private enum LinkState
