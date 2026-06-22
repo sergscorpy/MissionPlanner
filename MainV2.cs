@@ -2568,6 +2568,9 @@ namespace MissionPlanner
 
         ManualResetEvent SerialThreadrunner = new ManualResetEvent(false);
 
+        private readonly HeavyShotGpsFailsafeManager heavyShotGpsFailsafeManager =
+            new HeavyShotGpsFailsafeManager();
+
         /// <summary>
         /// main serial reader thread
         /// controls
@@ -2989,6 +2992,10 @@ namespace MissionPlanner
                         }
 
                         heatbeatSend = DateTime.UtcNow;
+
+                        // UDP can stay open after the vehicle disappears, so this manager uses the
+                        // autopilot heartbeat and revalidates the HeavyShot firmware after each outage.
+                        heavyShotGpsFailsafeManager.Update(comPort);
                     }
 
                     // if not connected or busy, sleep and loop

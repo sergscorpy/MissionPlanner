@@ -863,6 +863,22 @@ namespace MissionPlanner.Controls
         [System.ComponentModel.Browsable(true), System.ComponentModel.Category("Values")]
         public float ekfstatus { get; set; }
 
+        private int _heavyshotrtl = -1;
+
+        [System.ComponentModel.Browsable(true), System.ComponentModel.Category("Values")]
+        public int heavyshotrtl
+        {
+            get { return _heavyshotrtl; }
+            set
+            {
+                if (_heavyshotrtl != value)
+                {
+                    _heavyshotrtl = value;
+                    this.Invalidate();
+                }
+            }
+        }
+
         [System.ComponentModel.Browsable(true), System.ComponentModel.Category("Values")]
         public bool prearmstatus { get; set; }
 
@@ -994,6 +1010,12 @@ namespace MissionPlanner.Controls
         private readonly SolidBrush _whiteBrush = new SolidBrush(Color.White);
         private readonly SolidBrush _redBrush = new SolidBrush(Color.Red);
         private readonly SolidBrush _orangeBrush = new SolidBrush(Color.Orange);
+
+        private static readonly Bitmap HeavyShotRtlGreenIcon =
+            CreateStatusIcon(Color.FromArgb(4, 162, 19), "FS RTL");
+
+        private static readonly Bitmap HeavyShotRtlRedIcon =
+            CreateStatusIcon(Color.FromArgb(194, 5, 5), "FS RTL");
 
         private static readonly SolidBrush SolidBrush = new SolidBrush(Color.FromArgb(0x55, 0xff, 0xff, 0xff));
 
@@ -3214,6 +3236,27 @@ namespace MissionPlanner.Controls
                     }
                 }
 
+                // HeavyShot-specific throttle failsafe mode. A negative value keeps the
+                // indicator hidden until the firmware has been positively identified.
+                if (heavyshotrtl >= 0)
+                {
+                    if (displayicons)
+                    {
+                        var width = (fontsize + 8) * 3;
+                        var iconHeight = fontsize + 8;
+                        var gpsIconY = this.Height - (fontsize + 13);
+                        var rtlIcon = heavyshotrtl == 1 ? HeavyShotRtlGreenIcon : HeavyShotRtlRedIcon;
+
+                        DrawImage(rtlIcon, this.Width - width - 3, gpsIconY - iconHeight - 3, width, iconHeight);
+                    }
+                    else
+                    {
+                        var rtlBrush = heavyshotrtl == 1 ? _whiteBrush : (SolidBrush)Brushes.Red;
+                        var rtlTextY = _gpsfix2 > 0 ? yPos[0] - yTextOffset : yPos[0];
+                        drawstring("RTL", font, fontsize, rtlBrush, this.Width - 13 * fontsize, rtlTextY);
+                    }
+                }
+
                 if (displayprearm && status == false) // not armed
                 {
                     if (displayicons)
@@ -3386,6 +3429,42 @@ namespace MissionPlanner.Controls
             }
 
             return new Size((int)size, (int)fontsize);
+        }
+
+        private static Bitmap CreateStatusIcon(Color backgroundColor, string text)
+        {
+            var bitmap = new Bitmap(384, 128, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+
+            using (var graphics = System.Drawing.Graphics.FromImage(bitmap))
+            using (var backgroundBrush = new SolidBrush(Color.FromArgb(179, backgroundColor)))
+            using (var brush = new SolidBrush(Color.White))
+            using (var iconFont = new Font("Arial", 80, FontStyle.Bold, GraphicsUnit.Pixel))
+            using (var backgroundPath = new GraphicsPath())
+            using (var format = new StringFormat
+            {
+                Alignment = StringAlignment.Center,
+                LineAlignment = StringAlignment.Center,
+                FormatFlags = StringFormatFlags.NoWrap
+            })
+            {
+                const float cornerDiameter = 16;
+                var right = bitmap.Width - cornerDiameter;
+                var bottom = bitmap.Height - cornerDiameter;
+
+                backgroundPath.AddArc(0, 0, cornerDiameter, cornerDiameter, 180, 90);
+                backgroundPath.AddArc(right, 0, cornerDiameter, cornerDiameter, 270, 90);
+                backgroundPath.AddArc(right, bottom, cornerDiameter, cornerDiameter, 0, 90);
+                backgroundPath.AddArc(0, bottom, cornerDiameter, cornerDiameter, 90, 90);
+                backgroundPath.CloseFigure();
+
+                graphics.Clear(Color.Transparent);
+                graphics.SmoothingMode = SmoothingMode.AntiAlias;
+                graphics.FillPath(backgroundBrush, backgroundPath);
+                graphics.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAliasGridFit;
+                graphics.DrawString(text, iconFont, brush, new RectangleF(0, 0, bitmap.Width, bitmap.Height), format);
+            }
+
+            return bitmap;
         }
 
         int NextPowerOf2(int n)

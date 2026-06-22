@@ -385,6 +385,9 @@ namespace MissionPlanner
         [DisplayText("Gps Status")]
         public float gpsstatus { get; set; }
 
+        [DisplayText("HeavyShot RTL Status")]
+        public int heavyshotrtl { get; set; } = -1;
+
         [DisplayFieldName("gpshdop.Field")]
         [DisplayText("Gps HDOP")]
         [GroupText("Position")]
