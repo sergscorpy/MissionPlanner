@@ -4,6 +4,7 @@ using System.IO;
 using System.IO.Ports;
 using System.Linq;
 using System.Management;
+using System.Text.RegularExpressions;
 using RCListener.Logging;
 
 namespace RCListener.Transport
@@ -62,7 +63,8 @@ namespace RCListener.Transport
         {
             var ports = FilterPortsWithWmi(SerialPort.GetPortNames())
                 .Distinct()
-                .OrderBy(p => p)
+                .OrderBy(GetPortNumber)
+                .ThenBy(p => p)
                 .ToList();
 
             if (!string.IsNullOrEmpty(LastKnownGoodPort) && ports.Contains(LastKnownGoodPort))
@@ -91,7 +93,10 @@ namespace RCListener.Transport
                         var name = obj["Name"]?.ToString() ?? string.Empty;
                         var pnpId = obj["PNPDeviceID"]?.ToString() ?? string.Empty;
 
-                        var match = candidates.FirstOrDefault(port => name.IndexOf(port, StringComparison.OrdinalIgnoreCase) >= 0);
+                        var portName = ExtractComPortName(name);
+                        var match = string.IsNullOrEmpty(portName)
+                            ? null
+                            : candidates.FirstOrDefault(port => string.Equals(port, portName, StringComparison.OrdinalIgnoreCase));
                         if (string.IsNullOrEmpty(match))
                             continue;
 
@@ -114,6 +119,24 @@ namespace RCListener.Transport
                 log.Log($"[WMI] FilterPortsWithWmi error: {ex.Message}");
                 return Array.Empty<string>();
             }
+        }
+
+        private static string ExtractComPortName(string deviceName)
+        {
+            if (string.IsNullOrEmpty(deviceName))
+                return null;
+
+            var match = Regex.Match(deviceName, @"\((COM\d+)\)", RegexOptions.IgnoreCase);
+            return match.Success ? match.Groups[1].Value : null;
+        }
+
+        private static int GetPortNumber(string port)
+        {
+            if (string.IsNullOrEmpty(port) || !port.StartsWith("COM", StringComparison.OrdinalIgnoreCase))
+                return int.MaxValue;
+
+            int number;
+            return int.TryParse(port.Substring(3), out number) ? number : int.MaxValue;
         }
     }
 }
