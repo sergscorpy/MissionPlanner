@@ -32,10 +32,19 @@ namespace MissionPlanner.GCSViews.SituationMarkers
         SituationMarker draggingMarker;
         SituationMarkerMapMarker droneLabelMarker;
         PointLatLng lastDronePosition;
+        Guid? lastMarkerClickId;
+        DateTime lastMarkerClickTimeUtc;
+        Point lastMarkerClickLocation;
         bool hasDronePosition;
         bool suppressAutosave;
+        bool markersLocked;
 
         public BindingList<SituationMarker> Markers { get; } = new BindingList<SituationMarker>();
+
+        public bool MarkersLocked
+        {
+            get { return markersLocked; }
+        }
 
         public event EventHandler MarkersChanged;
 
@@ -125,6 +134,8 @@ namespace MissionPlanner.GCSViews.SituationMarkers
         {
             pickingMarker = null;
             draggingMarker = null;
+            lastMarkerClickId = null;
+            markersLocked = false;
 
             Markers.Clear();
             markersOverlay.Markers.Clear();
@@ -211,6 +222,34 @@ namespace MissionPlanner.GCSViews.SituationMarkers
                 form.SetStatus("Click on the map to set marker coordinates.");
         }
 
+        public void SetMarkersLocked(bool locked)
+        {
+            markersLocked = locked;
+            if (markersLocked)
+                draggingMarker = null;
+
+            if (form != null && !form.IsDisposed)
+                form.SetStatus(markersLocked ? "Marker dragging is locked." : "");
+
+            OnMarkersChanged(true);
+        }
+
+        public bool HandleMouseDoubleClick(MouseEventArgs e, GMapMarker currentMarker)
+        {
+            if (e.Button != MouseButtons.Left)
+                return false;
+
+            if (currentMarker is SituationMarkerMapMarker situationMapMarker &&
+                situationMapMarker.Tag is SituationMarker marker)
+            {
+                draggingMarker = null;
+                SetInterestMarker(marker);
+                return true;
+            }
+
+            return false;
+        }
+
         public bool HandleMouseDown(MouseEventArgs e, GMapMarker currentMarker)
         {
             if (e.Button != MouseButtons.Left)
@@ -218,6 +257,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
 
             if (pickingMarker != null)
             {
+                lastMarkerClickId = null;
                 var point = map.FromLocalToLatLng(e.X, e.Y);
                 SetMarkerPosition(pickingMarker, point.Lat, point.Lng, true);
                 pickingMarker = null;
@@ -229,6 +269,19 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             if (currentMarker is SituationMarkerMapMarker situationMapMarker &&
                 situationMapMarker.Tag is SituationMarker marker)
             {
+                if (IsDoubleClickOnMarker(marker, e))
+                {
+                    lastMarkerClickId = null;
+                    draggingMarker = null;
+                    SetInterestMarker(marker);
+                    return true;
+                }
+
+                RememberMarkerClick(marker, e);
+
+                if (MarkersLocked)
+                    return false;
+
                 draggingMarker = marker;
                 return true;
             }
@@ -236,8 +289,35 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             return false;
         }
 
+        bool IsDoubleClickOnMarker(SituationMarker marker, MouseEventArgs e)
+        {
+            if (e.Clicks > 1)
+                return true;
+
+            if (lastMarkerClickId != marker.Id)
+                return false;
+
+            var elapsed = DateTime.UtcNow - lastMarkerClickTimeUtc;
+            if (elapsed.TotalMilliseconds > SystemInformation.DoubleClickTime)
+                return false;
+
+            var maxDistance = SystemInformation.DoubleClickSize;
+            return Math.Abs(e.X - lastMarkerClickLocation.X) <= maxDistance.Width &&
+                   Math.Abs(e.Y - lastMarkerClickLocation.Y) <= maxDistance.Height;
+        }
+
+        void RememberMarkerClick(SituationMarker marker, MouseEventArgs e)
+        {
+            lastMarkerClickId = marker.Id;
+            lastMarkerClickTimeUtc = DateTime.UtcNow;
+            lastMarkerClickLocation = e.Location;
+        }
+
         public bool HandleMouseMove(MouseEventArgs e)
         {
+            if (MarkersLocked)
+                return false;
+
             if (draggingMarker == null || e.Button != MouseButtons.Left)
                 return false;
 
@@ -251,6 +331,9 @@ namespace MissionPlanner.GCSViews.SituationMarkers
 
         public bool HandleMouseUp(MouseEventArgs e)
         {
+            if (MarkersLocked)
+                return false;
+
             if (draggingMarker == null)
                 return false;
 
@@ -605,7 +688,8 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             var store = new SituationMarkersStore
             {
                 Markers = Markers.ToList(),
-                InterestMarkerId = Markers.FirstOrDefault(a => a.IsInterest)?.Id
+                InterestMarkerId = Markers.FirstOrDefault(a => a.IsInterest)?.Id,
+                MarkersLocked = MarkersLocked
             };
 
             var directory = Path.GetDirectoryName(fileName);
@@ -627,14 +711,21 @@ namespace MissionPlanner.GCSViews.SituationMarkers
                 markersOverlay.Markers.Clear();
                 routeOverlay.Routes.Clear();
                 mapMarkers.Clear();
+                markersLocked = store.MarkersLocked;
 
                 foreach (var marker in store.Markers)
                     Markers.Add(marker);
 
                 if (store.InterestMarkerId.HasValue)
-                    SetInterestMarker(Markers.FirstOrDefault(a => a.Id == store.InterestMarkerId.Value));
+                {
+                    var interest = Markers.FirstOrDefault(a => a.Id == store.InterestMarkerId.Value);
+                    foreach (var marker in Markers)
+                        marker.IsInterest = marker == interest;
+                }
                 else
+                {
                     SetDefaultInterest();
+                }
 
                 RebuildMap();
             }

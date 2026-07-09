@@ -6595,6 +6595,10 @@ namespace MissionPlanner.GCSViews
             var MouseDownEnd = gMapControl1.FromLocalToLatLng(e.X, e.Y);
             Console.WriteLine("gMapControl1_MouseUp " + MouseDownEnd);
 
+            if (e.Clicks > 1 && situationMarkersManager != null &&
+                situationMarkersManager.HandleMouseDoubleClick(e, CurrentGMapMarker))
+                return;
+
             if (situationMarkersManager != null && situationMarkersManager.HandleMouseUp(e))
                 return;
 

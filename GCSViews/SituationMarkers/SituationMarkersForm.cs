@@ -16,6 +16,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
         readonly SituationMarkersManager manager;
         readonly DataGridView grid = new DataGridView();
         readonly Label statusLabel = new Label();
+        Button lockButton;
         bool refreshing;
 
         public SituationMarkersForm(SituationMarkersManager manager)
@@ -52,6 +53,8 @@ namespace MissionPlanner.GCSViews.SituationMarkers
                         row.DefaultCellStyle.Font = grid.Font;
                     }
                 }
+
+                UpdateLockState();
             }
             finally
             {
@@ -96,6 +99,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             AddButton(toolbar, "Save", SaveMarkers);
             AddButton(toolbar, "Load", LoadMarkers);
             AddButton(toolbar, "Reset", ResetMarkers);
+            lockButton = AddButton(toolbar, "Lock", ToggleLock);
 
             grid.Dock = DockStyle.Fill;
             grid.AutoGenerateColumns = false;
@@ -207,7 +211,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             grid.GridColor = Color.FromArgb(120, 120, 120);
         }
 
-        void AddButton(Control parent, string text, EventHandler handler)
+        Button AddButton(Control parent, string text, EventHandler handler)
         {
             var button = new Button
             {
@@ -217,6 +221,26 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             };
             button.Click += handler;
             parent.Controls.Add(button);
+            return button;
+        }
+
+        void UpdateLockState()
+        {
+            if (lockButton != null)
+            {
+                lockButton.Text = manager.MarkersLocked ? "Unlock Drag" : "Lock Drag";
+                lockButton.BackColor = manager.MarkersLocked ? Color.FromArgb(210, 90, 80) : SystemColors.Control;
+            }
+
+            foreach (DataGridViewColumn column in grid.Columns)
+            {
+                if (column is DataGridViewButtonColumn)
+                    continue;
+
+                column.ReadOnly = column.DataPropertyName == nameof(SituationMarker.IsHome) ||
+                                  column.DataPropertyName == nameof(SituationMarker.AltitudeSource) ||
+                                  column.Name == "RelativeHome";
+            }
         }
 
         void Grid_CellContentClick(object sender, DataGridViewCellEventArgs e)
@@ -362,6 +386,11 @@ namespace MissionPlanner.GCSViews.SituationMarkers
                 return;
 
             manager.ResetMarkers();
+        }
+
+        void ToggleLock(object sender, EventArgs e)
+        {
+            manager.SetMarkersLocked(!manager.MarkersLocked);
         }
     }
 }
