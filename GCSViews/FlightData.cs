@@ -3485,10 +3485,12 @@ namespace MissionPlanner.GCSViews
         void gMapControl1_OnMarkerEnter(GMapMarker item)
         {
             CurrentGMapMarker = item;
+            situationMarkersManager?.HandleMarkerEnter(item);
         }
 
         void gMapControl1_OnMarkerLeave(GMapMarker item)
         {
+            situationMarkersManager?.HandleMarkerLeave(item);
             CurrentGMapMarker = null;
         }
 

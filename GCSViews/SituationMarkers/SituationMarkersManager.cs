@@ -226,7 +226,10 @@ namespace MissionPlanner.GCSViews.SituationMarkers
         {
             markersLocked = locked;
             if (markersLocked)
+            {
                 draggingMarker = null;
+                ClearMarkerHover();
+            }
 
             if (form != null && !form.IsDisposed)
                 form.SetStatus(markersLocked ? "Marker dragging is locked." : "");
@@ -248,6 +251,16 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             }
 
             return false;
+        }
+
+        public void HandleMarkerEnter(GMapMarker marker)
+        {
+            SetMarkerHover(marker, true);
+        }
+
+        public void HandleMarkerLeave(GMapMarker marker)
+        {
+            SetMarkerHover(marker, false);
         }
 
         public bool HandleMouseDown(MouseEventArgs e, GMapMarker currentMarker)
@@ -311,6 +324,36 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             lastMarkerClickId = marker.Id;
             lastMarkerClickTimeUtc = DateTime.UtcNow;
             lastMarkerClickLocation = e.Location;
+        }
+
+        void SetMarkerHover(GMapMarker marker, bool isHovered)
+        {
+            if (!(marker is SituationMarkerMapMarker situationMapMarker) ||
+                !(situationMapMarker.Tag is SituationMarker))
+                return;
+
+            var nextState = isHovered && !MarkersLocked;
+            if (situationMapMarker.IsHovered == nextState)
+                return;
+
+            situationMapMarker.IsHovered = nextState;
+            map.Invalidate();
+        }
+
+        void ClearMarkerHover()
+        {
+            var changed = false;
+            foreach (var marker in mapMarkers.Values)
+            {
+                if (!marker.IsHovered)
+                    continue;
+
+                marker.IsHovered = false;
+                changed = true;
+            }
+
+            if (changed)
+                map.Invalidate();
         }
 
         public bool HandleMouseMove(MouseEventArgs e)

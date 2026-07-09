@@ -11,6 +11,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
         public string Label { get; set; }
         public bool IsHome { get; set; }
         public bool IsInterest { get; set; }
+        public bool IsHovered { get; set; }
         public bool DrawPin { get; set; } = true;
 
         public SituationMarkerMapMarker(PointLatLng pos)
@@ -29,10 +30,24 @@ namespace MissionPlanner.GCSViews.SituationMarkers
 
             if (DrawPin)
             {
-                var fill = IsHome ? Brushes.DeepSkyBlue : IsInterest ? Brushes.Gold : Brushes.LimeGreen;
+                var fill = IsHome ? Color.DeepSkyBlue : IsInterest ? Color.Gold : Color.LimeGreen;
+                if (IsHovered)
+                    fill = IsHome ? Color.Aqua : IsInterest ? Color.Orange : Color.Chartreuse;
+
+                if (IsHovered)
+                {
+                    using (var glow = new Pen(Color.White, 5))
+                    using (var hoverOutline = new Pen(Color.DodgerBlue, 3))
+                    {
+                        g.DrawEllipse(glow, center.X - 12, center.Y - 12, 24, 24);
+                        g.DrawEllipse(hoverOutline, center.X - 12, center.Y - 12, 24, 24);
+                    }
+                }
+
+                using (var brush = new SolidBrush(fill))
                 using (var outline = new Pen(IsInterest ? Color.OrangeRed : Color.Black, IsInterest ? 3 : 1))
                 {
-                    g.FillEllipse(fill, center.X - 8, center.Y - 8, 16, 16);
+                    g.FillEllipse(brush, center.X - 8, center.Y - 8, 16, 16);
                     g.DrawEllipse(outline, center.X - 8, center.Y - 8, 16, 16);
                     g.FillEllipse(Brushes.White, center.X - 3, center.Y - 3, 6, 6);
                 }
