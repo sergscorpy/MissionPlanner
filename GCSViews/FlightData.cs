@@ -4684,7 +4684,8 @@ namespace MissionPlanner.GCSViews
                                 FlightPlanner.addpolygonmarker(this, "Guided Mode", MainV2.comPort.MAV.GuidedMode.y / 1e7,
                                     MainV2.comPort.MAV.GuidedMode.x / 1e7, (int)MainV2.comPort.MAV.GuidedMode.z,
                                     Color.Blue,
-                                    routes);
+                                    routes,
+                                    false);
                             }
 
                             // draw all icons for all connected mavs

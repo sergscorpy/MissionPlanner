@@ -628,10 +628,10 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             var interest = GetInterestMarker();
 
             if (home != null && home.Altitude.HasValue)
-                lines.Add("H: " + FormatRelativeAltitude(altitudeAmsl - home.Altitude.Value));
+                lines.Add("Home: " + FormatRelativeAltitude(altitudeAmsl - home.Altitude.Value));
 
             if (interest != null && interest.Altitude.HasValue)
-                lines.Add("I: " + FormatRelativeAltitude(altitudeAmsl - interest.Altitude.Value));
+                lines.Add("Target: " + FormatRelativeAltitude(altitudeAmsl - interest.Altitude.Value));
 
             return string.Join("\n", lines);
         }
