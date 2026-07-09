@@ -95,6 +95,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             AddButton(toolbar, "Elevation Profile", (sender, args) => manager.ShowElevationProfile(this));
             AddButton(toolbar, "Save", SaveMarkers);
             AddButton(toolbar, "Load", LoadMarkers);
+            AddButton(toolbar, "Reset", ResetMarkers);
 
             grid.Dock = DockStyle.Fill;
             grid.AutoGenerateColumns = false;
@@ -352,6 +353,15 @@ namespace MissionPlanner.GCSViews.SituationMarkers
 
                 manager.LoadFromFile(dialog.FileName);
             }
+        }
+
+        void ResetMarkers(object sender, EventArgs e)
+        {
+            if (MessageBox.Show(this, "Reset all situation markers and clear autosave?", "Situation Markers",
+                    MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes)
+                return;
+
+            manager.ResetMarkers();
         }
     }
 }

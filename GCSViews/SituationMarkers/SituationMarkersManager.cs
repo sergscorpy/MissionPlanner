@@ -121,6 +121,23 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             OnMarkersChanged(true);
         }
 
+        public void ResetMarkers()
+        {
+            pickingMarker = null;
+            draggingMarker = null;
+
+            Markers.Clear();
+            markersOverlay.Markers.Clear();
+            routeOverlay.Routes.Clear();
+            mapMarkers.Clear();
+
+            if (droneLabelMarker != null)
+                markersOverlay.Markers.Add(droneLabelMarker);
+
+            map.Refresh();
+            OnMarkersChanged(true);
+        }
+
         public void SetInterestMarker(SituationMarker marker)
         {
             foreach (var item in Markers)
@@ -256,7 +273,8 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             {
                 droneLabelMarker = new SituationMarkerMapMarker(position)
                 {
-                    IsHitTestVisible = false
+                    IsHitTestVisible = false,
+                    DrawPin = false
                 };
                 markersOverlay.Markers.Add(droneLabelMarker);
             }
