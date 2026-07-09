@@ -8,6 +8,11 @@ namespace MissionPlanner.GCSViews.SituationMarkers
 {
     public class SituationMarkersForm : Form
     {
+        readonly Color gridBackColor = Color.FromArgb(38, 39, 40);
+        readonly Color rowBackColor = Color.FromArgb(40, 40, 40);
+        readonly Color alternateRowBackColor = Color.FromArgb(48, 48, 48);
+        readonly Color interestRowBackColor = Color.FromArgb(72, 68, 40);
+        readonly Color selectionBackColor = Color.FromArgb(0, 122, 204);
         readonly SituationMarkersManager manager;
         readonly DataGridView grid = new DataGridView();
         readonly Label statusLabel = new Label();
@@ -39,8 +44,12 @@ namespace MissionPlanner.GCSViews.SituationMarkers
                 {
                     if (row.DataBoundItem is SituationMarker marker)
                     {
-                        row.DefaultCellStyle.BackColor = marker.IsInterest ? Color.FromArgb(255, 245, 190) : grid.DefaultCellStyle.BackColor;
-                        row.DefaultCellStyle.Font = marker.IsInterest ? new Font(grid.Font, FontStyle.Bold) : grid.Font;
+                        row.DefaultCellStyle.BackColor = marker.IsInterest ? interestRowBackColor :
+                            row.Index % 2 == 0 ? rowBackColor : alternateRowBackColor;
+                        row.DefaultCellStyle.ForeColor = Color.White;
+                        row.DefaultCellStyle.SelectionBackColor = selectionBackColor;
+                        row.DefaultCellStyle.SelectionForeColor = Color.White;
+                        row.DefaultCellStyle.Font = grid.Font;
                     }
                 }
             }
@@ -61,7 +70,8 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             {
                 Dock = DockStyle.Fill,
                 RowCount = 3,
-                ColumnCount = 1
+                ColumnCount = 1,
+                BackColor = gridBackColor
             };
             root.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             root.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
@@ -90,13 +100,20 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             grid.AutoGenerateColumns = false;
             grid.AllowUserToAddRows = false;
             grid.AllowUserToDeleteRows = false;
+            grid.RowHeadersVisible = false;
+            grid.BackgroundColor = gridBackColor;
+            grid.BorderStyle = BorderStyle.FixedSingle;
+            grid.EnableHeadersVisualStyles = false;
             grid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
             grid.MultiSelect = false;
+            ApplyGridStyle();
             grid.DataSource = manager.Markers;
             grid.CellContentClick += Grid_CellContentClick;
             grid.CellEndEdit += Grid_CellEndEdit;
             grid.CellFormatting += Grid_CellFormatting;
             grid.CellParsing += Grid_CellParsing;
+            grid.RowsAdded += (sender, args) => RefreshGrid();
+            grid.DataBindingComplete += (sender, args) => RefreshGrid();
             root.Controls.Add(grid, 0, 1);
 
             grid.Columns.Add(new DataGridViewTextBoxColumn
@@ -167,7 +184,26 @@ namespace MissionPlanner.GCSViews.SituationMarkers
 
             statusLabel.Dock = DockStyle.Fill;
             statusLabel.Padding = new Padding(8, 3, 8, 6);
+            statusLabel.ForeColor = Color.White;
+            statusLabel.BackColor = gridBackColor;
             root.Controls.Add(statusLabel, 0, 2);
+        }
+
+        void ApplyGridStyle()
+        {
+            grid.DefaultCellStyle.BackColor = rowBackColor;
+            grid.DefaultCellStyle.ForeColor = Color.White;
+            grid.DefaultCellStyle.SelectionBackColor = selectionBackColor;
+            grid.DefaultCellStyle.SelectionForeColor = Color.White;
+            grid.AlternatingRowsDefaultCellStyle.BackColor = alternateRowBackColor;
+            grid.AlternatingRowsDefaultCellStyle.ForeColor = Color.White;
+            grid.AlternatingRowsDefaultCellStyle.SelectionBackColor = selectionBackColor;
+            grid.AlternatingRowsDefaultCellStyle.SelectionForeColor = Color.White;
+            grid.ColumnHeadersDefaultCellStyle.BackColor = gridBackColor;
+            grid.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
+            grid.ColumnHeadersDefaultCellStyle.SelectionBackColor = gridBackColor;
+            grid.ColumnHeadersDefaultCellStyle.SelectionForeColor = Color.White;
+            grid.GridColor = Color.FromArgb(120, 120, 120);
         }
 
         void AddButton(Control parent, string text, EventHandler handler)
