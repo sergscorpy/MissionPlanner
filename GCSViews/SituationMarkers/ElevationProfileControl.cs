@@ -140,7 +140,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
 
         Rectangle GetPlotRectangle()
         {
-            return new Rectangle(78, 24, Math.Max(10, Width - 128), Math.Max(10, Height - 76));
+            return new Rectangle(108, 24, Math.Max(10, Width - 158), Math.Max(10, Height - 76));
         }
 
         void ClearCursorDistance()
@@ -310,28 +310,70 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             if (multiplier <= 0)
                 multiplier = 1;
 
+            var labelAxisX = plot.Left - 80;
+            g.DrawLine(Pens.Black, labelAxisX, plot.Top, labelAxisX, plot.Bottom);
+
             var minDisplay = minAltitude * multiplier;
             var maxDisplay = maxAltitude * multiplier;
+            var minLabelY = ToY(plot, minAltitude);
+            var maxLabelY = ToY(plot, maxAltitude);
             foreach (var tick in BuildNiceTicks(minDisplay, maxDisplay, 7))
             {
                 var y = ToY(plot, tick / multiplier);
                 g.DrawLine(gridPen, plot.Left, y, plot.Right, y);
                 g.DrawLine(Pens.Black, plot.Left - 5, y, plot.Left, y);
-                DrawAxisText(g, FormatSignedValue(tick), Brushes.Black, plot.Left - 46, y - Font.Height / 2);
+                if (Math.Abs(y - minLabelY) > Font.Height && Math.Abs(y - maxLabelY) > Font.Height)
+                    DrawLabelAxisTick(g, labelAxisX, y, FormatSignedValue(tick), Color.Black);
             }
 
-            DrawAltitudeRulerMark(g, plot, minAltitude, FormatSignedValue(minDisplay), Color.FromArgb(90, 90, 90));
-            DrawAltitudeRulerMark(g, plot, maxAltitude, FormatSignedValue(maxDisplay), Color.FromArgb(90, 90, 90));
+            DrawAltitudeRulerMark(g, plot, labelAxisX, minAltitude, FormatSignedValue(minDisplay), Color.FromArgb(90, 90, 90));
+            DrawAltitudeRulerMark(g, plot, labelAxisX, maxAltitude, FormatSignedValue(maxDisplay), Color.FromArgb(90, 90, 90));
+
+            DrawPlotValueLabel(g, plot, 0, "0", Color.DeepSkyBlue);
 
             var interest = manager.GetInterestMarker();
             if (interest != null && interest.Altitude.HasValue)
             {
                 var relativeInterest = ToRelativeAltitude(interest.Altitude.Value);
-                DrawAltitudeRulerMark(g, plot, relativeInterest, FormatSignedValue(relativeInterest * multiplier), Color.OrangeRed);
+                DrawPlotValueLabel(g, plot, relativeInterest, FormatSignedValue(relativeInterest * multiplier), Color.OrangeRed);
+            }
+
+            if (cursorDistance.HasValue)
+            {
+                var cursorAltitude = GetProfileAltitudeAtDistance(cursorDistance.Value);
+                if (cursorAltitude.HasValue)
+                {
+                    var relativeCursorAltitude = ToRelativeAltitude(cursorAltitude.Value);
+                    DrawPlotValueLabel(g, plot, relativeCursorAltitude,
+                        FormatSignedValue(relativeCursorAltitude * multiplier), Color.DodgerBlue);
+                }
             }
         }
 
-        void DrawAltitudeRulerMark(Graphics g, Rectangle plot, double relativeAltitude, string label, Color color)
+        void DrawAltitudeRulerMark(Graphics g, Rectangle plot, int labelAxisX, double relativeAltitude, string label, Color color)
+        {
+            if (relativeAltitude < minAltitude || relativeAltitude > maxAltitude)
+                return;
+
+            var y = ToY(plot, relativeAltitude);
+            using (var pen = new Pen(color, 1))
+            {
+                g.DrawLine(pen, plot.Left - 6, y, plot.Left, y);
+                DrawLabelAxisTick(g, labelAxisX, y, label, color);
+            }
+        }
+
+        void DrawLabelAxisTick(Graphics g, int labelAxisX, int y, string label, Color color)
+        {
+            using (var pen = new Pen(color, 1))
+            using (var brush = new SolidBrush(color))
+            {
+                g.DrawLine(pen, labelAxisX, y, labelAxisX + 6, y);
+                g.DrawString(label, Font, brush, labelAxisX + 9, y - Font.Height / 2);
+            }
+        }
+
+        void DrawPlotValueLabel(Graphics g, Rectangle plot, double relativeAltitude, string label, Color color)
         {
             if (relativeAltitude < minAltitude || relativeAltitude > maxAltitude)
                 return;
@@ -340,8 +382,9 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             using (var pen = new Pen(color, 1))
             using (var brush = new SolidBrush(color))
             {
-                g.DrawLine(pen, plot.Left - 6, y, plot.Left, y);
-                g.DrawString(label, Font, brush, 4, y - Font.Height / 2);
+                g.DrawLine(pen, plot.Left - 8, y, plot.Left, y);
+                var size = g.MeasureString(label, Font);
+                g.DrawString(label, Font, brush, plot.Left - size.Width - 10, y - Font.Height / 2);
             }
         }
 
@@ -420,11 +463,6 @@ namespace MissionPlanner.GCSViews.SituationMarkers
         string FormatSignedValue(double value)
         {
             return (value >= 0 ? "+" : "") + value.ToString("0", CultureInfo.InvariantCulture);
-        }
-
-        void DrawAxisText(Graphics g, string text, Brush brush, float x, float y)
-        {
-            g.DrawString(text, Font, brush, x, y);
         }
 
         void DrawRouteMarkers(Graphics g, Rectangle plot)
