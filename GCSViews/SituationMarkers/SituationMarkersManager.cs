@@ -20,11 +20,13 @@ namespace MissionPlanner.GCSViews.SituationMarkers
         const string RouteOverlayId = "situationmarkersroute";
         const string AutosaveFileName = "autosavemarkers.json";
         const int DroneUiUpdateIntervalMs = 250;
+        const double DroneTerrainCacheDistanceMeters = 50.0;
 
         readonly myGMAP map;
         readonly GMapOverlay markersOverlay;
         readonly GMapOverlay routeOverlay;
         readonly Dictionary<Guid, SituationMarkerMapMarker> mapMarkers = new Dictionary<Guid, SituationMarkerMapMarker>();
+        readonly List<RouteSegment> routeSegments = new List<RouteSegment>();
         readonly string autosavePath;
 
         SituationMarkersForm form;
@@ -35,11 +37,14 @@ namespace MissionPlanner.GCSViews.SituationMarkers
         PointLatLng lastDronePosition;
         double lastDroneAltitudeAmsl;
         DateTime lastDroneUiUpdateUtc = DateTime.MinValue;
+        PointLatLng cachedDroneTerrainPosition;
+        double cachedDroneTerrainAltitude;
         Guid? selectedMarkerId;
         Guid? lastMarkerClickId;
         DateTime lastMarkerClickTimeUtc;
         Point lastMarkerClickLocation;
         bool hasDronePosition;
+        bool hasDroneTerrainCache;
         bool suppressAutosave;
         bool markersLocked;
 
@@ -229,6 +234,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             Markers.Clear();
             markersOverlay.Markers.Clear();
             routeOverlay.Routes.Clear();
+            routeSegments.Clear();
             mapMarkers.Clear();
 
             if (droneLabelMarker != null)
@@ -552,8 +558,10 @@ namespace MissionPlanner.GCSViews.SituationMarkers
                 markersOverlay.Markers.Add(droneLabelMarker);
             }
 
+            var terrainUpdated = UpdateDroneTerrainCache(position);
             droneLabelMarker.Position = position;
-            droneLabelMarker.Label = BuildDroneLabel(altitudeAmsl);
+            if (terrainUpdated || string.IsNullOrEmpty(droneLabelMarker.Label))
+                droneLabelMarker.Label = BuildDroneLabel(altitudeAmsl);
             map.UpdateMarkerLocalPosition(droneLabelMarker);
             elevationProfileForm?.RefreshDronePosition();
         }
@@ -638,31 +646,24 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             if (!hasDronePosition)
                 return false;
 
-            var route = GetRouteMarkers();
-            if (route.Count < 2)
+            if (routeSegments.Count == 0)
                 return false;
 
             var bestDistance = double.MaxValue;
-            var accumulated = 0.0;
             var bestRouteDistance = 0.0;
 
-            for (var i = 1; i < route.Count; i++)
+            foreach (var segment in routeSegments)
             {
-                var start = new PointLatLng(route[i - 1].Lat.Value, route[i - 1].Lng.Value);
-                var end = new PointLatLng(route[i].Lat.Value, route[i].Lng.Value);
-                var segmentLength = DistanceMeters(start, end);
-                if (segmentLength <= 0)
+                if (segment.Length <= 0)
                     continue;
 
-                var projection = ProjectToSegment(start, end, lastDronePosition);
+                var projection = ProjectToSegment(segment.Start, segment.End, lastDronePosition);
                 var distanceToSegment = DistanceMeters(lastDronePosition, projection.Point);
                 if (distanceToSegment < bestDistance)
                 {
                     bestDistance = distanceToSegment;
-                    bestRouteDistance = accumulated + segmentLength * projection.Fraction;
+                    bestRouteDistance = segment.StartDistance + segment.Length * projection.Fraction;
                 }
-
-                accumulated += segmentLength;
             }
 
             distanceMeters = bestRouteDistance;
@@ -753,9 +754,29 @@ namespace MissionPlanner.GCSViews.SituationMarkers
         void RebuildRoute()
         {
             routeOverlay.Routes.Clear();
+            routeSegments.Clear();
+
             var points = GetRouteMarkers().Select(a => new PointLatLng(a.Lat.Value, a.Lng.Value)).ToList();
             if (points.Count < 2)
                 return;
+
+            var accumulated = 0.0;
+            for (var i = 1; i < points.Count; i++)
+            {
+                var segmentLength = DistanceMeters(points[i - 1], points[i]);
+                if (segmentLength > 0)
+                {
+                    routeSegments.Add(new RouteSegment
+                    {
+                        Start = points[i - 1],
+                        End = points[i],
+                        Length = segmentLength,
+                        StartDistance = accumulated
+                    });
+                }
+
+                accumulated += segmentLength;
+            }
 
             var route = new GMapRoute(points, "situation route")
             {
@@ -790,16 +811,27 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             var lines = new List<string>();
             var interest = GetInterestMarker();
 
-            if (hasDronePosition)
-            {
-                var terrainAltitude = GetSrtmAltitude(lastDronePosition.Lat, lastDronePosition.Lng);
-                lines.Add("Alt: " + FormatRelativeAltitude(altitudeAmsl - terrainAltitude));
-            }
+            if (hasDroneTerrainCache)
+                lines.Add("Alt: " + FormatRelativeAltitude(altitudeAmsl - cachedDroneTerrainAltitude));
 
             if (interest != null && interest.Altitude.HasValue)
                 lines.Add("Target: " + FormatRelativeAltitude(altitudeAmsl - interest.Altitude.Value));
 
             return string.Join("\n", lines);
+        }
+
+        bool UpdateDroneTerrainCache(PointLatLng position)
+        {
+            if (hasDroneTerrainCache &&
+                DistanceMeters(cachedDroneTerrainPosition, position) < DroneTerrainCacheDistanceMeters)
+            {
+                return false;
+            }
+
+            cachedDroneTerrainPosition = position;
+            cachedDroneTerrainAltitude = GetSrtmAltitude(position.Lat, position.Lng);
+            hasDroneTerrainCache = true;
+            return true;
         }
 
         string FormatRelativeAltitude(double altitude)
@@ -837,10 +869,23 @@ namespace MissionPlanner.GCSViews.SituationMarkers
         {
             form?.RefreshGrid();
             MarkersChanged?.Invoke(this, EventArgs.Empty);
+            RefreshDroneLabel();
             elevationProfileForm?.RefreshProfile();
 
             if (save)
                 SaveAutosave();
+        }
+
+        void RefreshDroneLabel()
+        {
+            if (droneLabelMarker == null || !hasDronePosition)
+                return;
+
+            if (!hasDroneTerrainCache)
+                UpdateDroneTerrainCache(lastDronePosition);
+
+            droneLabelMarker.Label = BuildDroneLabel(lastDroneAltitudeAmsl);
+            map.UpdateMarkerLocalPosition(droneLabelMarker);
         }
 
         ProjectionResult ProjectToSegment(PointLatLng start, PointLatLng end, PointLatLng point)
@@ -919,6 +964,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
                 Markers.Clear();
                 markersOverlay.Markers.Clear();
                 routeOverlay.Routes.Clear();
+                routeSegments.Clear();
                 mapMarkers.Clear();
                 selectedMarkerId = null;
                 markersLocked = store.MarkersLocked;
@@ -955,6 +1001,14 @@ namespace MissionPlanner.GCSViews.SituationMarkers
         {
             public double Fraction;
             public PointLatLng Point;
+        }
+
+        class RouteSegment
+        {
+            public PointLatLng Start;
+            public PointLatLng End;
+            public double Length;
+            public double StartDistance;
         }
     }
 }
