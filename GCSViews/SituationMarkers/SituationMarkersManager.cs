@@ -91,7 +91,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             return marker;
         }
 
-        public SituationMarker AddOrUpdateHome(PointLatLng homeLocation)
+        public SituationMarker AddOrUpdateHome(PointLatLng homeLocation, double? homeAltitudeAmsl)
         {
             if (homeLocation.Lat == 0 && homeLocation.Lng == 0)
             {
@@ -112,7 +112,20 @@ namespace MissionPlanner.GCSViews.SituationMarkers
 
             home.Name = "HOME";
             home.IsHome = true;
-            SetMarkerPosition(home, homeLocation.Lat, homeLocation.Lng, true);
+            home.Lat = homeLocation.Lat;
+            home.Lng = homeLocation.Lng;
+            if (homeAltitudeAmsl.HasValue && !double.IsNaN(homeAltitudeAmsl.Value) && !double.IsInfinity(homeAltitudeAmsl.Value))
+            {
+                home.Altitude = homeAltitudeAmsl.Value;
+                home.AltitudeSource = SituationMarkerAltitudeSource.Home;
+            }
+            else
+            {
+                home.Altitude = GetSrtmAltitude(homeLocation.Lat, homeLocation.Lng);
+                home.AltitudeSource = SituationMarkerAltitudeSource.Srtm;
+            }
+
+            RebuildMap();
             SelectMarker(home);
             OnMarkersChanged(true);
             return home;
@@ -689,11 +702,13 @@ namespace MissionPlanner.GCSViews.SituationMarkers
         string BuildDroneLabel(double altitudeAmsl)
         {
             var lines = new List<string>();
-            var home = GetHomeMarker();
             var interest = GetInterestMarker();
 
-            if (home != null && home.Altitude.HasValue)
-                lines.Add("Home: " + FormatRelativeAltitude(altitudeAmsl - home.Altitude.Value));
+            if (hasDronePosition)
+            {
+                var terrainAltitude = GetSrtmAltitude(lastDronePosition.Lat, lastDronePosition.Lng);
+                lines.Add("Alt: " + FormatRelativeAltitude(altitudeAmsl - terrainAltitude));
+            }
 
             if (interest != null && interest.Altitude.HasValue)
                 lines.Add("Target: " + FormatRelativeAltitude(altitudeAmsl - interest.Altitude.Value));

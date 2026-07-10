@@ -216,7 +216,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
 
                 var paddingX = 7;
                 var paddingY = 5;
-                var lineHeight = (int)Math.Ceiling(g.MeasureString("Home: +000 m", font).Height);
+                var lineHeight = (int)Math.Ceiling(g.MeasureString("Target: +000 m", font).Height);
                 var lineSpacing = lines.Length > 1 ? 5 : 0;
                 var iconWidth = 17;
                 var contentGap = 4;

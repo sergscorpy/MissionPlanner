@@ -4,8 +4,9 @@ namespace MissionPlanner.GCSViews.SituationMarkers
 {
     public enum SituationMarkerAltitudeSource
     {
-        Srtm,
-        Manual
+        Srtm = 0,
+        Manual = 1,
+        Home = 2
     }
 
     public class SituationMarker
