@@ -71,6 +71,7 @@ namespace MissionPlanner.GCSViews
         GMapMarker center = new GMarkerGoogle(new PointLatLng(0.0, 0.0), GMarkerGoogleType.none);
         SituationMarkersManager situationMarkersManager;
         Button situationMarkersButton;
+        Button elevationProfileButton;
         bool huddropout;
         bool huddropoutresize;
 
@@ -3513,32 +3514,50 @@ namespace MissionPlanner.GCSViews
 
         void AddSituationMarkersButton()
         {
-            situationMarkersButton = new Button
+            elevationProfileButton = CreateSituationMarkersMapButton("Elevation Profile", 124);
+            elevationProfileButton.Click += (sender, args) => situationMarkersManager?.ToggleElevationProfile(this);
+
+            situationMarkersButton = CreateSituationMarkersMapButton("Markers", 82);
+            situationMarkersButton.Click += (sender, args) => situationMarkersManager?.ToggleMarkersForm(this);
+
+            gMapControl1.Controls.Add(elevationProfileButton);
+            gMapControl1.Controls.Add(situationMarkersButton);
+            elevationProfileButton.BringToFront();
+            situationMarkersButton.BringToFront();
+            PositionSituationMarkersButton();
+        }
+
+        Button CreateSituationMarkersMapButton(string text, int width)
+        {
+            var button = new Button
             {
-                Text = "Markers",
-                Width = 82,
+                Text = text,
+                Width = width,
                 Height = 28,
                 Anchor = AnchorStyles.Right | AnchorStyles.Bottom,
                 BackColor = Color.FromArgb(245, 245, 245),
                 ForeColor = Color.Black,
                 FlatStyle = FlatStyle.Flat
             };
-            situationMarkersButton.FlatAppearance.BorderColor = Color.FromArgb(80, 80, 80);
-            situationMarkersButton.Click += (sender, args) => situationMarkersManager?.ShowMarkersForm(this);
-
-            gMapControl1.Controls.Add(situationMarkersButton);
-            situationMarkersButton.BringToFront();
-            PositionSituationMarkersButton();
+            button.FlatAppearance.BorderColor = Color.FromArgb(80, 80, 80);
+            return button;
         }
 
         void PositionSituationMarkersButton()
         {
-            if (situationMarkersButton == null)
+            if (situationMarkersButton == null || elevationProfileButton == null)
                 return;
 
+            var gap = 8;
+            var bottom = Math.Max(0, gMapControl1.Height - situationMarkersButton.Height - 12);
+            var markersLeft = Math.Max(0, gMapControl1.Width - situationMarkersButton.Width - 12);
+            var profileLeft = Math.Max(0, markersLeft - elevationProfileButton.Width - gap);
+
+            elevationProfileButton.Location = new Point(profileLeft, bottom);
             situationMarkersButton.Location = new Point(
-                Math.Max(0, gMapControl1.Width - situationMarkersButton.Width - 12),
-                Math.Max(0, gMapControl1.Height - situationMarkersButton.Height - 12));
+                markersLeft,
+                bottom);
+            elevationProfileButton.BringToFront();
             situationMarkersButton.BringToFront();
         }
 

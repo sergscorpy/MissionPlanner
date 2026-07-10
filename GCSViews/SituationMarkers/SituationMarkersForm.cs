@@ -104,7 +104,6 @@ namespace MissionPlanner.GCSViews.SituationMarkers
                 var home = MainV2.comPort.MAV.cs.HomeLocation;
                 manager.AddOrUpdateHome(new PointLatLng(home.Lat, home.Lng), home.Alt);
             });
-            AddButton(toolbar, "Elevation Profile", (sender, args) => manager.ShowElevationProfile(this));
             AddButton(toolbar, "Save", SaveMarkers);
             AddButton(toolbar, "Load", LoadMarkers);
             AddButton(toolbar, "Reset", ResetMarkers);

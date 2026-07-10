@@ -77,6 +77,17 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             form.BringToFront();
         }
 
+        public void ToggleMarkersForm(IWin32Window owner)
+        {
+            if (form != null && !form.IsDisposed)
+            {
+                form.Close();
+                return;
+            }
+
+            ShowMarkersForm(owner);
+        }
+
         public SituationMarker AddMarker()
         {
             var marker = new SituationMarker
@@ -547,6 +558,17 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             elevationProfileForm.Show(owner);
             elevationProfileForm.BringToFront();
             elevationProfileForm.RefreshProfile();
+        }
+
+        public void ToggleElevationProfile(IWin32Window owner)
+        {
+            if (elevationProfileForm != null && !elevationProfileForm.IsDisposed)
+            {
+                elevationProfileForm.Close();
+                return;
+            }
+
+            ShowElevationProfile(owner);
         }
 
         public List<SituationMarker> GetRouteMarkers()
