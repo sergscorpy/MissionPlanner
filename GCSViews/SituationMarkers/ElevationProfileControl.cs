@@ -33,6 +33,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
         double minDistance;
         double maxDistance;
         double? droneDistance;
+        double? droneAltitudeAmsl;
         double? cursorDistance;
 
         public ElevationProfileControl(SituationMarkersManager manager)
@@ -128,14 +129,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
                 DrawAltitudeLine(graphics, plot, manager.GetInterestMarker(), interestPen, "INTEREST");
 
                 DrawRouteMarkers(graphics, plot);
-
-                if (droneDistance.HasValue)
-                {
-                    var x = ToX(plot, droneDistance.Value);
-                    graphics.DrawLine(dronePen, x, plot.Top, x, plot.Bottom);
-                    using (var brush = new SolidBrush(Color.Magenta))
-                        graphics.DrawString("DRONE", Font, brush, x + 3, plot.Bottom - 18);
-                }
+                DrawDroneProfile(graphics, plot, dronePen);
 
                 DrawCursorProbe(graphics, plot);
 
@@ -207,6 +201,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             minDistance = 0;
             maxDistance = 0;
             homeAltitude = 0;
+            droneAltitudeAmsl = null;
 
             var route = manager.GetRouteMarkers();
             if (route.Count < 2)
@@ -248,6 +243,11 @@ namespace MissionPlanner.GCSViews.SituationMarkers
 
             AddReferenceAltitude(manager.GetHomeMarker());
             AddReferenceAltitude(manager.GetInterestMarker());
+            if (manager.TryGetDroneAltitude(out var droneAltitude))
+            {
+                droneAltitudeAmsl = droneAltitude;
+                AddReferenceAltitude(droneAltitudeAmsl.Value);
+            }
 
             if (Math.Abs(maxAltitude - minAltitude) < 1)
             {
@@ -314,7 +314,12 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             if (marker == null || !marker.Altitude.HasValue)
                 return;
 
-            var relativeAltitude = ToRelativeAltitude(marker.Altitude.Value);
+            AddReferenceAltitude(marker.Altitude.Value);
+        }
+
+        void AddReferenceAltitude(double altitudeAmsl)
+        {
+            var relativeAltitude = ToRelativeAltitude(altitudeAmsl);
             minAltitude = Math.Min(minAltitude, relativeAltitude);
             maxAltitude = Math.Max(maxAltitude, relativeAltitude);
         }
@@ -384,6 +389,10 @@ namespace MissionPlanner.GCSViews.SituationMarkers
                         FormatSignedValue(relativeCursorAltitude * multiplier), Color.DodgerBlue);
                 }
             }
+
+            if (droneAltitudeAmsl.HasValue)
+                DrawPlotValueLabel(g, plot, ToRelativeAltitude(droneAltitudeAmsl.Value),
+                    FormatSignedValue(ToRelativeAltitude(droneAltitudeAmsl.Value) * multiplier), Color.Magenta);
         }
 
         void DrawAltitudeRulerMark(Graphics g, Rectangle plot, int labelAxisX, double relativeAltitude, string label, Color color)
@@ -608,6 +617,66 @@ namespace MissionPlanner.GCSViews.SituationMarkers
 
                 using (var brush = new SolidBrush(TextColor))
                     g.DrawString(marker.Marker.Name, Font, brush, x + 6, y - 16);
+            }
+        }
+
+        void DrawDroneProfile(Graphics g, Rectangle plot, Pen dronePen)
+        {
+            if (!droneDistance.HasValue && !droneAltitudeAmsl.HasValue)
+                return;
+
+            int? x = null;
+            int? y = null;
+
+            if (droneDistance.HasValue)
+            {
+                x = ToX(plot, droneDistance.Value);
+                using (var verticalPen = new Pen(Color.FromArgb(210, dronePen.Color), dronePen.Width))
+                {
+                    verticalPen.DashStyle = System.Drawing.Drawing2D.DashStyle.Dash;
+                    g.DrawLine(verticalPen, x.Value, plot.Top, x.Value, plot.Bottom);
+                }
+            }
+
+            if (droneAltitudeAmsl.HasValue)
+            {
+                var relativeAltitude = ToRelativeAltitude(droneAltitudeAmsl.Value);
+                y = ToY(plot, relativeAltitude);
+                using (var altitudePen = new Pen(Color.FromArgb(210, dronePen.Color), 1))
+                {
+                    altitudePen.DashStyle = System.Drawing.Drawing2D.DashStyle.Dash;
+                    g.DrawLine(altitudePen, plot.Left, y.Value, plot.Right, y.Value);
+                }
+            }
+
+            if (x.HasValue && y.HasValue)
+                DrawDroneIcon(g, x.Value, y.Value, dronePen.Color);
+        }
+
+        void DrawDroneIcon(Graphics g, int x, int y, Color color)
+        {
+            using (var armPen = new Pen(color, 2))
+            using (var outlinePen = new Pen(Color.FromArgb(30, 30, 30), 2))
+            using (var fill = new SolidBrush(Color.FromArgb(245, color)))
+            using (var bodyFill = new SolidBrush(Color.FromArgb(245, 245, 245)))
+            {
+                g.DrawLine(outlinePen, x - 12, y, x + 12, y);
+                g.DrawLine(outlinePen, x, y - 12, x, y + 12);
+                g.DrawLine(armPen, x - 12, y, x + 12, y);
+                g.DrawLine(armPen, x, y - 12, x, y + 12);
+
+                g.FillEllipse(fill, x - 16, y - 4, 8, 8);
+                g.FillEllipse(fill, x + 8, y - 4, 8, 8);
+                g.FillEllipse(fill, x - 4, y - 16, 8, 8);
+                g.FillEllipse(fill, x - 4, y + 8, 8, 8);
+
+                g.DrawEllipse(outlinePen, x - 16, y - 4, 8, 8);
+                g.DrawEllipse(outlinePen, x + 8, y - 4, 8, 8);
+                g.DrawEllipse(outlinePen, x - 4, y - 16, 8, 8);
+                g.DrawEllipse(outlinePen, x - 4, y + 8, 8, 8);
+
+                g.FillEllipse(bodyFill, x - 5, y - 5, 10, 10);
+                g.DrawEllipse(armPen, x - 5, y - 5, 10, 10);
             }
         }
 

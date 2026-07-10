@@ -32,6 +32,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
         SituationMarker draggingMarker;
         SituationMarkerMapMarker droneLabelMarker;
         PointLatLng lastDronePosition;
+        double lastDroneAltitudeAmsl;
         Guid? selectedMarkerId;
         Guid? lastMarkerClickId;
         DateTime lastMarkerClickTimeUtc;
@@ -449,6 +450,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
                 return;
 
             lastDronePosition = position;
+            lastDroneAltitudeAmsl = altitudeAmsl;
             hasDronePosition = true;
 
             if (droneLabelMarker == null)
@@ -565,6 +567,12 @@ namespace MissionPlanner.GCSViews.SituationMarkers
 
             distanceMeters = bestRouteDistance;
             return true;
+        }
+
+        public bool TryGetDroneAltitude(out double altitudeAmsl)
+        {
+            altitudeAmsl = lastDroneAltitudeAmsl;
+            return hasDronePosition;
         }
 
         public PointLatLng Interpolate(PointLatLng start, PointLatLng end, double fraction)
