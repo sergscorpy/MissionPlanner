@@ -13,6 +13,8 @@ namespace MissionPlanner.GCSViews.SituationMarkers
     {
         readonly SituationMarkersManager manager;
         const double ProfilePaddingFraction = 0.12;
+        const double DistanceKilometerMultiplier = 0.001;
+        const string DistanceKilometerUnit = "Km";
         readonly List<ProfilePoint> profilePoints = new List<ProfilePoint>();
         readonly List<RouteMarkerDistance> markerDistances = new List<RouteMarkerDistance>();
 
@@ -140,7 +142,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
 
         Rectangle GetPlotRectangle()
         {
-            return new Rectangle(108, 24, Math.Max(10, Width - 158), Math.Max(10, Height - 76));
+            return new Rectangle(108, 24, Math.Max(10, Width - 158), Math.Max(10, Height - 108));
         }
 
         void ClearCursorDistance()
@@ -330,6 +332,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             DrawAltitudeRulerMark(g, plot, labelAxisX, maxAltitude, FormatSignedValue(maxDisplay), Color.FromArgb(90, 90, 90));
 
             DrawPlotValueLabel(g, plot, 0, "0", Color.DeepSkyBlue);
+            DrawAltitudeUnitLabel(g, labelAxisX, plot.Bottom + 8);
 
             var interest = manager.GetInterestMarker();
             if (interest != null && interest.Altitude.HasValue)
@@ -390,23 +393,84 @@ namespace MissionPlanner.GCSViews.SituationMarkers
 
         void DrawDistanceRuler(Graphics g, Rectangle plot, Pen gridPen)
         {
-            var multiplier = CurrentState.multiplierdist;
-            if (multiplier <= 0)
-                multiplier = 1;
+            var minDisplay = ToDistanceKilometers(minDistance);
+            var maxDisplay = ToDistanceKilometers(maxDistance);
+            var labelAxisY = plot.Bottom + 46;
+            g.DrawLine(Pens.Black, plot.Left, labelAxisY, plot.Right, labelAxisY);
 
-            var minDisplay = minDistance * multiplier;
-            var maxDisplay = maxDistance * multiplier;
+            var minLabelX = ToX(plot, minDistance);
+            var maxLabelX = ToX(plot, maxDistance);
+            var minLabel = FormatDistanceKilometers(minDisplay);
+            var maxLabel = FormatDistanceKilometers(maxDisplay);
+            var minLabelWidth = g.MeasureString(minLabel, Font).Width;
+            var maxLabelWidth = g.MeasureString(maxLabel, Font).Width;
             foreach (var tick in BuildNiceTicks(minDisplay, maxDisplay, 8))
             {
-                var x = ToX(plot, tick / multiplier);
+                var x = ToX(plot, tick / DistanceKilometerMultiplier);
                 g.DrawLine(gridPen, x, plot.Top, x, plot.Bottom);
                 g.DrawLine(Pens.Black, x, plot.Bottom, x, plot.Bottom + 5);
-                var label = tick.ToString("0", CultureInfo.InvariantCulture);
-                var size = g.MeasureString(label, Font);
-                g.DrawString(label, Font, Brushes.Black, x - size.Width / 2, plot.Bottom + 7);
+                var tickLabel = FormatDistanceKilometers(tick);
+                var tickLabelWidth = g.MeasureString(tickLabel, Font).Width;
+                if (Math.Abs(x - minLabelX) > (tickLabelWidth + minLabelWidth) / 2 + 6 &&
+                    Math.Abs(x - maxLabelX) > (tickLabelWidth + maxLabelWidth) / 2 + 6)
+                    DrawDistanceLabelAxisTick(g, labelAxisY, x, tickLabel, Color.Black);
             }
 
-            g.DrawString(CurrentState.DistanceUnit, Font, Brushes.Black, plot.Right + 6, plot.Bottom + 7);
+            DrawDistanceLabelAxisTick(g, labelAxisY, minLabelX, minLabel, Color.FromArgb(90, 90, 90));
+            DrawDistanceLabelAxisTick(g, labelAxisY, maxLabelX, maxLabel, Color.FromArgb(90, 90, 90));
+
+            if (droneDistance.HasValue)
+                DrawPlotDistanceValueLabel(g, plot, droneDistance.Value, Color.Magenta);
+
+            if (cursorDistance.HasValue)
+                DrawPlotDistanceValueLabel(g, plot, cursorDistance.Value, Color.DodgerBlue);
+
+            DrawDistanceUnitLabel(g, plot.Left, labelAxisY + 8);
+        }
+
+        void DrawPlotDistanceValueLabel(Graphics g, Rectangle plot, double distance, Color color)
+        {
+            if (distance < minDistance || distance > maxDistance)
+                return;
+
+            var x = ToX(plot, distance);
+            var label = FormatDistanceKilometers(ToDistanceKilometers(distance));
+            using (var pen = new Pen(color, 1))
+            using (var brush = new SolidBrush(color))
+            {
+                g.DrawLine(pen, x, plot.Bottom, x, plot.Bottom + 8);
+                var size = g.MeasureString(label, Font);
+                g.DrawString(label, Font, brush, x - size.Width / 2, plot.Bottom + 10);
+            }
+        }
+
+        void DrawAltitudeUnitLabel(Graphics g, int labelAxisX, int y)
+        {
+            using (var brush = new SolidBrush(Color.FromArgb(90, 90, 90)))
+            {
+                var unit = string.IsNullOrEmpty(CurrentState.AltUnit) ? "m" : CurrentState.AltUnit;
+                g.DrawString(unit, Font, brush, labelAxisX + 9, y);
+            }
+        }
+
+        void DrawDistanceUnitLabel(Graphics g, int plotLeft, int y)
+        {
+            using (var brush = new SolidBrush(Color.FromArgb(90, 90, 90)))
+            {
+                var size = g.MeasureString(DistanceKilometerUnit, Font);
+                g.DrawString(DistanceKilometerUnit, Font, brush, plotLeft - size.Width - 8, y);
+            }
+        }
+
+        void DrawDistanceLabelAxisTick(Graphics g, int labelAxisY, int x, string label, Color color)
+        {
+            using (var pen = new Pen(color, 1))
+            using (var brush = new SolidBrush(color))
+            {
+                g.DrawLine(pen, x, labelAxisY - 6, x, labelAxisY);
+                var size = g.MeasureString(label, Font);
+                g.DrawString(label, Font, brush, x - size.Width / 2, labelAxisY - Font.Height - 7);
+            }
         }
 
         IEnumerable<double> BuildNiceTicks(double minValue, double maxValue, int targetCount)
@@ -463,6 +527,16 @@ namespace MissionPlanner.GCSViews.SituationMarkers
         string FormatSignedValue(double value)
         {
             return (value >= 0 ? "+" : "") + value.ToString("0", CultureInfo.InvariantCulture);
+        }
+
+        double ToDistanceKilometers(double distanceMeters)
+        {
+            return distanceMeters * DistanceKilometerMultiplier;
+        }
+
+        string FormatDistanceKilometers(double distanceKilometers)
+        {
+            return distanceKilometers.ToString("0.00", CultureInfo.InvariantCulture);
         }
 
         void DrawRouteMarkers(Graphics g, Rectangle plot)
