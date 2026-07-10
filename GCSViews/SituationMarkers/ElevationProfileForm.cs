@@ -39,6 +39,36 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             profileControl.RefreshProfile();
         }
 
+        public void RefreshDronePosition()
+        {
+            if (IsDisposed)
+                return;
+
+            if (InvokeRequired)
+            {
+                if (IsHandleCreated)
+                    BeginInvoke((MethodInvoker)RefreshDronePosition);
+                return;
+            }
+
+            profileControl.RefreshDronePosition();
+        }
+
+        public void RefreshSelection()
+        {
+            if (IsDisposed)
+                return;
+
+            if (InvokeRequired)
+            {
+                if (IsHandleCreated)
+                    BeginInvoke((MethodInvoker)RefreshSelection);
+                return;
+            }
+
+            profileControl.Invalidate();
+        }
+
         protected override void OnFormClosed(FormClosedEventArgs e)
         {
             manager.SelectedMarkerChanged -= Manager_SelectedMarkerChanged;
@@ -47,7 +77,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
 
         void Manager_SelectedMarkerChanged(object sender, System.EventArgs e)
         {
-            RefreshProfile();
+            RefreshSelection();
         }
     }
 }

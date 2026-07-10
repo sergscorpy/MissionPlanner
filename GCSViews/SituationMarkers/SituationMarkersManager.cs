@@ -19,6 +19,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
         const string OverlayId = "situationmarkers";
         const string RouteOverlayId = "situationmarkersroute";
         const string AutosaveFileName = "autosavemarkers.json";
+        const int DroneUiUpdateIntervalMs = 250;
 
         readonly myGMAP map;
         readonly GMapOverlay markersOverlay;
@@ -33,6 +34,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
         SituationMarkerMapMarker droneLabelMarker;
         PointLatLng lastDronePosition;
         double lastDroneAltitudeAmsl;
+        DateTime lastDroneUiUpdateUtc = DateTime.MinValue;
         Guid? selectedMarkerId;
         Guid? lastMarkerClickId;
         DateTime lastMarkerClickTimeUtc;
@@ -531,6 +533,15 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             lastDroneAltitudeAmsl = altitudeAmsl;
             hasDronePosition = true;
 
+            var now = DateTime.UtcNow;
+            if (droneLabelMarker != null &&
+                (now - lastDroneUiUpdateUtc).TotalMilliseconds < DroneUiUpdateIntervalMs)
+            {
+                return;
+            }
+
+            lastDroneUiUpdateUtc = now;
+
             if (droneLabelMarker == null)
             {
                 droneLabelMarker = new SituationMarkerMapMarker(position)
@@ -544,7 +555,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             droneLabelMarker.Position = position;
             droneLabelMarker.Label = BuildDroneLabel(altitudeAmsl);
             map.UpdateMarkerLocalPosition(droneLabelMarker);
-            elevationProfileForm?.RefreshProfile();
+            elevationProfileForm?.RefreshDronePosition();
         }
 
         public void ShowElevationProfile(IWin32Window owner)
@@ -737,7 +748,6 @@ namespace MissionPlanner.GCSViews.SituationMarkers
 
             RebuildRoute();
             map.Refresh();
-            elevationProfileForm?.RefreshProfile();
         }
 
         void RebuildRoute()

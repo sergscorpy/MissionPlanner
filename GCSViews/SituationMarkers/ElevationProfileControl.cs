@@ -110,6 +110,12 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             Invalidate();
         }
 
+        public void RefreshDronePosition()
+        {
+            UpdateDroneProfilePosition();
+            Invalidate();
+        }
+
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);
@@ -270,11 +276,9 @@ namespace MissionPlanner.GCSViews.SituationMarkers
 
             AddReferenceAltitude(manager.GetHomeMarker());
             AddReferenceAltitude(manager.GetInterestMarker());
-            if (manager.TryGetDroneAltitude(out var droneAltitude))
-            {
-                droneAltitudeAmsl = droneAltitude;
+            UpdateDroneProfilePosition();
+            if (droneAltitudeAmsl.HasValue)
                 AddReferenceAltitude(droneAltitudeAmsl.Value);
-            }
 
             if (Math.Abs(maxAltitude - minAltitude) < 1)
             {
@@ -287,6 +291,16 @@ namespace MissionPlanner.GCSViews.SituationMarkers
                 maxAltitude += altitudePadding;
                 minAltitude -= altitudePadding;
             }
+
+        }
+
+        void UpdateDroneProfilePosition()
+        {
+            droneDistance = null;
+            droneAltitudeAmsl = null;
+
+            if (manager.TryGetDroneAltitude(out var droneAltitude))
+                droneAltitudeAmsl = droneAltitude;
 
             if (manager.TryGetDroneRouteDistance(out var distance))
                 droneDistance = distance;
