@@ -12,13 +12,18 @@ namespace MissionPlanner.GCSViews.SituationMarkers
     public class ElevationProfileControl : Control
     {
         readonly SituationMarkersManager manager;
+        const double ProfilePaddingFraction = 0.12;
         readonly List<ProfilePoint> profilePoints = new List<ProfilePoint>();
         readonly List<RouteMarkerDistance> markerDistances = new List<RouteMarkerDistance>();
 
         double minAltitude;
         double maxAltitude;
+        double homeAltitude;
         double totalDistance;
+        double minDistance;
+        double maxDistance;
         double? droneDistance;
+        double? cursorDistance;
 
         public ElevationProfileControl(SituationMarkersManager manager)
         {
@@ -28,9 +33,45 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             ForeColor = Color.Black;
         }
 
+        protected override void OnMouseMove(MouseEventArgs e)
+        {
+            base.OnMouseMove(e);
+
+            var plot = GetPlotRectangle();
+            if (!plot.Contains(e.Location) || profilePoints.Count < 2)
+            {
+                ClearCursorDistance();
+                return;
+            }
+
+            cursorDistance = ToDistance(plot, e.X);
+            Invalidate();
+        }
+
+        protected override void OnMouseLeave(EventArgs e)
+        {
+            base.OnMouseLeave(e);
+            ClearCursorDistance();
+        }
+
+        protected override void OnMouseDown(MouseEventArgs e)
+        {
+            base.OnMouseDown(e);
+
+            if (e.Button != MouseButtons.Left || profilePoints.Count < 2)
+                return;
+
+            var plot = GetPlotRectangle();
+            var marker = GetMarkerAtPoint(plot, e.Location);
+            if (marker != null)
+                manager.SelectMarker(marker);
+        }
+
         public void RefreshProfile()
         {
             BuildProfile();
+            if (profilePoints.Count < 2)
+                cursorDistance = null;
             Invalidate();
         }
 
@@ -38,52 +79,77 @@ namespace MissionPlanner.GCSViews.SituationMarkers
         {
             base.OnPaint(e);
 
-            e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-            var plot = new Rectangle(58, 24, Math.Max(10, Width - 92), Math.Max(10, Height - 68));
+            try
+            {
+                DrawProfile(e.Graphics);
+            }
+            catch (Exception ex)
+            {
+                DrawRenderError(e.Graphics, ex);
+            }
+        }
+
+        void DrawProfile(Graphics graphics)
+        {
+            graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+            var plot = GetPlotRectangle();
 
             using (var axisPen = new Pen(Color.FromArgb(90, 90, 90)))
             using (var gridPen = new Pen(Color.FromArgb(225, 225, 225)))
             using (var terrainPen = new Pen(Color.ForestGreen, 2))
             using (var homePen = new Pen(Color.DeepSkyBlue, 1))
             using (var interestPen = new Pen(Color.OrangeRed, 1))
-            using (var markerPen = new Pen(Color.FromArgb(120, 80, 80, 80), 1))
             using (var dronePen = new Pen(Color.Magenta, 2))
             {
-                DrawEmptyStateIfNeeded(e.Graphics, plot);
+                DrawEmptyStateIfNeeded(graphics, plot);
                 if (profilePoints.Count < 2)
                     return;
 
-                for (var i = 0; i <= 4; i++)
-                {
-                    var y = plot.Top + plot.Height * i / 4;
-                    e.Graphics.DrawLine(gridPen, plot.Left, y, plot.Right, y);
-                }
-
-                e.Graphics.DrawRectangle(axisPen, plot);
+                DrawRulers(graphics, plot, axisPen, gridPen);
 
                 var terrain = profilePoints.Select(p => ToPoint(plot, p.Distance, p.Altitude)).ToArray();
                 if (terrain.Length > 1)
-                    e.Graphics.DrawLines(terrainPen, terrain);
+                    graphics.DrawLines(terrainPen, terrain);
 
-                DrawAltitudeLine(e.Graphics, plot, manager.GetHomeMarker(), homePen, "HOME");
-                DrawAltitudeLine(e.Graphics, plot, manager.GetInterestMarker(), interestPen, "INTEREST");
+                DrawAltitudeLine(graphics, plot, manager.GetHomeMarker(), homePen, "HOME");
+                DrawAltitudeLine(graphics, plot, manager.GetInterestMarker(), interestPen, "INTEREST");
 
-                foreach (var marker in markerDistances)
-                {
-                    var x = ToX(plot, marker.Distance);
-                    e.Graphics.DrawLine(markerPen, x, plot.Top, x, plot.Bottom);
-                    e.Graphics.DrawString(marker.Name, Font, Brushes.Black, x + 3, plot.Top + 3);
-                }
+                DrawRouteMarkers(graphics, plot);
 
                 if (droneDistance.HasValue)
                 {
                     var x = ToX(plot, droneDistance.Value);
-                    e.Graphics.DrawLine(dronePen, x, plot.Top, x, plot.Bottom);
-                    e.Graphics.DrawString("DRONE", Font, Brushes.Magenta, x + 3, plot.Bottom - 18);
+                    graphics.DrawLine(dronePen, x, plot.Top, x, plot.Bottom);
+                    graphics.DrawString("DRONE", Font, Brushes.Magenta, x + 3, plot.Bottom - 18);
                 }
 
-                DrawAxisLabels(e.Graphics, plot);
+                DrawCursorProbe(graphics, plot);
+
             }
+        }
+
+        void DrawRenderError(Graphics g, Exception ex)
+        {
+            g.Clear(BackColor);
+            using (var brush = new SolidBrush(Color.Firebrick))
+            {
+                var text = "Elevation profile render error: " + ex.Message;
+                g.DrawString(text, Font, brush, 8, 8);
+            }
+        }
+
+        Rectangle GetPlotRectangle()
+        {
+            return new Rectangle(78, 24, Math.Max(10, Width - 128), Math.Max(10, Height - 76));
+        }
+
+        void ClearCursorDistance()
+        {
+            if (!cursorDistance.HasValue)
+                return;
+
+            cursorDistance = null;
+            Invalidate();
         }
 
         void DrawEmptyStateIfNeeded(Graphics g, Rectangle plot)
@@ -105,12 +171,19 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             markerDistances.Clear();
             droneDistance = null;
             totalDistance = 0;
+            minDistance = 0;
+            maxDistance = 0;
+            homeAltitude = 0;
 
             var route = manager.GetRouteMarkers();
             if (route.Count < 2)
                 return;
 
-            markerDistances.Add(new RouteMarkerDistance(route[0].Name, 0));
+            var home = manager.GetHomeMarker();
+            if (home != null && home.Altitude.HasValue)
+                homeAltitude = home.Altitude.Value;
+
+            markerDistances.Add(new RouteMarkerDistance(route[0], 0));
 
             for (var i = 1; i < route.Count; i++)
             {
@@ -129,14 +202,16 @@ namespace MissionPlanner.GCSViews.SituationMarkers
                 }
 
                 totalDistance += segmentLength;
-                markerDistances.Add(new RouteMarkerDistance(route[i].Name, totalDistance));
+                markerDistances.Add(new RouteMarkerDistance(route[i], totalDistance));
             }
+
+            ExtendProfile(route);
 
             if (profilePoints.Count == 0)
                 return;
 
-            minAltitude = profilePoints.Min(a => a.Altitude);
-            maxAltitude = profilePoints.Max(a => a.Altitude);
+            minAltitude = profilePoints.Min(a => ToRelativeAltitude(a.Altitude));
+            maxAltitude = profilePoints.Max(a => ToRelativeAltitude(a.Altitude));
 
             AddReferenceAltitude(manager.GetHomeMarker());
             AddReferenceAltitude(manager.GetInterestMarker());
@@ -146,9 +221,59 @@ namespace MissionPlanner.GCSViews.SituationMarkers
                 maxAltitude += 1;
                 minAltitude -= 1;
             }
+            else
+            {
+                var altitudePadding = (maxAltitude - minAltitude) * ProfilePaddingFraction;
+                maxAltitude += altitudePadding;
+                minAltitude -= altitudePadding;
+            }
 
             if (manager.TryGetDroneRouteDistance(out var distance))
                 droneDistance = distance;
+        }
+
+        void ExtendProfile(List<SituationMarker> route)
+        {
+            if (totalDistance <= 0 || route.Count < 2)
+                return;
+
+            var extensionDistance = totalDistance * ProfilePaddingFraction;
+            minDistance = -extensionDistance;
+            maxDistance = totalDistance + extensionDistance;
+
+            var first = new PointLatLng(route[0].Lat.Value, route[0].Lng.Value);
+            var second = new PointLatLng(route[1].Lat.Value, route[1].Lng.Value);
+            AddExtension(first, second, 0, -extensionDistance, true);
+
+            var last = new PointLatLng(route[route.Count - 1].Lat.Value, route[route.Count - 1].Lng.Value);
+            var previous = new PointLatLng(route[route.Count - 2].Lat.Value, route[route.Count - 2].Lng.Value);
+            AddExtension(previous, last, totalDistance, extensionDistance, false);
+        }
+
+        void AddExtension(PointLatLng from, PointLatLng to, double routeEdgeDistance, double extensionDistance, bool prepend)
+        {
+            var steps = Math.Max(2, Math.Min(40, (int)(Math.Abs(extensionDistance) / 50.0)));
+            var points = new List<ProfilePoint>();
+            var direction = extensionDistance < 0 ? -1 : 1;
+
+            for (var step = 1; step <= steps; step++)
+            {
+                var fraction = step / (double)steps;
+                var point = manager.Interpolate(from, to, direction < 0 ? -fraction : 1 + fraction);
+                points.Add(new ProfilePoint(
+                    routeEdgeDistance + extensionDistance * fraction,
+                    manager.GetTerrainAltitude(point.Lat, point.Lng)));
+            }
+
+            if (prepend)
+            {
+                points.Reverse();
+                profilePoints.InsertRange(0, points);
+            }
+            else
+            {
+                profilePoints.AddRange(points);
+            }
         }
 
         void AddReferenceAltitude(SituationMarker marker)
@@ -156,8 +281,9 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             if (marker == null || !marker.Altitude.HasValue)
                 return;
 
-            minAltitude = Math.Min(minAltitude, marker.Altitude.Value);
-            maxAltitude = Math.Max(maxAltitude, marker.Altitude.Value);
+            var relativeAltitude = ToRelativeAltitude(marker.Altitude.Value);
+            minAltitude = Math.Min(minAltitude, relativeAltitude);
+            maxAltitude = Math.Max(maxAltitude, relativeAltitude);
         }
 
         void DrawAltitudeLine(Graphics g, Rectangle plot, SituationMarker marker, Pen pen, string label)
@@ -165,36 +291,307 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             if (marker == null || !marker.Altitude.HasValue)
                 return;
 
-            var y = ToY(plot, marker.Altitude.Value);
+            var y = ToY(plot, ToRelativeAltitude(marker.Altitude.Value));
             g.DrawLine(pen, plot.Left, y, plot.Right, y);
-            g.DrawString(label, Font, new SolidBrush(pen.Color), plot.Left + 3, y - 16);
+            using (var brush = new SolidBrush(pen.Color))
+                g.DrawString(label, Font, brush, plot.Left + 3, y - 16);
         }
 
-        void DrawAxisLabels(Graphics g, Rectangle plot)
+        void DrawRulers(Graphics g, Rectangle plot, Pen axisPen, Pen gridPen)
         {
-            g.DrawString((minAltitude * CurrentState.multiplieralt).ToString("0", CultureInfo.InvariantCulture), Font, Brushes.Black, 4, plot.Bottom - 10);
-            g.DrawString((maxAltitude * CurrentState.multiplieralt).ToString("0", CultureInfo.InvariantCulture), Font, Brushes.Black, 4, plot.Top - 4);
-            g.DrawString("0 m", Font, Brushes.Black, plot.Left - 8, plot.Bottom + 6);
-            g.DrawString((totalDistance * CurrentState.multiplierdist).ToString("0", CultureInfo.InvariantCulture) + " " + CurrentState.DistanceUnit, Font, Brushes.Black, plot.Right - 80, plot.Bottom + 6);
+            DrawDistanceRuler(g, plot, gridPen);
+            DrawAltitudeRuler(g, plot, gridPen);
+            g.DrawRectangle(axisPen, plot);
+        }
+
+        void DrawAltitudeRuler(Graphics g, Rectangle plot, Pen gridPen)
+        {
+            var multiplier = CurrentState.multiplieralt;
+            if (multiplier <= 0)
+                multiplier = 1;
+
+            var minDisplay = minAltitude * multiplier;
+            var maxDisplay = maxAltitude * multiplier;
+            foreach (var tick in BuildNiceTicks(minDisplay, maxDisplay, 7))
+            {
+                var y = ToY(plot, tick / multiplier);
+                g.DrawLine(gridPen, plot.Left, y, plot.Right, y);
+                g.DrawLine(Pens.Black, plot.Left - 5, y, plot.Left, y);
+                DrawAxisText(g, FormatSignedValue(tick), Brushes.Black, plot.Left - 46, y - Font.Height / 2);
+            }
+
+            DrawAltitudeRulerMark(g, plot, minAltitude, FormatSignedValue(minDisplay), Color.FromArgb(90, 90, 90));
+            DrawAltitudeRulerMark(g, plot, maxAltitude, FormatSignedValue(maxDisplay), Color.FromArgb(90, 90, 90));
+
+            var interest = manager.GetInterestMarker();
+            if (interest != null && interest.Altitude.HasValue)
+            {
+                var relativeInterest = ToRelativeAltitude(interest.Altitude.Value);
+                DrawAltitudeRulerMark(g, plot, relativeInterest, FormatSignedValue(relativeInterest * multiplier), Color.OrangeRed);
+            }
+        }
+
+        void DrawAltitudeRulerMark(Graphics g, Rectangle plot, double relativeAltitude, string label, Color color)
+        {
+            if (relativeAltitude < minAltitude || relativeAltitude > maxAltitude)
+                return;
+
+            var y = ToY(plot, relativeAltitude);
+            using (var pen = new Pen(color, 1))
+            using (var brush = new SolidBrush(color))
+            {
+                g.DrawLine(pen, plot.Left - 6, y, plot.Left, y);
+                g.DrawString(label, Font, brush, 4, y - Font.Height / 2);
+            }
+        }
+
+        void DrawDistanceRuler(Graphics g, Rectangle plot, Pen gridPen)
+        {
+            var multiplier = CurrentState.multiplierdist;
+            if (multiplier <= 0)
+                multiplier = 1;
+
+            var minDisplay = minDistance * multiplier;
+            var maxDisplay = maxDistance * multiplier;
+            foreach (var tick in BuildNiceTicks(minDisplay, maxDisplay, 8))
+            {
+                var x = ToX(plot, tick / multiplier);
+                g.DrawLine(gridPen, x, plot.Top, x, plot.Bottom);
+                g.DrawLine(Pens.Black, x, plot.Bottom, x, plot.Bottom + 5);
+                var label = tick.ToString("0", CultureInfo.InvariantCulture);
+                var size = g.MeasureString(label, Font);
+                g.DrawString(label, Font, Brushes.Black, x - size.Width / 2, plot.Bottom + 7);
+            }
+
+            g.DrawString(CurrentState.DistanceUnit, Font, Brushes.Black, plot.Right + 6, plot.Bottom + 7);
+        }
+
+        IEnumerable<double> BuildNiceTicks(double minValue, double maxValue, int targetCount)
+        {
+            if (targetCount < 2 || Math.Abs(maxValue - minValue) < 0.001)
+                yield break;
+
+            var step = NiceNumber((maxValue - minValue) / (targetCount - 1), true);
+            if (step <= 0)
+                yield break;
+
+            var start = Math.Ceiling(minValue / step) * step;
+            var end = Math.Floor(maxValue / step) * step;
+
+            for (var value = start; value <= end + step * 0.5; value += step)
+                yield return Math.Abs(value) < step * 0.001 ? 0 : value;
+        }
+
+        double NiceNumber(double value, bool round)
+        {
+            if (value <= 0)
+                return 0;
+
+            var exponent = Math.Floor(Math.Log10(value));
+            var fraction = value / Math.Pow(10, exponent);
+            double niceFraction;
+
+            if (round)
+            {
+                if (fraction < 1.5)
+                    niceFraction = 1;
+                else if (fraction < 3)
+                    niceFraction = 2;
+                else if (fraction < 7)
+                    niceFraction = 5;
+                else
+                    niceFraction = 10;
+            }
+            else
+            {
+                if (fraction <= 1)
+                    niceFraction = 1;
+                else if (fraction <= 2)
+                    niceFraction = 2;
+                else if (fraction <= 5)
+                    niceFraction = 5;
+                else
+                    niceFraction = 10;
+            }
+
+            return niceFraction * Math.Pow(10, exponent);
+        }
+
+        string FormatSignedValue(double value)
+        {
+            return (value >= 0 ? "+" : "") + value.ToString("0", CultureInfo.InvariantCulture);
+        }
+
+        void DrawAxisText(Graphics g, string text, Brush brush, float x, float y)
+        {
+            g.DrawString(text, Font, brush, x, y);
+        }
+
+        void DrawRouteMarkers(Graphics g, Rectangle plot)
+        {
+            foreach (var marker in markerDistances)
+            {
+                var altitude = GetProfileAltitudeAtDistance(marker.Distance);
+                if (!altitude.HasValue)
+                    continue;
+
+                var x = ToX(plot, marker.Distance);
+                var y = ToY(plot, ToRelativeAltitude(altitude.Value));
+                var isSelected = manager.SelectedMarker == marker.Marker;
+                var fill = marker.Marker.IsHome ? Color.DeepSkyBlue : marker.Marker.IsInterest ? Color.Gold : Color.LimeGreen;
+                var outline = marker.Marker.IsInterest ? Color.OrangeRed : Color.FromArgb(60, 60, 60);
+
+                if (isSelected)
+                {
+                    using (var glow = new Pen(Color.White, 5))
+                    using (var selectedOutline = new Pen(Color.DodgerBlue, 3))
+                    {
+                        g.DrawEllipse(glow, x - 8, y - 8, 16, 16);
+                        g.DrawEllipse(selectedOutline, x - 8, y - 8, 16, 16);
+                    }
+                }
+
+                using (var brush = new SolidBrush(fill))
+                using (var pen = new Pen(outline, marker.Marker.IsInterest ? 3 : 2))
+                {
+                    var radius = isSelected ? 6 : 4;
+                    g.FillEllipse(brush, x - radius, y - radius, radius * 2, radius * 2);
+                    g.DrawEllipse(pen, x - radius, y - radius, radius * 2, radius * 2);
+                }
+
+                g.DrawString(marker.Marker.Name, Font, Brushes.Black, x + 6, y - 16);
+            }
+        }
+
+        void DrawCursorProbe(Graphics g, Rectangle plot)
+        {
+            if (!cursorDistance.HasValue)
+                return;
+
+            var altitude = GetProfileAltitudeAtDistance(cursorDistance.Value);
+            if (!altitude.HasValue)
+                return;
+
+            var x = ToX(plot, cursorDistance.Value);
+            var relativeAltitude = ToRelativeAltitude(altitude.Value);
+            var y = ToY(plot, relativeAltitude);
+            using (var crosshairPen = new Pen(Color.FromArgb(150, Color.DodgerBlue), 1))
+            using (var markerFill = new SolidBrush(Color.FromArgb(235, Color.White)))
+            using (var markerOutline = new Pen(Color.DodgerBlue, 2))
+            {
+                crosshairPen.DashStyle = System.Drawing.Drawing2D.DashStyle.Dash;
+                g.DrawLine(crosshairPen, x, plot.Top, x, plot.Bottom);
+                g.DrawLine(crosshairPen, plot.Left, y, plot.Right, y);
+
+                g.FillEllipse(markerFill, x - 5, y - 5, 10, 10);
+                g.DrawEllipse(markerOutline, x - 5, y - 5, 10, 10);
+            }
+
+            DrawCursorAltitudeLabel(g, plot, x, y, relativeAltitude);
+        }
+
+        void DrawCursorAltitudeLabel(Graphics g, Rectangle plot, int x, int y, double relativeAltitude)
+        {
+            var value = relativeAltitude * CurrentState.multiplieralt;
+            var text = (value >= 0 ? "+" : "") + value.ToString("0", CultureInfo.InvariantCulture) + " " + CurrentState.AltUnit;
+            using (var font = new Font(Font.FontFamily, Font.Size, FontStyle.Bold))
+            {
+                var size = g.MeasureString(text, font);
+                var width = (int)Math.Ceiling(size.Width) + 12;
+                var height = (int)Math.Ceiling(size.Height) + 6;
+                var labelX = Math.Min(plot.Right - width - 2, x + 8);
+                var labelY = Math.Max(plot.Top + 2, y - height - 8);
+
+                using (var fill = new SolidBrush(Color.FromArgb(230, Color.AliceBlue)))
+                using (var outline = new Pen(Color.FromArgb(170, Color.MidnightBlue), 1))
+                using (var brush = new SolidBrush(Color.Navy))
+                {
+                    g.FillRectangle(fill, labelX, labelY, width, height);
+                    g.DrawRectangle(outline, labelX, labelY, width, height);
+                    g.DrawString(text, font, brush, labelX + 6, labelY + 3);
+                }
+            }
+        }
+
+        SituationMarker GetMarkerAtPoint(Rectangle plot, Point point)
+        {
+            SituationMarker bestMarker = null;
+            var bestDistance = double.MaxValue;
+
+            foreach (var marker in markerDistances)
+            {
+                var altitude = GetProfileAltitudeAtDistance(marker.Distance);
+                if (!altitude.HasValue)
+                    continue;
+
+                var x = ToX(plot, marker.Distance);
+                var y = ToY(plot, ToRelativeAltitude(altitude.Value));
+                var dx = point.X - x;
+                var dy = point.Y - y;
+                var distance = Math.Sqrt(dx * dx + dy * dy);
+                if (distance > 10 || distance >= bestDistance)
+                    continue;
+
+                bestDistance = distance;
+                bestMarker = marker.Marker;
+            }
+
+            return bestMarker;
+        }
+
+        double? GetProfileAltitudeAtDistance(double distance)
+        {
+            if (profilePoints.Count == 0)
+                return null;
+
+            for (var i = 1; i < profilePoints.Count; i++)
+            {
+                var previous = profilePoints[i - 1];
+                var current = profilePoints[i];
+                if (distance < previous.Distance || distance > current.Distance)
+                    continue;
+
+                var span = current.Distance - previous.Distance;
+                if (Math.Abs(span) < 0.001)
+                    return current.Altitude;
+
+                var fraction = (distance - previous.Distance) / span;
+                return previous.Altitude + (current.Altitude - previous.Altitude) * fraction;
+            }
+
+            return profilePoints.OrderBy(a => Math.Abs(a.Distance - distance)).First().Altitude;
         }
 
         Point ToPoint(Rectangle plot, double distance, double altitude)
         {
-            return new Point(ToX(plot, distance), ToY(plot, altitude));
+            return new Point(ToX(plot, distance), ToY(plot, ToRelativeAltitude(altitude)));
         }
 
         int ToX(Rectangle plot, double distance)
         {
-            if (totalDistance <= 0)
+            var distanceRange = maxDistance - minDistance;
+            if (distanceRange <= 0)
                 return plot.Left;
 
-            return plot.Left + (int)(plot.Width * Math.Max(0, Math.Min(1, distance / totalDistance)));
+            return plot.Left + (int)(plot.Width * Math.Max(0, Math.Min(1, (distance - minDistance) / distanceRange)));
+        }
+
+        double ToDistance(Rectangle plot, int x)
+        {
+            var fraction = (x - plot.Left) / (double)plot.Width;
+            fraction = Math.Max(0, Math.Min(1, fraction));
+            return minDistance + (maxDistance - minDistance) * fraction;
         }
 
         int ToY(Rectangle plot, double altitude)
         {
             var fraction = (altitude - minAltitude) / (maxAltitude - minAltitude);
             return plot.Bottom - (int)(plot.Height * Math.Max(0, Math.Min(1, fraction)));
+        }
+
+        double ToRelativeAltitude(double altitude)
+        {
+            return altitude - homeAltitude;
         }
 
         class ProfilePoint
@@ -211,12 +608,12 @@ namespace MissionPlanner.GCSViews.SituationMarkers
 
         class RouteMarkerDistance
         {
-            public readonly string Name;
+            public readonly SituationMarker Marker;
             public readonly double Distance;
 
-            public RouteMarkerDistance(string name, double distance)
+            public RouteMarkerDistance(SituationMarker marker, double distance)
             {
-                Name = name;
+                Marker = marker;
                 Distance = distance;
             }
         }

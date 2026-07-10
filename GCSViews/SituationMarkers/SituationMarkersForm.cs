@@ -22,6 +22,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
         public SituationMarkersForm(SituationMarkersManager manager)
         {
             this.manager = manager;
+            this.manager.SelectedMarkerChanged += Manager_SelectedMarkerChanged;
             Text = "Situation Markers";
             Width = 980;
             Height = 420;
@@ -60,11 +61,19 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             {
                 refreshing = false;
             }
+
+            SelectGridRow(manager.SelectedMarker);
         }
 
         public void SetStatus(string text)
         {
             statusLabel.Text = text ?? "";
+        }
+
+        protected override void OnFormClosed(FormClosedEventArgs e)
+        {
+            manager.SelectedMarkerChanged -= Manager_SelectedMarkerChanged;
+            base.OnFormClosed(e);
         }
 
         void BuildLayout()
@@ -113,10 +122,12 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             grid.MultiSelect = false;
             ApplyGridStyle();
             grid.DataSource = manager.Markers;
-            grid.CellContentClick += Grid_CellContentClick;
+            grid.CellClick += Grid_CellClick;
             grid.CellEndEdit += Grid_CellEndEdit;
             grid.CellFormatting += Grid_CellFormatting;
             grid.CellParsing += Grid_CellParsing;
+            grid.SelectionChanged += Grid_SelectionChanged;
+            grid.KeyDown += Grid_KeyDown;
             grid.RowsAdded += (sender, args) => RefreshGrid();
             grid.DataBindingComplete += (sender, args) => RefreshGrid();
             root.Controls.Add(grid, 0, 1);
@@ -243,7 +254,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             }
         }
 
-        void Grid_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        void Grid_CellClick(object sender, DataGridViewCellEventArgs e)
         {
             if (e.RowIndex < 0 || e.ColumnIndex < 0)
                 return;
@@ -267,6 +278,74 @@ namespace MissionPlanner.GCSViews.SituationMarkers
 
             if (column.DataPropertyName == nameof(SituationMarker.IsInterest))
                 manager.SetInterestMarker(marker);
+        }
+
+        void Grid_SelectionChanged(object sender, EventArgs e)
+        {
+            if (refreshing || grid.CurrentRow == null)
+                return;
+
+            if (grid.CurrentCell != null && IsButtonColumn(grid.CurrentCell.ColumnIndex))
+                return;
+
+            if (grid.CurrentRow.DataBoundItem is SituationMarker marker)
+                manager.SelectMarker(marker);
+        }
+
+        bool IsButtonColumn(int columnIndex)
+        {
+            return columnIndex >= 0 &&
+                   columnIndex < grid.Columns.Count &&
+                   grid.Columns[columnIndex] is DataGridViewButtonColumn;
+        }
+
+        void Grid_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode != Keys.Delete)
+                return;
+
+            if (manager.DeleteSelectedMarker())
+            {
+                e.Handled = true;
+                e.SuppressKeyPress = true;
+            }
+        }
+
+        void Manager_SelectedMarkerChanged(object sender, EventArgs e)
+        {
+            SelectGridRow(manager.SelectedMarker);
+        }
+
+        void SelectGridRow(SituationMarker selectedMarker)
+        {
+            if (refreshing)
+                return;
+
+            refreshing = true;
+            try
+            {
+                grid.ClearSelection();
+                if (selectedMarker == null)
+                {
+                    grid.CurrentCell = null;
+                    return;
+                }
+
+                foreach (DataGridViewRow row in grid.Rows)
+                {
+                    if (!(row.DataBoundItem is SituationMarker marker) || marker.Id != selectedMarker.Id)
+                        continue;
+
+                    row.Selected = true;
+                    if (row.Cells.Count > 0)
+                        grid.CurrentCell = row.Cells[0];
+                    break;
+                }
+            }
+            finally
+            {
+                refreshing = false;
+            }
         }
 
         void Grid_CellEndEdit(object sender, DataGridViewCellEventArgs e)

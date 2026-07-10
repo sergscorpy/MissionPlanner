@@ -32,6 +32,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
         SituationMarker draggingMarker;
         SituationMarkerMapMarker droneLabelMarker;
         PointLatLng lastDronePosition;
+        Guid? selectedMarkerId;
         Guid? lastMarkerClickId;
         DateTime lastMarkerClickTimeUtc;
         Point lastMarkerClickLocation;
@@ -47,6 +48,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
         }
 
         public event EventHandler MarkersChanged;
+        public event EventHandler SelectedMarkerChanged;
 
         public SituationMarkersManager(myGMAP map)
         {
@@ -83,6 +85,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
 
             Markers.Add(marker);
             SetDefaultInterest();
+            SelectMarker(marker);
             OnMarkersChanged(true);
             return marker;
         }
@@ -109,6 +112,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             home.Name = "HOME";
             home.IsHome = true;
             SetMarkerPosition(home, homeLocation.Lat, homeLocation.Lng, true);
+            SelectMarker(home);
             OnMarkersChanged(true);
             return home;
         }
@@ -117,6 +121,9 @@ namespace MissionPlanner.GCSViews.SituationMarkers
         {
             if (marker == null)
                 return;
+
+            if (selectedMarkerId == marker.Id)
+                ClearSelectedMarker();
 
             Markers.Remove(marker);
             if (mapMarkers.TryGetValue(marker.Id, out var mapMarker))
@@ -134,6 +141,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
         {
             pickingMarker = null;
             draggingMarker = null;
+            selectedMarkerId = null;
             lastMarkerClickId = null;
             markersLocked = false;
 
@@ -146,7 +154,52 @@ namespace MissionPlanner.GCSViews.SituationMarkers
                 markersOverlay.Markers.Add(droneLabelMarker);
 
             map.Refresh();
+            SelectedMarkerChanged?.Invoke(this, EventArgs.Empty);
             OnMarkersChanged(true);
+        }
+
+        public SituationMarker SelectedMarker
+        {
+            get { return selectedMarkerId.HasValue ? Markers.FirstOrDefault(a => a.Id == selectedMarkerId.Value) : null; }
+        }
+
+        public void SelectMarker(SituationMarker marker)
+        {
+            if (marker == null || selectedMarkerId == marker.Id)
+                return;
+
+            if (selectedMarkerId.HasValue && mapMarkers.TryGetValue(selectedMarkerId.Value, out var previousMapMarker))
+                previousMapMarker.IsSelected = false;
+
+            selectedMarkerId = marker.Id;
+            if (mapMarkers.TryGetValue(marker.Id, out var mapMarker))
+                mapMarker.IsSelected = true;
+
+            map.Invalidate();
+            SelectedMarkerChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        public void ClearSelectedMarker()
+        {
+            if (!selectedMarkerId.HasValue)
+                return;
+
+            if (mapMarkers.TryGetValue(selectedMarkerId.Value, out var mapMarker))
+                mapMarker.IsSelected = false;
+
+            selectedMarkerId = null;
+            map.Invalidate();
+            SelectedMarkerChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        public bool DeleteSelectedMarker()
+        {
+            var marker = SelectedMarker;
+            if (marker == null)
+                return false;
+
+            RemoveMarker(marker);
+            return true;
         }
 
         public void SetInterestMarker(SituationMarker marker)
@@ -282,6 +335,8 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             if (currentMarker is SituationMarkerMapMarker situationMapMarker &&
                 situationMapMarker.Tag is SituationMarker marker)
             {
+                SelectMarker(marker);
+
                 if (IsDoubleClickOnMarker(marker, e))
                 {
                     lastMarkerClickId = null;
@@ -299,6 +354,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
                 return true;
             }
 
+            ClearSelectedMarker();
             return false;
         }
 
@@ -569,6 +625,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
                 mapMarker.Position = new PointLatLng(marker.Lat.Value, marker.Lng.Value);
                 mapMarker.IsHome = marker.IsHome;
                 mapMarker.IsInterest = marker.IsInterest;
+                mapMarker.IsSelected = selectedMarkerId == marker.Id;
                 mapMarker.Label = BuildMarkerLabel(marker);
             }
 
@@ -754,6 +811,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
                 markersOverlay.Markers.Clear();
                 routeOverlay.Routes.Clear();
                 mapMarkers.Clear();
+                selectedMarkerId = null;
                 markersLocked = store.MarkersLocked;
 
                 foreach (var marker in store.Markers)
@@ -771,6 +829,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
                 }
 
                 RebuildMap();
+                SelectedMarkerChanged?.Invoke(this, EventArgs.Empty);
             }
             finally
             {

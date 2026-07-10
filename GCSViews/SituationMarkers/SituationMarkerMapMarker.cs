@@ -13,6 +13,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
         public bool IsHome { get; set; }
         public bool IsInterest { get; set; }
         public bool IsHovered { get; set; }
+        public bool IsSelected { get; set; }
         public bool DrawPin { get; set; } = true;
 
         public SituationMarkerMapMarker(PointLatLng pos)
@@ -32,10 +33,11 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             if (DrawPin)
             {
                 var fill = IsHome ? Color.DeepSkyBlue : IsInterest ? Color.Gold : Color.LimeGreen;
-                if (IsHovered)
+                var isHighlighted = IsHovered || IsSelected;
+                if (isHighlighted)
                     fill = IsHome ? Color.Aqua : IsInterest ? Color.Orange : Color.Chartreuse;
 
-                if (IsHovered)
+                if (isHighlighted)
                 {
                     using (var glow = new Pen(Color.White, 5))
                     using (var hoverOutline = new Pen(Color.DodgerBlue, 3))

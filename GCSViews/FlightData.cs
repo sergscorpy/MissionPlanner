@@ -1024,6 +1024,10 @@ namespace MissionPlanner.GCSViews
 
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
+            if (keyData == Keys.Delete && situationMarkersManager != null &&
+                situationMarkersManager.DeleteSelectedMarker())
+                return true;
+
             if (keyData == (Keys.Control | Keys.D1))
             {
                 tabControlactions.SelectedIndex = 0;
