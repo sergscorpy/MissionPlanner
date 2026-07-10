@@ -11,7 +11,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
         readonly Color gridBackColor = Color.FromArgb(38, 39, 40);
         readonly Color rowBackColor = Color.FromArgb(40, 40, 40);
         readonly Color alternateRowBackColor = Color.FromArgb(48, 48, 48);
-        readonly Color interestRowBackColor = Color.FromArgb(72, 68, 40);
+        readonly Color targetRowBackColor = Color.FromArgb(72, 68, 40);
         readonly Color selectionBackColor = Color.FromArgb(0, 122, 204);
         readonly SituationMarkersManager manager;
         readonly DataGridView grid = new DataGridView();
@@ -46,7 +46,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
                 {
                     if (row.DataBoundItem is SituationMarker marker)
                     {
-                        row.DefaultCellStyle.BackColor = marker.IsInterest ? interestRowBackColor :
+                        row.DefaultCellStyle.BackColor = marker.IsInterest ? targetRowBackColor :
                             row.Index % 2 == 0 ? rowBackColor : alternateRowBackColor;
                         row.DefaultCellStyle.ForeColor = Color.White;
                         row.DefaultCellStyle.SelectionBackColor = selectionBackColor;
@@ -137,17 +137,12 @@ namespace MissionPlanner.GCSViews.SituationMarkers
                 DataPropertyName = nameof(SituationMarker.Name),
                 Width = 140
             });
-            grid.Columns.Add(new DataGridViewCheckBoxColumn
+            grid.Columns.Add(new DataGridViewButtonColumn
             {
-                HeaderText = "HOME",
-                DataPropertyName = nameof(SituationMarker.IsHome),
-                ReadOnly = true,
-                Width = 55
-            });
-            grid.Columns.Add(new DataGridViewCheckBoxColumn
-            {
-                HeaderText = "Interest",
-                DataPropertyName = nameof(SituationMarker.IsInterest),
+                HeaderText = "Target",
+                Name = "Target",
+                Text = "Set",
+                UseColumnTextForButtonValue = false,
                 Width = 70
             });
             grid.Columns.Add(new DataGridViewTextBoxColumn
@@ -164,16 +159,9 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             });
             grid.Columns.Add(new DataGridViewTextBoxColumn
             {
-                HeaderText = "Altitude AMSL",
+                HeaderText = "Altitude",
                 DataPropertyName = nameof(SituationMarker.Altitude),
                 Width = 110
-            });
-            grid.Columns.Add(new DataGridViewTextBoxColumn
-            {
-                HeaderText = "Alt Source",
-                DataPropertyName = nameof(SituationMarker.AltitudeSource),
-                ReadOnly = true,
-                Width = 90
             });
             grid.Columns.Add(new DataGridViewTextBoxColumn
             {
@@ -185,6 +173,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             grid.Columns.Add(new DataGridViewButtonColumn
             {
                 HeaderText = "",
+                Name = "PickOnMap",
                 Text = "Pick on map",
                 UseColumnTextForButtonValue = true,
                 Width = 95
@@ -192,6 +181,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             grid.Columns.Add(new DataGridViewButtonColumn
             {
                 HeaderText = "",
+                Name = "Delete",
                 Text = "Delete",
                 UseColumnTextForButtonValue = true,
                 Width = 70
@@ -247,9 +237,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
                 if (column is DataGridViewButtonColumn)
                     continue;
 
-                column.ReadOnly = column.DataPropertyName == nameof(SituationMarker.IsHome) ||
-                                  column.DataPropertyName == nameof(SituationMarker.AltitudeSource) ||
-                                  column.Name == "RelativeHome";
+                column.ReadOnly = column.Name == "Target" || column.Name == "RelativeHome";
             }
         }
 
@@ -263,20 +251,23 @@ namespace MissionPlanner.GCSViews.SituationMarkers
                 return;
 
             var column = grid.Columns[e.ColumnIndex];
-            if (column is DataGridViewButtonColumn && column.Index == grid.Columns.Count - 2)
+            if (column.Name == "Target")
+            {
+                manager.SetInterestMarker(marker);
+                return;
+            }
+
+            if (column.Name == "PickOnMap")
             {
                 manager.BeginPickOnMap(marker);
                 return;
             }
 
-            if (column is DataGridViewButtonColumn && column.Index == grid.Columns.Count - 1)
+            if (column.Name == "Delete")
             {
                 manager.RemoveMarker(marker);
                 return;
             }
-
-            if (column.DataPropertyName == nameof(SituationMarker.IsInterest))
-                manager.SetInterestMarker(marker);
         }
 
         void Grid_SelectionChanged(object sender, EventArgs e)
@@ -388,6 +379,17 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             {
                 var relative = manager.GetRelativeToHome(marker);
                 e.Value = relative.HasValue ? FormatAltitude(relative.Value) : "";
+                e.FormattingApplied = true;
+            }
+            else if (grid.Columns[e.ColumnIndex].Name == "Target")
+            {
+                e.Value = marker.IsInterest ? "Target" : "Set";
+                e.FormattingApplied = true;
+            }
+            else if (grid.Columns[e.ColumnIndex].DataPropertyName == nameof(SituationMarker.Altitude) &&
+                     e.Value is double altitude)
+            {
+                e.Value = altitude.ToString("0", CultureInfo.InvariantCulture);
                 e.FormattingApplied = true;
             }
             else if (e.Value is double value)

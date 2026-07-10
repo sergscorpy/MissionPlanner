@@ -156,7 +156,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
                     graphics.DrawLines(terrainPen, terrain);
 
                 DrawAltitudeLine(graphics, plot, manager.GetHomeMarker(), homePen, "HOME");
-                DrawAltitudeLine(graphics, plot, manager.GetInterestMarker(), interestPen, "INTEREST");
+                DrawAltitudeLine(graphics, plot, manager.GetInterestMarker(), interestPen, "TARGET");
 
                 DrawRouteMarkers(graphics, plot);
                 DrawDroneProfile(graphics, plot, dronePen);
