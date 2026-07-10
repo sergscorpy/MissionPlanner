@@ -91,6 +91,60 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             return marker;
         }
 
+        public SituationMarker InsertMarkerAtRouteDistance(double distanceMeters)
+        {
+            var route = GetRouteMarkers();
+            if (route.Count < 2 || distanceMeters <= 0)
+                return null;
+
+            var accumulated = 0.0;
+            for (var i = 1; i < route.Count; i++)
+            {
+                var startMarker = route[i - 1];
+                var endMarker = route[i];
+                var start = new PointLatLng(startMarker.Lat.Value, startMarker.Lng.Value);
+                var end = new PointLatLng(endMarker.Lat.Value, endMarker.Lng.Value);
+                var segmentLength = DistanceMeters(start, end);
+                if (segmentLength <= 0)
+                    continue;
+
+                var segmentEndDistance = accumulated + segmentLength;
+                if (distanceMeters < accumulated || distanceMeters > segmentEndDistance)
+                {
+                    accumulated = segmentEndDistance;
+                    continue;
+                }
+
+                var fraction = (distanceMeters - accumulated) / segmentLength;
+                if (fraction <= 0 || fraction >= 1)
+                    return null;
+
+                var point = Interpolate(start, end, fraction);
+                var marker = new SituationMarker
+                {
+                    Name = "Marker " + (Markers.Count(a => !a.IsHome) + 1).ToString(CultureInfo.InvariantCulture),
+                    Lat = point.Lat,
+                    Lng = point.Lng,
+                    Altitude = GetSrtmAltitude(point.Lat, point.Lng),
+                    AltitudeSource = SituationMarkerAltitudeSource.Srtm
+                };
+
+                var insertIndex = Markers.IndexOf(endMarker);
+                if (insertIndex < 0)
+                    Markers.Add(marker);
+                else
+                    Markers.Insert(insertIndex, marker);
+
+                SetDefaultInterest();
+                SelectMarker(marker);
+                RebuildMap();
+                OnMarkersChanged(true);
+                return marker;
+            }
+
+            return null;
+        }
+
         public SituationMarker AddOrUpdateHome(PointLatLng homeLocation, double? homeAltitudeAmsl)
         {
             if (homeLocation.Lat == 0 && homeLocation.Lng == 0)

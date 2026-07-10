@@ -13,6 +13,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
     {
         readonly SituationMarkersManager manager;
         const double ProfilePaddingFraction = 0.12;
+        const double CursorSnapFraction = 0.005;
         const double DistanceKilometerMultiplier = 0.001;
         const string DistanceKilometerUnit = "Km";
         static readonly Color ProfileBackColor = Color.FromArgb(37, 37, 37);
@@ -25,6 +26,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
         static readonly Color TerrainFillColor = Color.FromArgb(70, 72, 205, 92);
         readonly List<ProfilePoint> profilePoints = new List<ProfilePoint>();
         readonly List<RouteMarkerDistance> markerDistances = new List<RouteMarkerDistance>();
+        readonly List<double> profilePeakDistances = new List<double>();
 
         double minAltitude;
         double maxAltitude;
@@ -55,7 +57,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
                 return;
             }
 
-            cursorDistance = ToDistance(plot, e.X);
+            cursorDistance = GetSnappedCursorDistance(ToDistance(plot, e.X));
             Invalidate();
         }
 
@@ -76,6 +78,28 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             var marker = GetMarkerAtPoint(plot, e.Location);
             if (marker != null)
                 manager.SelectMarker(marker);
+        }
+
+        protected override void OnMouseDoubleClick(MouseEventArgs e)
+        {
+            base.OnMouseDoubleClick(e);
+
+            if (e.Button != MouseButtons.Left || profilePoints.Count < 2)
+                return;
+
+            var plot = GetPlotRectangle();
+            if (!plot.Contains(e.Location))
+                return;
+
+            var marker = GetMarkerAtPoint(plot, e.Location);
+            if (marker != null)
+            {
+                manager.SetInterestMarker(marker);
+                return;
+            }
+
+            var distance = GetSnappedCursorDistance(ToDistance(plot, e.X));
+            manager.InsertMarkerAtRouteDistance(distance);
         }
 
         public void RefreshProfile()
@@ -196,6 +220,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
         {
             profilePoints.Clear();
             markerDistances.Clear();
+            profilePeakDistances.Clear();
             droneDistance = null;
             totalDistance = 0;
             minDistance = 0;
@@ -237,6 +262,8 @@ namespace MissionPlanner.GCSViews.SituationMarkers
 
             if (profilePoints.Count == 0)
                 return;
+
+            BuildProfilePeakSnapTargets();
 
             minAltitude = profilePoints.Min(a => ToRelativeAltitude(a.Altitude));
             maxAltitude = profilePoints.Max(a => ToRelativeAltitude(a.Altitude));
@@ -306,6 +333,26 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             else
             {
                 profilePoints.AddRange(points);
+            }
+        }
+
+        void BuildProfilePeakSnapTargets()
+        {
+            profilePeakDistances.Clear();
+            if (profilePoints.Count < 3)
+                return;
+
+            for (var i = 1; i < profilePoints.Count - 1; i++)
+            {
+                var previous = ToRelativeAltitude(profilePoints[i - 1].Altitude);
+                var current = ToRelativeAltitude(profilePoints[i].Altitude);
+                var next = ToRelativeAltitude(profilePoints[i + 1].Altitude);
+                var isPeak = current >= previous && current > next;
+                var isValley = current <= previous && current < next;
+                if (!isPeak && !isValley)
+                    continue;
+
+                profilePeakDistances.Add(profilePoints[i].Distance);
             }
         }
 
@@ -583,6 +630,41 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             return distanceKilometers.ToString("0.00", CultureInfo.InvariantCulture);
         }
 
+        double GetSnappedCursorDistance(double rawDistance)
+        {
+            var snapRange = (maxDistance - minDistance) * CursorSnapFraction;
+            if (snapRange <= 0)
+                return rawDistance;
+
+            if (TryFindNearestSnapDistance(rawDistance, markerDistances.Select(a => a.Distance), snapRange, out var markerDistance))
+                return markerDistance;
+
+            if (TryFindNearestSnapDistance(rawDistance, profilePeakDistances, snapRange, out var peakDistance))
+                return peakDistance;
+
+            return rawDistance;
+        }
+
+        bool TryFindNearestSnapDistance(double rawDistance, IEnumerable<double> candidates, double snapRange, out double snapDistance)
+        {
+            snapDistance = rawDistance;
+            var bestDelta = snapRange;
+            var found = false;
+
+            foreach (var candidate in candidates)
+            {
+                var delta = Math.Abs(candidate - rawDistance);
+                if (delta > bestDelta)
+                    continue;
+
+                bestDelta = delta;
+                snapDistance = candidate;
+                found = true;
+            }
+
+            return found;
+        }
+
         void DrawRouteMarkers(Graphics g, Rectangle plot)
         {
             foreach (var marker in markerDistances)
@@ -733,23 +815,18 @@ namespace MissionPlanner.GCSViews.SituationMarkers
         SituationMarker GetMarkerAtPoint(Rectangle plot, Point point)
         {
             SituationMarker bestMarker = null;
-            var bestDistance = double.MaxValue;
+            var bestDeltaX = double.MaxValue;
+            var selectedDistance = GetSnappedCursorDistance(ToDistance(plot, point.X));
+            var selectedX = ToX(plot, selectedDistance);
 
             foreach (var marker in markerDistances)
             {
-                var altitude = GetProfileAltitudeAtDistance(marker.Distance);
-                if (!altitude.HasValue)
-                    continue;
-
                 var x = ToX(plot, marker.Distance);
-                var y = ToY(plot, ToRelativeAltitude(altitude.Value));
-                var dx = point.X - x;
-                var dy = point.Y - y;
-                var distance = Math.Sqrt(dx * dx + dy * dy);
-                if (distance > 10 || distance >= bestDistance)
+                var deltaX = Math.Abs(selectedX - x);
+                if (deltaX > 10 || deltaX >= bestDeltaX)
                     continue;
 
-                bestDistance = distance;
+                bestDeltaX = deltaX;
                 bestMarker = marker.Marker;
             }
 
