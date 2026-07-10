@@ -15,6 +15,14 @@ namespace MissionPlanner.GCSViews.SituationMarkers
         const double ProfilePaddingFraction = 0.12;
         const double DistanceKilometerMultiplier = 0.001;
         const string DistanceKilometerUnit = "Km";
+        static readonly Color ProfileBackColor = Color.FromArgb(37, 37, 37);
+        static readonly Color PlotBackColor = Color.FromArgb(45, 45, 45);
+        static readonly Color AxisColor = Color.FromArgb(185, 185, 185);
+        static readonly Color GridColor = Color.FromArgb(78, 78, 78);
+        static readonly Color MutedTextColor = Color.FromArgb(170, 170, 170);
+        static readonly Color TextColor = Color.FromArgb(230, 230, 230);
+        static readonly Color TerrainColor = Color.FromArgb(72, 205, 92);
+        static readonly Color TerrainFillColor = Color.FromArgb(70, 72, 205, 92);
         readonly List<ProfilePoint> profilePoints = new List<ProfilePoint>();
         readonly List<RouteMarkerDistance> markerDistances = new List<RouteMarkerDistance>();
 
@@ -31,8 +39,8 @@ namespace MissionPlanner.GCSViews.SituationMarkers
         {
             this.manager = manager;
             DoubleBuffered = true;
-            BackColor = Color.White;
-            ForeColor = Color.Black;
+            BackColor = ProfileBackColor;
+            ForeColor = TextColor;
         }
 
         protected override void OnMouseMove(MouseEventArgs e)
@@ -96,20 +104,23 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
             var plot = GetPlotRectangle();
 
-            using (var axisPen = new Pen(Color.FromArgb(90, 90, 90)))
-            using (var gridPen = new Pen(Color.FromArgb(225, 225, 225)))
-            using (var terrainPen = new Pen(Color.ForestGreen, 2))
+            using (var axisPen = new Pen(AxisColor))
+            using (var gridPen = new Pen(GridColor))
+            using (var terrainPen = new Pen(TerrainColor, 2))
             using (var homePen = new Pen(Color.DeepSkyBlue, 1))
             using (var interestPen = new Pen(Color.OrangeRed, 1))
             using (var dronePen = new Pen(Color.Magenta, 2))
             {
+                DrawPlotBackground(graphics, plot);
                 DrawEmptyStateIfNeeded(graphics, plot);
                 if (profilePoints.Count < 2)
                     return;
 
+                var terrain = profilePoints.Select(p => ToPoint(plot, p.Distance, p.Altitude)).ToArray();
+                DrawTerrainFill(graphics, plot, terrain);
+
                 DrawRulers(graphics, plot, axisPen, gridPen);
 
-                var terrain = profilePoints.Select(p => ToPoint(plot, p.Distance, p.Altitude)).ToArray();
                 if (terrain.Length > 1)
                     graphics.DrawLines(terrainPen, terrain);
 
@@ -122,7 +133,8 @@ namespace MissionPlanner.GCSViews.SituationMarkers
                 {
                     var x = ToX(plot, droneDistance.Value);
                     graphics.DrawLine(dronePen, x, plot.Top, x, plot.Bottom);
-                    graphics.DrawString("DRONE", Font, Brushes.Magenta, x + 3, plot.Bottom - 18);
+                    using (var brush = new SolidBrush(Color.Magenta))
+                        graphics.DrawString("DRONE", Font, brush, x + 3, plot.Bottom - 18);
                 }
 
                 DrawCursorProbe(graphics, plot);
@@ -138,6 +150,25 @@ namespace MissionPlanner.GCSViews.SituationMarkers
                 var text = "Elevation profile render error: " + ex.Message;
                 g.DrawString(text, Font, brush, 8, 8);
             }
+        }
+
+        void DrawPlotBackground(Graphics g, Rectangle plot)
+        {
+            using (var brush = new SolidBrush(PlotBackColor))
+                g.FillRectangle(brush, plot);
+        }
+
+        void DrawTerrainFill(Graphics g, Rectangle plot, Point[] terrain)
+        {
+            if (terrain.Length < 2)
+                return;
+
+            var area = new List<Point>(terrain.Length + 2) { new Point(terrain[0].X, plot.Bottom) };
+            area.AddRange(terrain);
+            area.Add(new Point(terrain[terrain.Length - 1].X, plot.Bottom));
+
+            using (var brush = new SolidBrush(TerrainFillColor))
+                g.FillPolygon(brush, area.ToArray());
         }
 
         Rectangle GetPlotRectangle()
@@ -159,7 +190,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             if (profilePoints.Count >= 2)
                 return;
 
-            using (var brush = new SolidBrush(Color.FromArgb(100, 100, 100)))
+            using (var brush = new SolidBrush(MutedTextColor))
             {
                 var text = "Need at least two valid route points";
                 var size = g.MeasureString(text, Font);
@@ -313,7 +344,8 @@ namespace MissionPlanner.GCSViews.SituationMarkers
                 multiplier = 1;
 
             var labelAxisX = plot.Left - 80;
-            g.DrawLine(Pens.Black, labelAxisX, plot.Top, labelAxisX, plot.Bottom);
+            using (var axisPen = new Pen(AxisColor))
+                g.DrawLine(axisPen, labelAxisX, plot.Top, labelAxisX, plot.Bottom);
 
             var minDisplay = minAltitude * multiplier;
             var maxDisplay = maxAltitude * multiplier;
@@ -323,13 +355,14 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             {
                 var y = ToY(plot, tick / multiplier);
                 g.DrawLine(gridPen, plot.Left, y, plot.Right, y);
-                g.DrawLine(Pens.Black, plot.Left - 5, y, plot.Left, y);
+                using (var axisPen = new Pen(AxisColor))
+                    g.DrawLine(axisPen, plot.Left - 5, y, plot.Left, y);
                 if (Math.Abs(y - minLabelY) > Font.Height && Math.Abs(y - maxLabelY) > Font.Height)
-                    DrawLabelAxisTick(g, labelAxisX, y, FormatSignedValue(tick), Color.Black);
+                    DrawLabelAxisTick(g, labelAxisX, y, FormatSignedValue(tick), TextColor);
             }
 
-            DrawAltitudeRulerMark(g, plot, labelAxisX, minAltitude, FormatSignedValue(minDisplay), Color.FromArgb(90, 90, 90));
-            DrawAltitudeRulerMark(g, plot, labelAxisX, maxAltitude, FormatSignedValue(maxDisplay), Color.FromArgb(90, 90, 90));
+            DrawAltitudeRulerMark(g, plot, labelAxisX, minAltitude, FormatSignedValue(minDisplay), MutedTextColor);
+            DrawAltitudeRulerMark(g, plot, labelAxisX, maxAltitude, FormatSignedValue(maxDisplay), MutedTextColor);
 
             DrawPlotValueLabel(g, plot, 0, "0", Color.DeepSkyBlue);
             DrawAltitudeUnitLabel(g, labelAxisX, plot.Bottom + 8);
@@ -396,7 +429,8 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             var minDisplay = ToDistanceKilometers(minDistance);
             var maxDisplay = ToDistanceKilometers(maxDistance);
             var labelAxisY = plot.Bottom + 46;
-            g.DrawLine(Pens.Black, plot.Left, labelAxisY, plot.Right, labelAxisY);
+            using (var axisPen = new Pen(AxisColor))
+                g.DrawLine(axisPen, plot.Left, labelAxisY, plot.Right, labelAxisY);
 
             var minLabelX = ToX(plot, minDistance);
             var maxLabelX = ToX(plot, maxDistance);
@@ -408,16 +442,17 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             {
                 var x = ToX(plot, tick / DistanceKilometerMultiplier);
                 g.DrawLine(gridPen, x, plot.Top, x, plot.Bottom);
-                g.DrawLine(Pens.Black, x, plot.Bottom, x, plot.Bottom + 5);
+                using (var axisPen = new Pen(AxisColor))
+                    g.DrawLine(axisPen, x, plot.Bottom, x, plot.Bottom + 5);
                 var tickLabel = FormatDistanceKilometers(tick);
                 var tickLabelWidth = g.MeasureString(tickLabel, Font).Width;
                 if (Math.Abs(x - minLabelX) > (tickLabelWidth + minLabelWidth) / 2 + 6 &&
                     Math.Abs(x - maxLabelX) > (tickLabelWidth + maxLabelWidth) / 2 + 6)
-                    DrawDistanceLabelAxisTick(g, labelAxisY, x, tickLabel, Color.Black);
+                    DrawDistanceLabelAxisTick(g, labelAxisY, x, tickLabel, TextColor);
             }
 
-            DrawDistanceLabelAxisTick(g, labelAxisY, minLabelX, minLabel, Color.FromArgb(90, 90, 90));
-            DrawDistanceLabelAxisTick(g, labelAxisY, maxLabelX, maxLabel, Color.FromArgb(90, 90, 90));
+            DrawDistanceLabelAxisTick(g, labelAxisY, minLabelX, minLabel, MutedTextColor);
+            DrawDistanceLabelAxisTick(g, labelAxisY, maxLabelX, maxLabel, MutedTextColor);
 
             if (droneDistance.HasValue)
                 DrawPlotDistanceValueLabel(g, plot, droneDistance.Value, Color.Magenta);
@@ -446,7 +481,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
 
         void DrawAltitudeUnitLabel(Graphics g, int labelAxisX, int y)
         {
-            using (var brush = new SolidBrush(Color.FromArgb(90, 90, 90)))
+            using (var brush = new SolidBrush(MutedTextColor))
             {
                 var unit = string.IsNullOrEmpty(CurrentState.AltUnit) ? "m" : CurrentState.AltUnit;
                 g.DrawString(unit, Font, brush, labelAxisX + 9, y);
@@ -455,7 +490,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
 
         void DrawDistanceUnitLabel(Graphics g, int plotLeft, int y)
         {
-            using (var brush = new SolidBrush(Color.FromArgb(90, 90, 90)))
+            using (var brush = new SolidBrush(MutedTextColor))
             {
                 var size = g.MeasureString(DistanceKilometerUnit, Font);
                 g.DrawString(DistanceKilometerUnit, Font, brush, plotLeft - size.Width - 8, y);
@@ -551,11 +586,11 @@ namespace MissionPlanner.GCSViews.SituationMarkers
                 var y = ToY(plot, ToRelativeAltitude(altitude.Value));
                 var isSelected = manager.SelectedMarker == marker.Marker;
                 var fill = marker.Marker.IsHome ? Color.DeepSkyBlue : marker.Marker.IsInterest ? Color.Gold : Color.LimeGreen;
-                var outline = marker.Marker.IsInterest ? Color.OrangeRed : Color.FromArgb(60, 60, 60);
+                var outline = marker.Marker.IsInterest ? Color.OrangeRed : Color.FromArgb(35, 35, 35);
 
                 if (isSelected)
                 {
-                    using (var glow = new Pen(Color.White, 5))
+                    using (var glow = new Pen(Color.FromArgb(245, 245, 245), 5))
                     using (var selectedOutline = new Pen(Color.DodgerBlue, 3))
                     {
                         g.DrawEllipse(glow, x - 8, y - 8, 16, 16);
@@ -571,7 +606,8 @@ namespace MissionPlanner.GCSViews.SituationMarkers
                     g.DrawEllipse(pen, x - radius, y - radius, radius * 2, radius * 2);
                 }
 
-                g.DrawString(marker.Marker.Name, Font, Brushes.Black, x + 6, y - 16);
+                using (var brush = new SolidBrush(TextColor))
+                    g.DrawString(marker.Marker.Name, Font, brush, x + 6, y - 16);
             }
         }
 
