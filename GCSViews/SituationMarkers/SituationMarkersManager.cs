@@ -62,6 +62,11 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             get { return markersLocked; }
         }
 
+        public bool MapOverlaysVisible
+        {
+            get { return markersOverlay.IsVisibile && routeOverlay.IsVisibile; }
+        }
+
         public event EventHandler MarkersChanged;
         public event EventHandler SelectedMarkerChanged;
 
@@ -100,6 +105,46 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             }
 
             ShowMarkersForm(owner);
+        }
+
+        public void ToggleMapOverlaysVisible()
+        {
+            SetMapOverlaysVisible(!MapOverlaysVisible);
+        }
+
+        public void SetMapOverlaysVisible(bool visible)
+        {
+            markersOverlay.IsVisibile = visible;
+            routeOverlay.IsVisibile = visible;
+            map.Refresh();
+        }
+
+        public bool FocusRouteOnMap()
+        {
+            var route = GetRouteMarkers();
+            if (route.Count == 0)
+                return false;
+
+            var minLat = route.Min(a => a.Lat.Value);
+            var maxLat = route.Max(a => a.Lat.Value);
+            var minLng = route.Min(a => a.Lng.Value);
+            var maxLng = route.Max(a => a.Lng.Value);
+
+            if (route.Count == 1)
+            {
+                map.Position = new PointLatLng(route[0].Lat.Value, route[0].Lng.Value);
+                return true;
+            }
+
+            var latPadding = Math.Max(0.0001, (maxLat - minLat) * 0.12);
+            var lngPadding = Math.Max(0.0001, (maxLng - minLng) * 0.12);
+            var bounds = RectLatLng.FromLTRB(
+                minLng - lngPadding,
+                maxLat + latPadding,
+                maxLng + lngPadding,
+                minLat - latPadding);
+
+            return map.SetZoomToFitRect(bounds);
         }
 
         public SituationMarker AddMarker()

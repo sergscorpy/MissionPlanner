@@ -72,6 +72,8 @@ namespace MissionPlanner.GCSViews
         SituationMarkersManager situationMarkersManager;
         Button situationMarkersButton;
         Button elevationProfileButton;
+        Button focusSituationRouteButton;
+        Button toggleSituationRouteButton;
         bool huddropout;
         bool huddropoutresize;
 
@@ -3514,14 +3516,28 @@ namespace MissionPlanner.GCSViews
 
         void AddSituationMarkersButton()
         {
+            focusSituationRouteButton = CreateSituationMarkersMapButton("Focus Route", 104);
+            focusSituationRouteButton.Click += (sender, args) => situationMarkersManager?.FocusRouteOnMap();
+
+            toggleSituationRouteButton = CreateSituationMarkersMapButton("Hide Route", 96);
+            toggleSituationRouteButton.Click += (sender, args) =>
+            {
+                situationMarkersManager?.ToggleMapOverlaysVisible();
+                UpdateSituationRouteVisibilityButton();
+            };
+
             elevationProfileButton = CreateSituationMarkersMapButton("Elevation Profile", 124);
             elevationProfileButton.Click += (sender, args) => situationMarkersManager?.ToggleElevationProfile(this);
 
             situationMarkersButton = CreateSituationMarkersMapButton("Markers", 82);
             situationMarkersButton.Click += (sender, args) => situationMarkersManager?.ToggleMarkersForm(this);
 
+            gMapControl1.Controls.Add(focusSituationRouteButton);
+            gMapControl1.Controls.Add(toggleSituationRouteButton);
             gMapControl1.Controls.Add(elevationProfileButton);
             gMapControl1.Controls.Add(situationMarkersButton);
+            focusSituationRouteButton.BringToFront();
+            toggleSituationRouteButton.BringToFront();
             elevationProfileButton.BringToFront();
             situationMarkersButton.BringToFront();
             PositionSituationMarkersButton();
@@ -3545,20 +3561,37 @@ namespace MissionPlanner.GCSViews
 
         void PositionSituationMarkersButton()
         {
-            if (situationMarkersButton == null || elevationProfileButton == null)
+            if (situationMarkersButton == null || elevationProfileButton == null ||
+                focusSituationRouteButton == null || toggleSituationRouteButton == null)
                 return;
 
             var gap = 8;
             var bottom = Math.Max(0, gMapControl1.Height - situationMarkersButton.Height - 12);
-            var markersLeft = Math.Max(0, gMapControl1.Width - situationMarkersButton.Width - 12);
-            var profileLeft = Math.Max(0, markersLeft - elevationProfileButton.Width - gap);
+            var right = Math.Max(0, gMapControl1.Width - 12);
+            PositionSituationMapButton(situationMarkersButton, ref right, bottom, gap);
+            PositionSituationMapButton(elevationProfileButton, ref right, bottom, gap);
+            PositionSituationMapButton(focusSituationRouteButton, ref right, bottom, gap);
+            PositionSituationMapButton(toggleSituationRouteButton, ref right, bottom, gap);
 
-            elevationProfileButton.Location = new Point(profileLeft, bottom);
-            situationMarkersButton.Location = new Point(
-                markersLeft,
-                bottom);
+            focusSituationRouteButton.BringToFront();
+            toggleSituationRouteButton.BringToFront();
             elevationProfileButton.BringToFront();
             situationMarkersButton.BringToFront();
+        }
+
+        void PositionSituationMapButton(Button button, ref int right, int top, int gap)
+        {
+            var left = Math.Max(0, right - button.Width);
+            button.Location = new Point(left, top);
+            right = left - gap;
+        }
+
+        void UpdateSituationRouteVisibilityButton()
+        {
+            if (toggleSituationRouteButton == null || situationMarkersManager == null)
+                return;
+
+            toggleSituationRouteButton.Text = situationMarkersManager.MapOverlaysVisible ? "Hide Route" : "Show Route";
         }
 
         private void goHereToolStripMenuItem_Click(object sender, EventArgs e)
