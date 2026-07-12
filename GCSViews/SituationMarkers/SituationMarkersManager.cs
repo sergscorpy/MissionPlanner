@@ -32,6 +32,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
         SituationMarkersForm form;
         ElevationProfileForm elevationProfileForm;
         SituationMarker pickingMarker;
+        Point pickingMouseDownLocation;
         SituationMarker draggingMarker;
         SituationMarkerMapMarker droneLabelMarker;
         PointLatLng lastDronePosition;
@@ -45,6 +46,8 @@ namespace MissionPlanner.GCSViews.SituationMarkers
         Point lastMarkerClickLocation;
         bool hasDronePosition;
         bool hasDroneTerrainCache;
+        bool pickingMouseDown;
+        bool pickingDragged;
         bool suppressAutosave;
         bool markersLocked;
 
@@ -215,6 +218,8 @@ namespace MissionPlanner.GCSViews.SituationMarkers
         public void ResetMarkers()
         {
             pickingMarker = null;
+            pickingMouseDown = false;
+            pickingDragged = false;
             draggingMarker = null;
             selectedMarkerId = null;
             lastMarkerClickId = null;
@@ -347,6 +352,8 @@ namespace MissionPlanner.GCSViews.SituationMarkers
         public void BeginPickOnMap(SituationMarker marker)
         {
             pickingMarker = marker;
+            pickingMouseDown = false;
+            pickingDragged = false;
             if (form != null && !form.IsDisposed)
                 form.SetStatus("Click on the map to set marker coordinates.");
         }
@@ -400,11 +407,9 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             if (pickingMarker != null)
             {
                 lastMarkerClickId = null;
-                var point = map.FromLocalToLatLng(e.X, e.Y);
-                SetMarkerPosition(pickingMarker, point.Lat, point.Lng, true);
-                pickingMarker = null;
-                if (form != null && !form.IsDisposed)
-                    form.SetStatus("");
+                pickingMouseDown = true;
+                pickingDragged = false;
+                pickingMouseDownLocation = e.Location;
                 return true;
             }
 
@@ -490,6 +495,17 @@ namespace MissionPlanner.GCSViews.SituationMarkers
 
         public bool HandleMouseMove(MouseEventArgs e)
         {
+            if (pickingMarker != null)
+            {
+                if (pickingMouseDown && e.Button == MouseButtons.Left &&
+                    IsMouseDrag(pickingMouseDownLocation, e.Location))
+                {
+                    pickingDragged = true;
+                }
+
+                return false;
+            }
+
             if (MarkersLocked)
                 return false;
 
@@ -506,6 +522,26 @@ namespace MissionPlanner.GCSViews.SituationMarkers
 
         public bool HandleMouseUp(MouseEventArgs e)
         {
+            if (pickingMarker != null)
+            {
+                if (e.Button != MouseButtons.Left)
+                    return false;
+
+                if (pickingMouseDown && !pickingDragged &&
+                    !IsMouseDrag(pickingMouseDownLocation, e.Location))
+                {
+                    var pickedPoint = map.FromLocalToLatLng(e.X, e.Y);
+                    SetMarkerPosition(pickingMarker, pickedPoint.Lat, pickedPoint.Lng, true);
+                    pickingMarker = null;
+                    if (form != null && !form.IsDisposed)
+                        form.SetStatus("");
+                }
+
+                pickingMouseDown = false;
+                pickingDragged = false;
+                return true;
+            }
+
             if (MarkersLocked)
                 return false;
 
@@ -517,6 +553,13 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             draggingMarker = null;
             SetMarkerPosition(marker, point.Lat, point.Lng, true);
             return true;
+        }
+
+        bool IsMouseDrag(Point start, Point current)
+        {
+            var dragSize = SystemInformation.DragSize;
+            return Math.Abs(current.X - start.X) > dragSize.Width / 2 ||
+                   Math.Abs(current.Y - start.Y) > dragSize.Height / 2;
         }
 
         public void UpdateDronePosition(PointLatLng position, double altitudeAmsl)
