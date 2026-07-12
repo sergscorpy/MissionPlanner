@@ -111,33 +111,22 @@ namespace MissionPlanner.GCSViews.SituationMarkers
 
         public SituationMarker InsertMarkerAtRouteDistance(double distanceMeters)
         {
-            var route = GetRouteMarkers();
-            if (route.Count < 2 || distanceMeters <= 0)
+            if (routeSegments.Count == 0 || distanceMeters <= 0)
                 return null;
 
-            var accumulated = 0.0;
-            for (var i = 1; i < route.Count; i++)
+            foreach (var segment in routeSegments)
             {
-                var startMarker = route[i - 1];
-                var endMarker = route[i];
-                var start = new PointLatLng(startMarker.Lat.Value, startMarker.Lng.Value);
-                var end = new PointLatLng(endMarker.Lat.Value, endMarker.Lng.Value);
-                var segmentLength = DistanceMeters(start, end);
-                if (segmentLength <= 0)
+                if (segment.Length <= 0)
                     continue;
 
-                var segmentEndDistance = accumulated + segmentLength;
-                if (distanceMeters < accumulated || distanceMeters > segmentEndDistance)
-                {
-                    accumulated = segmentEndDistance;
+                if (distanceMeters < segment.StartDistance || distanceMeters > segment.EndDistance)
                     continue;
-                }
 
-                var fraction = (distanceMeters - accumulated) / segmentLength;
+                var fraction = (distanceMeters - segment.StartDistance) / segment.Length;
                 if (fraction <= 0 || fraction >= 1)
                     return null;
 
-                var point = Interpolate(start, end, fraction);
+                var point = Interpolate(segment.Start, segment.End, fraction);
                 var marker = new SituationMarker
                 {
                     Name = "Marker " + (Markers.Count(a => !a.IsHome) + 1).ToString(CultureInfo.InvariantCulture),
@@ -147,7 +136,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
                     AltitudeSource = SituationMarkerAltitudeSource.Srtm
                 };
 
-                var insertIndex = Markers.IndexOf(endMarker);
+                var insertIndex = Markers.IndexOf(segment.EndMarker);
                 if (insertIndex < 0)
                     Markers.Add(marker);
                 else
@@ -601,6 +590,11 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             return result;
         }
 
+        public List<RouteSegment> GetRouteSegments()
+        {
+            return routeSegments.ToList();
+        }
+
         public SituationMarker GetHomeMarker()
         {
             return Markers.FirstOrDefault(a => a.IsHome && a.HasValidPosition);
@@ -756,20 +750,24 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             routeOverlay.Routes.Clear();
             routeSegments.Clear();
 
-            var points = GetRouteMarkers().Select(a => new PointLatLng(a.Lat.Value, a.Lng.Value)).ToList();
-            if (points.Count < 2)
+            var route = GetRouteMarkers();
+            if (route.Count < 2)
                 return;
 
             var accumulated = 0.0;
-            for (var i = 1; i < points.Count; i++)
+            for (var i = 1; i < route.Count; i++)
             {
-                var segmentLength = DistanceMeters(points[i - 1], points[i]);
+                var start = new PointLatLng(route[i - 1].Lat.Value, route[i - 1].Lng.Value);
+                var end = new PointLatLng(route[i].Lat.Value, route[i].Lng.Value);
+                var segmentLength = DistanceMeters(start, end);
                 if (segmentLength > 0)
                 {
                     routeSegments.Add(new RouteSegment
                     {
-                        Start = points[i - 1],
-                        End = points[i],
+                        StartMarker = route[i - 1],
+                        EndMarker = route[i],
+                        Start = start,
+                        End = end,
                         Length = segmentLength,
                         StartDistance = accumulated
                     });
@@ -778,11 +776,12 @@ namespace MissionPlanner.GCSViews.SituationMarkers
                 accumulated += segmentLength;
             }
 
-            var route = new GMapRoute(points, "situation route")
+            var points = route.Select(a => new PointLatLng(a.Lat.Value, a.Lng.Value)).ToList();
+            var mapRoute = new GMapRoute(points, "situation route")
             {
                 Stroke = new Pen(Color.DeepSkyBlue, 2)
             };
-            routeOverlay.Routes.Add(route);
+            routeOverlay.Routes.Add(mapRoute);
         }
 
         void RemoveMapMarker(SituationMarker marker)
@@ -1003,12 +1002,19 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             public PointLatLng Point;
         }
 
-        class RouteSegment
+        public class RouteSegment
         {
+            public SituationMarker StartMarker;
+            public SituationMarker EndMarker;
             public PointLatLng Start;
             public PointLatLng End;
             public double Length;
             public double StartDistance;
+
+            public double EndDistance
+            {
+                get { return StartDistance + Length; }
+            }
         }
     }
 }

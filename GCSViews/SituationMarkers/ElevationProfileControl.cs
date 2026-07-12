@@ -113,8 +113,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
 
         public void RefreshDronePosition()
         {
-            UpdateDroneProfilePosition();
-            ExpandAltitudeRangeForDrone();
+            SyncDroneProfileState(true);
             Invalidate();
         }
 
@@ -136,8 +135,6 @@ namespace MissionPlanner.GCSViews.SituationMarkers
         {
             graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
             var plot = GetPlotRectangle();
-            UpdateDroneProfilePosition();
-            ExpandAltitudeRangeForDrone();
 
             using (var axisPen = new Pen(AxisColor))
             using (var gridPen = new Pen(GridColor))
@@ -246,27 +243,29 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             if (home != null && home.Altitude.HasValue)
                 homeAltitude = home.Altitude.Value;
 
+            var segments = manager.GetRouteSegments();
+            if (segments.Count == 0)
+                return;
+
             markerDistances.Add(new RouteMarkerDistance(route[0], 0));
 
-            for (var i = 1; i < route.Count; i++)
+            foreach (var segment in segments)
             {
-                var start = new PointLatLng(route[i - 1].Lat.Value, route[i - 1].Lng.Value);
-                var end = new PointLatLng(route[i].Lat.Value, route[i].Lng.Value);
-                var segmentLength = manager.DistanceMeters(start, end);
-                var steps = Math.Max(2, Math.Min(80, (int)(segmentLength / 50.0)));
+                var steps = Math.Max(2, Math.Min(80, (int)(segment.Length / 50.0)));
 
-                for (var step = i == 1 ? 0 : 1; step <= steps; step++)
+                for (var step = profilePoints.Count == 0 ? 0 : 1; step <= steps; step++)
                 {
                     var fraction = step / (double)steps;
-                    var point = manager.Interpolate(start, end, fraction);
+                    var point = manager.Interpolate(segment.Start, segment.End, fraction);
                     profilePoints.Add(new ProfilePoint(
-                        totalDistance + segmentLength * fraction,
+                        segment.StartDistance + segment.Length * fraction,
                         manager.GetTerrainAltitude(point.Lat, point.Lng)));
                 }
 
-                totalDistance += segmentLength;
-                markerDistances.Add(new RouteMarkerDistance(route[i], totalDistance));
+                markerDistances.Add(new RouteMarkerDistance(segment.EndMarker, segment.EndDistance));
             }
+
+            totalDistance = segments[segments.Count - 1].EndDistance;
 
             ExtendProfile(route);
 
@@ -280,7 +279,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
 
             AddReferenceAltitude(manager.GetHomeMarker());
             AddReferenceAltitude(manager.GetInterestMarker());
-            UpdateDroneProfilePosition();
+            SyncDroneProfileState(false);
             if (droneAltitudeAmsl.HasValue)
                 AddReferenceAltitude(droneAltitudeAmsl.Value);
 
@@ -298,7 +297,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
 
         }
 
-        void UpdateDroneProfilePosition()
+        void SyncDroneProfileState(bool expandAltitudeRange)
         {
             droneDistance = null;
             droneAltitudeAmsl = null;
@@ -308,6 +307,9 @@ namespace MissionPlanner.GCSViews.SituationMarkers
 
             if (manager.TryGetDroneRouteDistance(out var distance))
                 droneDistance = distance;
+
+            if (expandAltitudeRange)
+                ExpandAltitudeRangeForDrone();
         }
 
         void ExpandAltitudeRangeForDrone()
@@ -324,9 +326,9 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             var upperGuard = maxAltitude - range * DroneAltitudeScaleGuardFraction;
 
             if (relativeAltitude < lowerGuard)
-                minAltitude = maxAltitude - (maxAltitude - relativeAltitude) / (1.0 - DroneAltitudeScaleGuardFraction);
+                minAltitude = maxAltitude - (maxAltitude - relativeAltitude) / (1.0 - ProfilePaddingFraction);
             else if (relativeAltitude > upperGuard)
-                maxAltitude = minAltitude + (relativeAltitude - minAltitude) / (1.0 - DroneAltitudeScaleGuardFraction);
+                maxAltitude = minAltitude + (relativeAltitude - minAltitude) / (1.0 - ProfilePaddingFraction);
         }
 
         void ExtendProfile(List<SituationMarker> route)
