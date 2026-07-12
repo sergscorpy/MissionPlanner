@@ -574,6 +574,8 @@ namespace MissionPlanner.GCSViews
             situationMarkersManager = new SituationMarkersManager(gMapControl1);
             situationMarkersManager.MarkersLockChanged += (sender, args) => UpdateMarkerDragButton();
             AddSituationMarkersButton();
+            situationMarkersManager.SetMapOverlaysVisible(false);
+            UpdateSituationRouteVisibilityButton();
 
             float gspeedMax = Settings.Instance.GetFloat("GspeedMAX");
             if (gspeedMax != 0)
@@ -3521,7 +3523,7 @@ namespace MissionPlanner.GCSViews
 
         void AddSituationMarkersButton()
         {
-            focusSituationRouteButton = CreateSituationMarkersMapButton("Focus Route", 104);
+            focusSituationRouteButton = CreateSituationMarkersMapButton("Zoom", 70);
             focusSituationRouteButton.Click += (sender, args) => situationMarkersManager?.FocusRouteOnMap();
 
             toggleSituationRouteButton = CreateSituationMarkersMapButton("Hide Route", 96);
@@ -3531,10 +3533,10 @@ namespace MissionPlanner.GCSViews
                 UpdateSituationRouteVisibilityButton();
             };
 
-            elevationProfileButton = CreateSituationMarkersMapButton("Elevation Profile", 124);
+            elevationProfileButton = CreateSituationMarkersMapButton("Height Map", 98);
             elevationProfileButton.Click += (sender, args) => situationMarkersManager?.ToggleElevationProfile(this);
 
-            toggleMarkerDragButton = CreateSituationMarkersMapButton("Lock Drag", 96);
+            toggleMarkerDragButton = CreateSituationMarkersMapButton("Lock", 70);
             toggleMarkerDragButton.Click += (sender, args) =>
             {
                 if (situationMarkersManager == null)
@@ -3544,7 +3546,7 @@ namespace MissionPlanner.GCSViews
                 UpdateMarkerDragButton();
             };
 
-            situationMarkersButton = CreateSituationMarkersMapButton("Markers", 82);
+            situationMarkersButton = CreateSituationMarkersMapButton("Table", 70);
             situationMarkersButton.Click += (sender, args) => situationMarkersManager?.ToggleMarkersForm(this);
 
             gMapControl1.Controls.Add(focusSituationRouteButton);
@@ -3558,6 +3560,7 @@ namespace MissionPlanner.GCSViews
             toggleMarkerDragButton.BringToFront();
             situationMarkersButton.BringToFront();
             UpdateMarkerDragButton();
+            UpdateSituationRouteVisibilityButton();
             PositionSituationMarkersButton();
         }
 
@@ -3587,17 +3590,17 @@ namespace MissionPlanner.GCSViews
             var gap = 8;
             var bottom = Math.Max(0, gMapControl1.Height - situationMarkersButton.Height - 12);
             var right = Math.Max(0, gMapControl1.Width - 12);
+            PositionSituationMapButton(toggleSituationRouteButton, ref right, bottom, gap);
             PositionSituationMapButton(situationMarkersButton, ref right, bottom, gap);
             PositionSituationMapButton(elevationProfileButton, ref right, bottom, gap);
             PositionSituationMapButton(toggleMarkerDragButton, ref right, bottom, gap);
             PositionSituationMapButton(focusSituationRouteButton, ref right, bottom, gap);
-            PositionSituationMapButton(toggleSituationRouteButton, ref right, bottom, gap);
 
             focusSituationRouteButton.BringToFront();
-            toggleSituationRouteButton.BringToFront();
             elevationProfileButton.BringToFront();
             toggleMarkerDragButton.BringToFront();
             situationMarkersButton.BringToFront();
+            toggleSituationRouteButton.BringToFront();
         }
 
         void PositionSituationMapButton(Button button, ref int right, int top, int gap)
@@ -3612,7 +3615,24 @@ namespace MissionPlanner.GCSViews
             if (toggleSituationRouteButton == null || situationMarkersManager == null)
                 return;
 
-            toggleSituationRouteButton.Text = situationMarkersManager.MapOverlaysVisible ? "Hide Route" : "Show Route";
+            var visible = situationMarkersManager.MapOverlaysVisible;
+            toggleSituationRouteButton.Text = visible ? "Hide Route" : "Show Route";
+            SetSituationMapActionButtonsVisible(visible);
+        }
+
+        void SetSituationMapActionButtonsVisible(bool visible)
+        {
+            if (situationMarkersButton != null)
+                situationMarkersButton.Visible = visible;
+
+            if (elevationProfileButton != null)
+                elevationProfileButton.Visible = visible;
+
+            if (focusSituationRouteButton != null)
+                focusSituationRouteButton.Visible = visible;
+
+            if (toggleMarkerDragButton != null)
+                toggleMarkerDragButton.Visible = visible;
         }
 
         void UpdateMarkerDragButton()
@@ -3620,7 +3640,7 @@ namespace MissionPlanner.GCSViews
             if (toggleMarkerDragButton == null || situationMarkersManager == null)
                 return;
 
-            toggleMarkerDragButton.Text = situationMarkersManager.MarkersLocked ? "Unlock Drag" : "Lock Drag";
+            toggleMarkerDragButton.Text = situationMarkersManager.MarkersLocked ? "Unlock" : "Lock";
             if (situationMarkersManager.MarkersLocked)
             {
                 toggleMarkerDragButton.BackColor = Color.FromArgb(210, 90, 80);
