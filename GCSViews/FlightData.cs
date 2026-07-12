@@ -74,6 +74,10 @@ namespace MissionPlanner.GCSViews
         Button elevationProfileButton;
         Button focusSituationRouteButton;
         Button toggleSituationRouteButton;
+        Button toggleMarkerDragButton;
+        readonly Color situationMapButtonBackColor = Color.FromArgb(148, 193, 31);
+        readonly Color situationMapButtonBorderColor = Color.FromArgb(121, 148, 41);
+        readonly Color situationMapButtonTextColor = Color.FromArgb(64, 87, 4);
         bool huddropout;
         bool huddropoutresize;
 
@@ -568,6 +572,7 @@ namespace MissionPlanner.GCSViews
             gMapControl1.Overlays.Add(poioverlay);
 
             situationMarkersManager = new SituationMarkersManager(gMapControl1);
+            situationMarkersManager.MarkersLockChanged += (sender, args) => UpdateMarkerDragButton();
             AddSituationMarkersButton();
 
             float gspeedMax = Settings.Instance.GetFloat("GspeedMAX");
@@ -3529,17 +3534,30 @@ namespace MissionPlanner.GCSViews
             elevationProfileButton = CreateSituationMarkersMapButton("Elevation Profile", 124);
             elevationProfileButton.Click += (sender, args) => situationMarkersManager?.ToggleElevationProfile(this);
 
+            toggleMarkerDragButton = CreateSituationMarkersMapButton("Lock Drag", 96);
+            toggleMarkerDragButton.Click += (sender, args) =>
+            {
+                if (situationMarkersManager == null)
+                    return;
+
+                situationMarkersManager.SetMarkersLocked(!situationMarkersManager.MarkersLocked);
+                UpdateMarkerDragButton();
+            };
+
             situationMarkersButton = CreateSituationMarkersMapButton("Markers", 82);
             situationMarkersButton.Click += (sender, args) => situationMarkersManager?.ToggleMarkersForm(this);
 
             gMapControl1.Controls.Add(focusSituationRouteButton);
             gMapControl1.Controls.Add(toggleSituationRouteButton);
             gMapControl1.Controls.Add(elevationProfileButton);
+            gMapControl1.Controls.Add(toggleMarkerDragButton);
             gMapControl1.Controls.Add(situationMarkersButton);
             focusSituationRouteButton.BringToFront();
             toggleSituationRouteButton.BringToFront();
             elevationProfileButton.BringToFront();
+            toggleMarkerDragButton.BringToFront();
             situationMarkersButton.BringToFront();
+            UpdateMarkerDragButton();
             PositionSituationMarkersButton();
         }
 
@@ -3551,18 +3569,19 @@ namespace MissionPlanner.GCSViews
                 Width = width,
                 Height = 28,
                 Anchor = AnchorStyles.Right | AnchorStyles.Bottom,
-                BackColor = Color.FromArgb(245, 245, 245),
-                ForeColor = Color.Black,
+                BackColor = situationMapButtonBackColor,
+                ForeColor = situationMapButtonTextColor,
                 FlatStyle = FlatStyle.Flat
             };
-            button.FlatAppearance.BorderColor = Color.FromArgb(80, 80, 80);
+            button.FlatAppearance.BorderColor = situationMapButtonBorderColor;
             return button;
         }
 
         void PositionSituationMarkersButton()
         {
             if (situationMarkersButton == null || elevationProfileButton == null ||
-                focusSituationRouteButton == null || toggleSituationRouteButton == null)
+                focusSituationRouteButton == null || toggleSituationRouteButton == null ||
+                toggleMarkerDragButton == null)
                 return;
 
             var gap = 8;
@@ -3570,12 +3589,14 @@ namespace MissionPlanner.GCSViews
             var right = Math.Max(0, gMapControl1.Width - 12);
             PositionSituationMapButton(situationMarkersButton, ref right, bottom, gap);
             PositionSituationMapButton(elevationProfileButton, ref right, bottom, gap);
+            PositionSituationMapButton(toggleMarkerDragButton, ref right, bottom, gap);
             PositionSituationMapButton(focusSituationRouteButton, ref right, bottom, gap);
             PositionSituationMapButton(toggleSituationRouteButton, ref right, bottom, gap);
 
             focusSituationRouteButton.BringToFront();
             toggleSituationRouteButton.BringToFront();
             elevationProfileButton.BringToFront();
+            toggleMarkerDragButton.BringToFront();
             situationMarkersButton.BringToFront();
         }
 
@@ -3592,6 +3613,26 @@ namespace MissionPlanner.GCSViews
                 return;
 
             toggleSituationRouteButton.Text = situationMarkersManager.MapOverlaysVisible ? "Hide Route" : "Show Route";
+        }
+
+        void UpdateMarkerDragButton()
+        {
+            if (toggleMarkerDragButton == null || situationMarkersManager == null)
+                return;
+
+            toggleMarkerDragButton.Text = situationMarkersManager.MarkersLocked ? "Unlock Drag" : "Lock Drag";
+            if (situationMarkersManager.MarkersLocked)
+            {
+                toggleMarkerDragButton.BackColor = Color.FromArgb(210, 90, 80);
+                toggleMarkerDragButton.ForeColor = Color.Black;
+                toggleMarkerDragButton.FlatAppearance.BorderColor = Color.FromArgb(140, 45, 40);
+            }
+            else
+            {
+                toggleMarkerDragButton.BackColor = situationMapButtonBackColor;
+                toggleMarkerDragButton.ForeColor = situationMapButtonTextColor;
+                toggleMarkerDragButton.FlatAppearance.BorderColor = situationMapButtonBorderColor;
+            }
         }
 
         private void goHereToolStripMenuItem_Click(object sender, EventArgs e)

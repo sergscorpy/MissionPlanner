@@ -16,7 +16,6 @@ namespace MissionPlanner.GCSViews.SituationMarkers
         readonly SituationMarkersManager manager;
         readonly DataGridView grid = new DataGridView();
         readonly Label statusLabel = new Label();
-        Button lockButton;
         bool refreshing;
 
         public SituationMarkersForm(SituationMarkersManager manager)
@@ -107,7 +106,6 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             AddButton(toolbar, "Save", SaveMarkers);
             AddButton(toolbar, "Load", LoadMarkers);
             AddButton(toolbar, "Reset", ResetMarkers);
-            lockButton = AddButton(toolbar, "Lock", ToggleLock);
 
             grid.Dock = DockStyle.Fill;
             grid.AutoGenerateColumns = false;
@@ -226,12 +224,6 @@ namespace MissionPlanner.GCSViews.SituationMarkers
 
         void UpdateLockState()
         {
-            if (lockButton != null)
-            {
-                lockButton.Text = manager.MarkersLocked ? "Unlock Drag" : "Lock Drag";
-                lockButton.BackColor = manager.MarkersLocked ? Color.FromArgb(210, 90, 80) : SystemColors.Control;
-            }
-
             foreach (DataGridViewColumn column in grid.Columns)
             {
                 if (column is DataGridViewButtonColumn)
@@ -466,11 +458,6 @@ namespace MissionPlanner.GCSViews.SituationMarkers
                 return;
 
             manager.ResetMarkers();
-        }
-
-        void ToggleLock(object sender, EventArgs e)
-        {
-            manager.SetMarkersLocked(!manager.MarkersLocked);
         }
     }
 }

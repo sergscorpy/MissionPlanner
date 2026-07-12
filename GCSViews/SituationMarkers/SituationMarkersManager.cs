@@ -69,6 +69,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
 
         public event EventHandler MarkersChanged;
         public event EventHandler SelectedMarkerChanged;
+        public event EventHandler MarkersLockChanged;
 
         public SituationMarkersManager(myGMAP map)
         {
@@ -273,6 +274,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             selectedMarkerId = null;
             lastMarkerClickId = null;
             lastInsertClickSegment = null;
+            var wasLocked = markersLocked;
             markersLocked = false;
 
             Markers.Clear();
@@ -286,6 +288,8 @@ namespace MissionPlanner.GCSViews.SituationMarkers
                 markersOverlay.Markers.Add(droneLabelMarker);
 
             map.Refresh();
+            if (wasLocked)
+                MarkersLockChanged?.Invoke(this, EventArgs.Empty);
             SelectedMarkerChanged?.Invoke(this, EventArgs.Empty);
             OnMarkersChanged(true);
         }
@@ -412,6 +416,9 @@ namespace MissionPlanner.GCSViews.SituationMarkers
 
         public void SetMarkersLocked(bool locked)
         {
+            if (markersLocked == locked)
+                return;
+
             markersLocked = locked;
             if (markersLocked)
             {
@@ -422,6 +429,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             if (form != null && !form.IsDisposed)
                 form.SetStatus(markersLocked ? "Marker dragging is locked." : "");
 
+            MarkersLockChanged?.Invoke(this, EventArgs.Empty);
             OnMarkersChanged(true);
         }
 
@@ -1102,8 +1110,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             var store = new SituationMarkersStore
             {
                 Markers = Markers.ToList(),
-                InterestMarkerId = Markers.FirstOrDefault(a => a.IsInterest)?.Id,
-                MarkersLocked = MarkersLocked
+                InterestMarkerId = Markers.FirstOrDefault(a => a.IsInterest)?.Id
             };
 
             var directory = Path.GetDirectoryName(fileName);
@@ -1128,7 +1135,8 @@ namespace MissionPlanner.GCSViews.SituationMarkers
                 insertMarkers.Clear();
                 mapMarkers.Clear();
                 selectedMarkerId = null;
-                markersLocked = store.MarkersLocked;
+                var lockChanged = markersLocked;
+                markersLocked = false;
 
                 foreach (var marker in store.Markers)
                     Markers.Add(marker);
@@ -1145,6 +1153,8 @@ namespace MissionPlanner.GCSViews.SituationMarkers
                 }
 
                 RebuildMap();
+                if (lockChanged)
+                    MarkersLockChanged?.Invoke(this, EventArgs.Empty);
                 SelectedMarkerChanged?.Invoke(this, EventArgs.Empty);
             }
             finally
