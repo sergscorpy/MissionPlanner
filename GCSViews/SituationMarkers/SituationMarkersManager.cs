@@ -19,7 +19,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
         const string OverlayId = "situationmarkers";
         const string RouteOverlayId = "situationmarkersroute";
         const string AutosaveFileName = "autosavemarkers.json";
-        const int DroneUiUpdateIntervalMs = 1000;
+        const int DroneUiUpdateIntervalMs = 250;
         const double DroneTerrainCacheDistanceMeters = 10.0;
 
         readonly myGMAP map;
