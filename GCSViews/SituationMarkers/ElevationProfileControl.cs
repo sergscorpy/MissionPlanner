@@ -13,6 +13,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
     {
         readonly SituationMarkersManager manager;
         const double ProfilePaddingFraction = 0.12;
+        const double DroneAltitudeScaleGuardFraction = 0.05;
         const double CursorSnapFraction = 0.005;
         const double DistanceKilometerMultiplier = 0.001;
         const string DistanceKilometerUnit = "Km";
@@ -113,6 +114,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
         public void RefreshDronePosition()
         {
             UpdateDroneProfilePosition();
+            ExpandAltitudeRangeForDrone();
             Invalidate();
         }
 
@@ -134,6 +136,8 @@ namespace MissionPlanner.GCSViews.SituationMarkers
         {
             graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
             var plot = GetPlotRectangle();
+            UpdateDroneProfilePosition();
+            ExpandAltitudeRangeForDrone();
 
             using (var axisPen = new Pen(AxisColor))
             using (var gridPen = new Pen(GridColor))
@@ -304,6 +308,25 @@ namespace MissionPlanner.GCSViews.SituationMarkers
 
             if (manager.TryGetDroneRouteDistance(out var distance))
                 droneDistance = distance;
+        }
+
+        void ExpandAltitudeRangeForDrone()
+        {
+            if (!droneAltitudeAmsl.HasValue || profilePoints.Count < 2)
+                return;
+
+            var relativeAltitude = ToRelativeAltitude(droneAltitudeAmsl.Value);
+            var range = maxAltitude - minAltitude;
+            if (range <= 0)
+                return;
+
+            var lowerGuard = minAltitude + range * DroneAltitudeScaleGuardFraction;
+            var upperGuard = maxAltitude - range * DroneAltitudeScaleGuardFraction;
+
+            if (relativeAltitude < lowerGuard)
+                minAltitude = maxAltitude - (maxAltitude - relativeAltitude) / (1.0 - DroneAltitudeScaleGuardFraction);
+            else if (relativeAltitude > upperGuard)
+                maxAltitude = minAltitude + (relativeAltitude - minAltitude) / (1.0 - DroneAltitudeScaleGuardFraction);
         }
 
         void ExtendProfile(List<SituationMarker> route)
