@@ -27,6 +27,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
         readonly GMapOverlay routeOverlay;
         readonly Dictionary<Guid, SituationMarkerMapMarker> mapMarkers = new Dictionary<Guid, SituationMarkerMapMarker>();
         readonly List<RouteSegment> routeSegments = new List<RouteSegment>();
+        readonly List<SituationMarkerMapMarker> insertMarkers = new List<SituationMarkerMapMarker>();
         readonly string autosavePath;
 
         SituationMarkersForm form;
@@ -42,6 +43,9 @@ namespace MissionPlanner.GCSViews.SituationMarkers
         double cachedDroneTerrainAltitude;
         Guid? selectedMarkerId;
         Guid? lastMarkerClickId;
+        RouteSegment lastInsertClickSegment;
+        DateTime lastInsertClickTimeUtc;
+        Point lastInsertClickLocation;
         DateTime lastMarkerClickTimeUtc;
         Point lastMarkerClickLocation;
         bool hasDronePosition;
@@ -223,12 +227,14 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             draggingMarker = null;
             selectedMarkerId = null;
             lastMarkerClickId = null;
+            lastInsertClickSegment = null;
             markersLocked = false;
 
             Markers.Clear();
             markersOverlay.Markers.Clear();
             routeOverlay.Routes.Clear();
             routeSegments.Clear();
+            insertMarkers.Clear();
             mapMarkers.Clear();
 
             if (droneLabelMarker != null)
@@ -352,6 +358,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
         public void BeginPickOnMap(SituationMarker marker)
         {
             pickingMarker = marker;
+            lastInsertClickSegment = null;
             pickingMouseDown = false;
             pickingDragged = false;
             if (form != null && !form.IsDisposed)
@@ -407,9 +414,25 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             if (pickingMarker != null)
             {
                 lastMarkerClickId = null;
+                lastInsertClickSegment = null;
                 pickingMouseDown = true;
                 pickingDragged = false;
                 pickingMouseDownLocation = e.Location;
+                return true;
+            }
+
+            var insertMarker = currentMarker as SituationMarkerMapMarker;
+            if (insertMarker != null && insertMarker.IsInsertPoint && insertMarker.InsertSegment != null)
+            {
+                if (IsDoubleClickOnInsertMarker(insertMarker.InsertSegment, e))
+                {
+                    lastInsertClickSegment = null;
+                    draggingMarker = null;
+                    InsertMarkerAtRouteDistance(insertMarker.InsertSegment.StartDistance + insertMarker.InsertSegment.Length / 2.0);
+                    return true;
+                }
+
+                RememberInsertMarkerClick(insertMarker.InsertSegment, e);
                 return true;
             }
 
@@ -463,13 +486,39 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             lastMarkerClickLocation = e.Location;
         }
 
+        bool IsDoubleClickOnInsertMarker(RouteSegment segment, MouseEventArgs e)
+        {
+            if (e.Clicks > 1)
+                return true;
+
+            if (lastInsertClickSegment != segment)
+                return false;
+
+            var elapsed = DateTime.UtcNow - lastInsertClickTimeUtc;
+            if (elapsed.TotalMilliseconds > SystemInformation.DoubleClickTime)
+                return false;
+
+            var maxDistance = SystemInformation.DoubleClickSize;
+            return Math.Abs(e.X - lastInsertClickLocation.X) <= maxDistance.Width &&
+                   Math.Abs(e.Y - lastInsertClickLocation.Y) <= maxDistance.Height;
+        }
+
+        void RememberInsertMarkerClick(RouteSegment segment, MouseEventArgs e)
+        {
+            lastInsertClickSegment = segment;
+            lastInsertClickTimeUtc = DateTime.UtcNow;
+            lastInsertClickLocation = e.Location;
+        }
+
         void SetMarkerHover(GMapMarker marker, bool isHovered)
         {
-            if (!(marker is SituationMarkerMapMarker situationMapMarker) ||
-                !(situationMapMarker.Tag is SituationMarker))
+            if (!(marker is SituationMarkerMapMarker situationMapMarker))
                 return;
 
-            var nextState = isHovered && !MarkersLocked;
+            if (!situationMapMarker.IsInsertPoint && !(situationMapMarker.Tag is SituationMarker))
+                return;
+
+            var nextState = situationMapMarker.IsInsertPoint ? isHovered : isHovered && !MarkersLocked;
             if (situationMapMarker.IsHovered == nextState)
                 return;
 
@@ -790,6 +839,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
         void RebuildRoute()
         {
             routeOverlay.Routes.Clear();
+            ClearInsertMarkers();
             routeSegments.Clear();
 
             var route = GetRouteMarkers();
@@ -824,6 +874,30 @@ namespace MissionPlanner.GCSViews.SituationMarkers
                 Stroke = new Pen(Color.DeepSkyBlue, 2)
             };
             routeOverlay.Routes.Add(mapRoute);
+            RebuildInsertMarkers();
+        }
+
+        void RebuildInsertMarkers()
+        {
+            foreach (var segment in routeSegments)
+            {
+                var center = Interpolate(segment.Start, segment.End, 0.5);
+                var insertMarker = new SituationMarkerMapMarker(center)
+                {
+                    IsInsertPoint = true,
+                    InsertSegment = segment
+                };
+                insertMarkers.Add(insertMarker);
+                markersOverlay.Markers.Add(insertMarker);
+            }
+        }
+
+        void ClearInsertMarkers()
+        {
+            foreach (var marker in insertMarkers)
+                markersOverlay.Markers.Remove(marker);
+
+            insertMarkers.Clear();
         }
 
         void RemoveMapMarker(SituationMarker marker)
@@ -1006,6 +1080,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
                 markersOverlay.Markers.Clear();
                 routeOverlay.Routes.Clear();
                 routeSegments.Clear();
+                insertMarkers.Clear();
                 mapMarkers.Clear();
                 selectedMarkerId = null;
                 markersLocked = store.MarkersLocked;

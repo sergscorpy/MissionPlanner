@@ -15,6 +15,8 @@ namespace MissionPlanner.GCSViews.SituationMarkers
         public bool IsHovered { get; set; }
         public bool IsSelected { get; set; }
         public bool DrawPin { get; set; } = true;
+        public bool IsInsertPoint { get; set; }
+        public SituationMarkersManager.RouteSegment InsertSegment { get; set; }
 
         public SituationMarkerMapMarker(PointLatLng pos)
             : base(pos)
@@ -25,6 +27,12 @@ namespace MissionPlanner.GCSViews.SituationMarkers
 
         public override void OnRender(IGraphics g)
         {
+            if (IsInsertPoint)
+            {
+                DrawInsertPoint(g);
+                return;
+            }
+
             if (!DrawPin && string.IsNullOrEmpty(Label))
                 return;
 
@@ -66,6 +74,33 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             }
 
             DrawDroneLabel(g, center);
+        }
+
+        void DrawInsertPoint(IGraphics g)
+        {
+            var center = new Point(LocalPosition.X - Offset.X, LocalPosition.Y - Offset.Y);
+
+            if (!IsHovered)
+            {
+                using (var fill = new SolidBrush(Color.DeepSkyBlue))
+                using (var outline = new Pen(Color.FromArgb(35, 35, 35), 1))
+                {
+                    g.FillEllipse(fill, center.X - 2, center.Y - 2, 4, 4);
+                    g.DrawEllipse(outline, center.X - 2, center.Y - 2, 4, 4);
+                }
+
+                return;
+            }
+
+            using (var fill = new SolidBrush(Color.FromArgb(225, 35, 35, 35)))
+            using (var outline = new Pen(Color.DeepSkyBlue, 2))
+            using (var plus = new Pen(Color.White, 2))
+            {
+                g.FillEllipse(fill, center.X - 7, center.Y - 7, 14, 14);
+                g.DrawEllipse(outline, center.X - 7, center.Y - 7, 14, 14);
+                g.DrawLine(plus, center.X - 4, center.Y, center.X + 4, center.Y);
+                g.DrawLine(plus, center.X, center.Y - 4, center.X, center.Y + 4);
+            }
         }
 
         void DrawMarkerLabel(IGraphics g, Point center)
