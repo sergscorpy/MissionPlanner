@@ -19,7 +19,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
         const string OverlayId = "situationmarkers";
         const string RouteOverlayId = "situationmarkersroute";
         const string AutosaveFileName = "autosavemarkers.json";
-        const int DroneUiUpdateIntervalMs = 250;
+        const int DroneUiUpdateIntervalMs = 1000;
         const double DroneTerrainCacheDistanceMeters = 10.0;
 
         readonly myGMAP map;
@@ -547,10 +547,9 @@ namespace MissionPlanner.GCSViews.SituationMarkers
                 markersOverlay.Markers.Add(droneLabelMarker);
             }
 
-            var terrainUpdated = UpdateDroneTerrainCache(position);
+            UpdateDroneTerrainCache(position);
             droneLabelMarker.Position = position;
-            if (terrainUpdated || string.IsNullOrEmpty(droneLabelMarker.Label))
-                droneLabelMarker.Label = BuildDroneLabel(altitudeAmsl);
+            droneLabelMarker.Label = BuildDroneLabel(altitudeAmsl);
             map.UpdateMarkerLocalPosition(droneLabelMarker);
             elevationProfileForm?.RefreshDronePosition();
         }
