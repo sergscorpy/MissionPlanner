@@ -18,6 +18,11 @@ namespace MissionPlanner.GCSViews.SituationMarkers
         public bool IsInsertPoint { get; set; }
         public SituationMarkersManager.RouteSegment InsertSegment { get; set; }
 
+        const string DroneBearingPrefix = "BRG|";
+        const string DroneSpeedPrefix = "SPD|";
+        const string DroneDistancePrefix = "DST|";
+        const string DroneEtaPrefix = "ETA|";
+
         public SituationMarkerMapMarker(PointLatLng pos)
             : base(pos)
         {
@@ -259,7 +264,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
                 var width = 0;
 
                 foreach (var line in lines)
-                    width = Math.Max(width, (int)Math.Ceiling(g.MeasureString(RemoveAltitudeSign(line), font).Width));
+                    width = Math.Max(width, (int)Math.Ceiling(g.MeasureString(GetDroneLineDisplayText(line), font).Width));
 
                 width += paddingX * 2 + iconWidth + contentGap + 4;
                 var height = lineHeight * lines.Length + lineSpacing * (lines.Length - 1) + paddingY * 2;
@@ -290,7 +295,10 @@ namespace MissionPlanner.GCSViews.SituationMarkers
                     for (var i = 0; i < lines.Length; i++)
                     {
                         var line = lines[i];
-                        var direction = GetRelativeDirection(ExtractAltitudeValue(line));
+                        var iconKind = GetDroneNavigationIconKind(line);
+                        var isNavigationLine = iconKind.Length > 0;
+                        var displayText = GetDroneLineDisplayText(line);
+                        var direction = isNavigationLine ? 0 : GetRelativeDirection(ExtractAltitudeValue(line));
                         var color = GetLabelTheme(direction).Stroke;
                         var lineTop = rect.Y + paddingY + i * (lineHeight + lineSpacing);
                         var iconBounds = new RectangleF(
@@ -304,11 +312,19 @@ namespace MissionPlanner.GCSViews.SituationMarkers
                             rect.Width - paddingX * 2 - iconWidth - contentGap,
                             lineHeight);
 
-                        if (direction != 0)
+                        if (isNavigationLine)
+                            DrawDroneNavigationIcon(g, iconBounds, iconKind, color);
+                        else if (direction != 0)
                             DrawAltitudeDirectionIcon(g, iconBounds, direction, color);
 
+                        if (iconKind == "bearing")
+                        {
+                            DrawBearingText(g, displayText, font, textRect, format, color);
+                            continue;
+                        }
+
                         using (var foreground = new SolidBrush(color))
-                            g.DrawString(RemoveAltitudeSign(line), font, foreground, textRect, format);
+                            g.DrawString(displayText, font, foreground, textRect, format);
                     }
                 }
             }
@@ -323,6 +339,130 @@ namespace MissionPlanner.GCSViews.SituationMarkers
                 {
                     var y = rect.Y + paddingY + i * lineHeight + (i - 1) * lineSpacing + lineSpacing / 2f;
                     g.DrawLine(pen, rect.X + paddingX, y, rect.Right - paddingX, y);
+                }
+            }
+        }
+
+        void DrawBearingText(IGraphics g, string text, Font font, RectangleF textRect, StringFormat format, Color color)
+        {
+            var bracketStart = text.IndexOf("(", StringComparison.Ordinal);
+            if (bracketStart < 0)
+            {
+                using (var foreground = new SolidBrush(color))
+                    g.DrawString(text, font, foreground, textRect, format);
+                return;
+            }
+
+            var primaryText = text.Substring(0, bracketStart).TrimEnd();
+            var homeText = text.Substring(bracketStart);
+
+            using (var primary = new SolidBrush(color))
+            using (var home = new SolidBrush(Color.Firebrick))
+            {
+                g.DrawString(primaryText, font, primary, textRect, format);
+
+                var primaryWidth = (float)Math.Ceiling(g.MeasureString(primaryText + " ", font).Width);
+                var homeRect = new RectangleF(
+                    textRect.X + primaryWidth,
+                    textRect.Y,
+                    Math.Max(1, textRect.Width - primaryWidth),
+                    textRect.Height);
+                g.DrawString(homeText, font, home, homeRect, format);
+            }
+        }
+
+        string GetDroneLineDisplayText(string text)
+        {
+            if (string.IsNullOrEmpty(text))
+                return "";
+
+            if (text.StartsWith(DroneBearingPrefix))
+                return text.Substring(DroneBearingPrefix.Length);
+
+            if (text.StartsWith(DroneSpeedPrefix))
+                return text.Substring(DroneSpeedPrefix.Length);
+
+            if (text.StartsWith(DroneDistancePrefix))
+                return text.Substring(DroneDistancePrefix.Length);
+
+            if (text.StartsWith(DroneEtaPrefix))
+                return text.Substring(DroneEtaPrefix.Length);
+
+            return RemoveAltitudeSign(text);
+        }
+
+        string GetDroneNavigationIconKind(string text)
+        {
+            if (string.IsNullOrEmpty(text))
+                return "";
+
+            if (text.StartsWith(DroneBearingPrefix))
+                return "bearing";
+
+            if (text.StartsWith(DroneSpeedPrefix))
+                return "speed";
+
+            if (text.StartsWith(DroneDistancePrefix))
+                return "distance";
+
+            if (text.StartsWith(DroneEtaPrefix))
+                return "eta";
+
+            return "";
+        }
+
+        void DrawDroneNavigationIcon(IGraphics g, RectangleF bounds, string iconKind, Color color)
+        {
+            using (var pen = new Pen(color, 1.5f))
+            using (var brush = new SolidBrush(color))
+            {
+                pen.LineJoin = LineJoin.Round;
+
+                if (iconKind == "bearing")
+                {
+                    var centerX = bounds.X + bounds.Width / 2f;
+                    var top = bounds.Y + 2;
+                    var bottom = bounds.Bottom - 2;
+                    var arrow = new PointF[]
+                    {
+                        new PointF(centerX, top),
+                        new PointF(centerX + 5, bottom),
+                        new PointF(centerX, bottom - 3),
+                        new PointF(centerX - 5, bottom)
+                    };
+                    g.FillPolygon(brush, arrow);
+                    g.DrawPolygon(pen, arrow);
+                    return;
+                }
+
+                if (iconKind == "speed")
+                {
+                    g.DrawLine(pen, bounds.X + 2, bounds.Y + 5, bounds.Right - 4, bounds.Y + 5);
+                    g.DrawLine(pen, bounds.Right - 4, bounds.Y + 5, bounds.Right - 8, bounds.Y + 2);
+                    g.DrawLine(pen, bounds.Right - 4, bounds.Y + 5, bounds.Right - 8, bounds.Y + 8);
+                    g.DrawLine(pen, bounds.X + 4, bounds.Y + 11, bounds.Right - 2, bounds.Y + 11);
+                    g.DrawLine(pen, bounds.Right - 2, bounds.Y + 11, bounds.Right - 6, bounds.Y + 8);
+                    g.DrawLine(pen, bounds.Right - 2, bounds.Y + 11, bounds.Right - 6, bounds.Y + 14);
+                    return;
+                }
+
+                if (iconKind == "distance")
+                {
+                    var y = bounds.Y + bounds.Height / 2f;
+                    g.DrawLine(pen, bounds.X + 3, y, bounds.Right - 3, y);
+                    g.FillEllipse(brush, bounds.X + 1, y - 2, 4, 4);
+                    g.FillEllipse(brush, bounds.Right - 5, y - 2, 4, 4);
+                    return;
+                }
+
+                if (iconKind == "eta")
+                {
+                    var clock = new RectangleF(bounds.X + 2, bounds.Y + 2, bounds.Width - 4, bounds.Height - 4);
+                    g.DrawEllipse(pen, clock);
+                    g.DrawLine(pen, bounds.X + bounds.Width / 2f, bounds.Y + bounds.Height / 2f,
+                        bounds.X + bounds.Width / 2f, bounds.Y + 5);
+                    g.DrawLine(pen, bounds.X + bounds.Width / 2f, bounds.Y + bounds.Height / 2f,
+                        bounds.Right - 5, bounds.Y + bounds.Height / 2f);
                 }
             }
         }

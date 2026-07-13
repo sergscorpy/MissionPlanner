@@ -990,11 +990,20 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             if (interest != null && interest.HasValidPosition)
             {
                 var target = new PointLatLng(interest.Lat.Value, interest.Lng.Value);
+                var home = GetHomeMarker();
                 var distanceMeters = DistanceMeters(lastDronePosition, target);
-                lines.Add("Azimuth: " + FormatBearing(BearingDegrees(lastDronePosition, target)));
-                lines.Add("Speed: " + FormatDualSpeed(groundSpeedMetersPerSecond));
-                lines.Add("Dist: " + FormatDistance(distanceMeters));
-                lines.Add("ETA: " + FormatEta(distanceMeters, groundSpeedMetersPerSecond));
+                var bearing = FormatBearing(BearingDegrees(lastDronePosition, target));
+
+                if (home != null && home.HasValidPosition)
+                {
+                    var homePosition = new PointLatLng(home.Lat.Value, home.Lng.Value);
+                    bearing += " (" + FormatBearing(BearingDegrees(lastDronePosition, homePosition)) + ")";
+                }
+
+                lines.Add("BRG|" + bearing);
+                lines.Add("SPD|" + FormatDualSpeed(groundSpeedMetersPerSecond));
+                lines.Add("DST|" + FormatDistance(distanceMeters));
+                lines.Add("ETA|" + FormatEta(distanceMeters, groundSpeedMetersPerSecond));
             }
 
             return string.Join("\n", lines);
@@ -1086,14 +1095,14 @@ namespace MissionPlanner.GCSViews.SituationMarkers
 
         string FormatBearing(double bearing)
         {
-            return bearing.ToString("000", CultureInfo.InvariantCulture) + " deg";
+            return bearing.ToString("0", CultureInfo.InvariantCulture) + "°";
         }
 
         string FormatDualSpeed(double metersPerSecond)
         {
             var kilometersPerHour = metersPerSecond * 3.6;
-            return metersPerSecond.ToString("0.0", CultureInfo.CurrentCulture) + "/" +
-                   kilometersPerHour.ToString("000", CultureInfo.InvariantCulture);
+            return metersPerSecond.ToString("0.0", CultureInfo.CurrentCulture) + " m/s | " +
+                   kilometersPerHour.ToString("0", CultureInfo.InvariantCulture) + " km/h";
         }
 
         string FormatDistance(double meters)
