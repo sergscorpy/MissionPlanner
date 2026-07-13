@@ -117,10 +117,11 @@ namespace MissionPlanner.GCSViews.SituationMarkers
                 var textHeight = (int)Math.Ceiling(measuredTextSize.Height);
                 var iconWidth = direction == 0 ? 0 : 17;
                 var contentGap = direction == 0 ? 0 : 4;
+                var labelWidth = textWidth + iconWidth + contentGap + 10;
                 var rect = new Rectangle(
-                    center.X + 14,
+                    center.X - 14 - labelWidth,
                     center.Y - 44 - textHeight,
-                    textWidth + iconWidth + contentGap + 10,
+                    labelWidth,
                     textHeight + 10);
 
                 var theme = GetLabelTheme(direction);
@@ -136,7 +137,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
                     format.Alignment = StringAlignment.Near;
                     format.LineAlignment = StringAlignment.Center;
 
-                    g.DrawLine(stroke, center.X, center.Y, rect.X, rect.Y + rect.Height / 2);
+                    g.DrawLine(stroke, center.X, center.Y, rect.Right, rect.Y + rect.Height / 2);
                     g.FillPath(fill, bubblePath);
                     g.DrawPath(stroke, bubblePath);
 
@@ -263,7 +264,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
                 width += paddingX * 2 + iconWidth + contentGap + 4;
                 var height = lineHeight * lines.Length + lineSpacing * (lines.Length - 1) + paddingY * 2;
                 var rect = new Rectangle(
-                    center.X + 14,
+                    center.X - 14 - width,
                     center.Y - 44 - height,
                     width,
                     height);
@@ -279,7 +280,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
                     format.Alignment = StringAlignment.Near;
                     format.LineAlignment = StringAlignment.Center;
 
-                    g.DrawLine(stroke, center.X, center.Y, rect.X, rect.Y + rect.Height / 2);
+                    g.DrawLine(stroke, center.X, center.Y, rect.Right, rect.Y + rect.Height / 2);
                     g.FillPath(background, bubblePath);
                     g.DrawPath(stroke, bubblePath);
 
