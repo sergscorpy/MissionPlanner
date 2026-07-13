@@ -36,6 +36,8 @@ namespace MissionPlanner.GCSViews.SituationMarkers
         Point pickingMouseDownLocation;
         SituationMarker draggingMarker;
         SituationMarkerMapMarker droneLabelMarker;
+        Point droneLabelDragStartMouse;
+        Point droneLabelDragStartOffset;
         PointLatLng lastDronePosition;
         double lastDroneAltitudeAmsl;
         double lastDroneGroundSpeedMetersPerSecond;
@@ -55,12 +57,19 @@ namespace MissionPlanner.GCSViews.SituationMarkers
         bool pickingDragged;
         bool suppressAutosave;
         bool markersLocked;
+        bool draggingDroneLabel;
+        bool droneLabelMoveMode;
 
         public BindingList<SituationMarker> Markers { get; } = new BindingList<SituationMarker>();
 
         public bool MarkersLocked
         {
             get { return markersLocked; }
+        }
+
+        public bool DroneLabelMoveMode
+        {
+            get { return droneLabelMoveMode; }
         }
 
         public bool MapOverlaysVisible
@@ -71,6 +80,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
         public event EventHandler MarkersChanged;
         public event EventHandler SelectedMarkerChanged;
         public event EventHandler MarkersLockChanged;
+        public event EventHandler DroneLabelMoveModeChanged;
 
         public SituationMarkersManager(myGMAP map)
         {
@@ -272,6 +282,8 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             pickingMouseDown = false;
             pickingDragged = false;
             draggingMarker = null;
+            draggingDroneLabel = false;
+            SetDroneLabelMoveMode(false);
             selectedMarkerId = null;
             lastMarkerClickId = null;
             lastInsertClickSegment = null;
@@ -439,6 +451,12 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             if (e.Button != MouseButtons.Left)
                 return false;
 
+            if (droneLabelMoveMode)
+            {
+                ResetDroneLabelOffset();
+                return true;
+            }
+
             if (currentMarker is SituationMarkerMapMarker situationMapMarker &&
                 situationMapMarker.Tag is SituationMarker marker)
             {
@@ -464,6 +482,21 @@ namespace MissionPlanner.GCSViews.SituationMarkers
         {
             if (e.Button != MouseButtons.Left)
                 return false;
+
+            if (droneLabelMoveMode)
+            {
+                if (e.Clicks > 1)
+                {
+                    ResetDroneLabelOffset();
+                    return true;
+                }
+
+                draggingDroneLabel = true;
+                droneLabelDragStartMouse = e.Location;
+                droneLabelDragStartOffset = droneLabelMarker == null ? new Point(-14, -44) : droneLabelMarker.DroneLabelOffset;
+                map.Invalidate();
+                return true;
+            }
 
             if (pickingMarker != null)
             {
@@ -598,6 +631,15 @@ namespace MissionPlanner.GCSViews.SituationMarkers
 
         public bool HandleMouseMove(MouseEventArgs e)
         {
+            if (draggingDroneLabel)
+            {
+                SetDroneLabelOffset(new Point(
+                    droneLabelDragStartOffset.X + e.X - droneLabelDragStartMouse.X,
+                    droneLabelDragStartOffset.Y + e.Y - droneLabelDragStartMouse.Y));
+                map.Invalidate();
+                return true;
+            }
+
             if (pickingMarker != null)
             {
                 if (pickingMouseDown && e.Button == MouseButtons.Left &&
@@ -625,6 +667,12 @@ namespace MissionPlanner.GCSViews.SituationMarkers
 
         public bool HandleMouseUp(MouseEventArgs e)
         {
+            if (draggingDroneLabel)
+            {
+                draggingDroneLabel = false;
+                return true;
+            }
+
             if (pickingMarker != null)
             {
                 if (e.Button != MouseButtons.Left)
@@ -656,6 +704,38 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             draggingMarker = null;
             SetMarkerPosition(marker, point.Lat, point.Lng, true);
             return true;
+        }
+
+        public void SetDroneLabelMoveMode(bool enabled)
+        {
+            if (droneLabelMoveMode == enabled)
+                return;
+
+            droneLabelMoveMode = enabled;
+            draggingDroneLabel = false;
+            DroneLabelMoveModeChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        public void ToggleDroneLabelMoveMode()
+        {
+            SetDroneLabelMoveMode(!droneLabelMoveMode);
+        }
+
+        void ResetDroneLabelOffset()
+        {
+            SetDroneLabelOffset(new Point(-14, -44));
+        }
+
+        void SetDroneLabelOffset(Point offset)
+        {
+            if (droneLabelMarker == null)
+                return;
+
+            if (droneLabelMarker.DroneLabelOffset == offset)
+                return;
+
+            droneLabelMarker.DroneLabelOffset = offset;
+            map.Invalidate();
         }
 
         bool IsMouseDrag(Point start, Point current)

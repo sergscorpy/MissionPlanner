@@ -75,6 +75,7 @@ namespace MissionPlanner.GCSViews
         Button focusSituationRouteButton;
         Button toggleSituationRouteButton;
         Button toggleMarkerDragButton;
+        Button moveDroneLabelButton;
         readonly Color situationMapButtonBackColor = Color.FromArgb(148, 193, 31);
         readonly Color situationMapButtonBorderColor = Color.FromArgb(121, 148, 41);
         readonly Color situationMapButtonTextColor = Color.FromArgb(64, 87, 4);
@@ -573,6 +574,7 @@ namespace MissionPlanner.GCSViews
 
             situationMarkersManager = new SituationMarkersManager(gMapControl1);
             situationMarkersManager.MarkersLockChanged += (sender, args) => UpdateMarkerDragButton();
+            situationMarkersManager.DroneLabelMoveModeChanged += (sender, args) => UpdateMoveDroneLabelButton();
             AddSituationMarkersButton();
             situationMarkersManager.SetMapOverlaysVisible(false);
             UpdateSituationRouteVisibilityButton();
@@ -3546,6 +3548,16 @@ namespace MissionPlanner.GCSViews
                 UpdateMarkerDragButton();
             };
 
+            moveDroneLabelButton = CreateSituationMarkersMapButton("Move Label", 92);
+            moveDroneLabelButton.Click += (sender, args) =>
+            {
+                if (situationMarkersManager == null)
+                    return;
+
+                situationMarkersManager.ToggleDroneLabelMoveMode();
+                UpdateMoveDroneLabelButton();
+            };
+
             situationMarkersButton = CreateSituationMarkersMapButton("Table", 70);
             situationMarkersButton.Click += (sender, args) => situationMarkersManager?.ToggleMarkersForm(this);
 
@@ -3553,13 +3565,16 @@ namespace MissionPlanner.GCSViews
             gMapControl1.Controls.Add(toggleSituationRouteButton);
             gMapControl1.Controls.Add(elevationProfileButton);
             gMapControl1.Controls.Add(toggleMarkerDragButton);
+            gMapControl1.Controls.Add(moveDroneLabelButton);
             gMapControl1.Controls.Add(situationMarkersButton);
             focusSituationRouteButton.BringToFront();
             toggleSituationRouteButton.BringToFront();
             elevationProfileButton.BringToFront();
             toggleMarkerDragButton.BringToFront();
+            moveDroneLabelButton.BringToFront();
             situationMarkersButton.BringToFront();
             UpdateMarkerDragButton();
+            UpdateMoveDroneLabelButton();
             UpdateSituationRouteVisibilityButton();
             PositionSituationMarkersButton();
         }
@@ -3584,7 +3599,7 @@ namespace MissionPlanner.GCSViews
         {
             if (situationMarkersButton == null || elevationProfileButton == null ||
                 focusSituationRouteButton == null || toggleSituationRouteButton == null ||
-                toggleMarkerDragButton == null)
+                toggleMarkerDragButton == null || moveDroneLabelButton == null)
                 return;
 
             var gap = 8;
@@ -3593,12 +3608,14 @@ namespace MissionPlanner.GCSViews
             PositionSituationMapButton(toggleSituationRouteButton, ref right, bottom, gap);
             PositionSituationMapButton(situationMarkersButton, ref right, bottom, gap);
             PositionSituationMapButton(elevationProfileButton, ref right, bottom, gap);
+            PositionSituationMapButton(moveDroneLabelButton, ref right, bottom, gap);
             PositionSituationMapButton(toggleMarkerDragButton, ref right, bottom, gap);
             PositionSituationMapButton(focusSituationRouteButton, ref right, bottom, gap);
 
             focusSituationRouteButton.BringToFront();
             elevationProfileButton.BringToFront();
             toggleMarkerDragButton.BringToFront();
+            moveDroneLabelButton.BringToFront();
             situationMarkersButton.BringToFront();
             toggleSituationRouteButton.BringToFront();
         }
@@ -3633,6 +3650,15 @@ namespace MissionPlanner.GCSViews
 
             if (toggleMarkerDragButton != null)
                 toggleMarkerDragButton.Visible = visible;
+
+            if (moveDroneLabelButton != null)
+                moveDroneLabelButton.Visible = visible;
+
+            if (!visible && situationMarkersManager != null)
+            {
+                situationMarkersManager.SetDroneLabelMoveMode(false);
+                UpdateMoveDroneLabelButton();
+            }
         }
 
         void UpdateMarkerDragButton()
@@ -3652,6 +3678,26 @@ namespace MissionPlanner.GCSViews
                 toggleMarkerDragButton.BackColor = situationMapButtonBackColor;
                 toggleMarkerDragButton.ForeColor = situationMapButtonTextColor;
                 toggleMarkerDragButton.FlatAppearance.BorderColor = situationMapButtonBorderColor;
+            }
+        }
+
+        void UpdateMoveDroneLabelButton()
+        {
+            if (moveDroneLabelButton == null || situationMarkersManager == null)
+                return;
+
+            moveDroneLabelButton.Text = situationMarkersManager.DroneLabelMoveMode ? "Moving..." : "Move Label";
+            if (situationMarkersManager.DroneLabelMoveMode)
+            {
+                moveDroneLabelButton.BackColor = Color.FromArgb(80, 170, 210);
+                moveDroneLabelButton.ForeColor = Color.Black;
+                moveDroneLabelButton.FlatAppearance.BorderColor = Color.FromArgb(35, 105, 145);
+            }
+            else
+            {
+                moveDroneLabelButton.BackColor = situationMapButtonBackColor;
+                moveDroneLabelButton.ForeColor = situationMapButtonTextColor;
+                moveDroneLabelButton.FlatAppearance.BorderColor = situationMapButtonBorderColor;
             }
         }
 

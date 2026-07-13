@@ -15,6 +15,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
         public bool IsHovered { get; set; }
         public bool IsSelected { get; set; }
         public bool DrawPin { get; set; } = true;
+        public Point DroneLabelOffset { get; set; } = new Point(-14, -44);
         public bool IsInsertPoint { get; set; }
         public SituationMarkersManager.RouteSegment InsertSegment { get; set; }
 
@@ -269,8 +270,8 @@ namespace MissionPlanner.GCSViews.SituationMarkers
                 width += paddingX * 2 + iconWidth + contentGap + 4;
                 var height = lineHeight * lines.Length + lineSpacing * (lines.Length - 1) + paddingY * 2;
                 var rect = new Rectangle(
-                    center.X - 14 - width,
-                    center.Y - 44 - height,
+                    center.X + DroneLabelOffset.X - width,
+                    center.Y + DroneLabelOffset.Y - height,
                     width,
                     height);
 
