@@ -4362,7 +4362,10 @@ namespace MissionPlanner.GCSViews
                             MainV2.comPort.MAV.cs.lng != 0)
                         {
                             situationMarkersManager.UpdateDronePosition(currentloc,
-                                MainV2.comPort.MAV.cs.altasl / CurrentState.multiplieralt);
+                                MainV2.comPort.MAV.cs.altasl / CurrentState.multiplieralt,
+                                CurrentState.multiplierspeed == 0
+                                    ? 0
+                                    : MainV2.comPort.MAV.cs.groundspeed / CurrentState.multiplierspeed);
                         }
 
                         int numTrackLength = Settings.Instance.GetInt32("NUM_tracklength", 200);

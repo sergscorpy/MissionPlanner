@@ -38,6 +38,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
         SituationMarkerMapMarker droneLabelMarker;
         PointLatLng lastDronePosition;
         double lastDroneAltitudeAmsl;
+        double lastDroneGroundSpeedMetersPerSecond;
         DateTime lastDroneUiUpdateUtc = DateTime.MinValue;
         PointLatLng cachedDroneTerrainPosition;
         double cachedDroneTerrainAltitude;
@@ -664,13 +665,14 @@ namespace MissionPlanner.GCSViews.SituationMarkers
                    Math.Abs(current.Y - start.Y) > dragSize.Height / 2;
         }
 
-        public void UpdateDronePosition(PointLatLng position, double altitudeAmsl)
+        public void UpdateDronePosition(PointLatLng position, double altitudeAmsl, double groundSpeedMetersPerSecond)
         {
             if (position.Lat == 0 && position.Lng == 0)
                 return;
 
             lastDronePosition = position;
             lastDroneAltitudeAmsl = altitudeAmsl;
+            lastDroneGroundSpeedMetersPerSecond = Math.Max(0, groundSpeedMetersPerSecond);
             hasDronePosition = true;
 
             var now = DateTime.UtcNow;
@@ -694,7 +696,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
 
             UpdateDroneTerrainCache(position);
             droneLabelMarker.Position = position;
-            droneLabelMarker.Label = BuildDroneLabel(altitudeAmsl);
+            droneLabelMarker.Label = BuildDroneLabel(altitudeAmsl, lastDroneGroundSpeedMetersPerSecond);
             map.UpdateMarkerLocalPosition(droneLabelMarker);
             elevationProfileForm?.RefreshDronePosition();
         }
@@ -974,7 +976,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             return FormatRelativeAltitude(marker.Altitude.Value - home.Altitude.Value);
         }
 
-        string BuildDroneLabel(double altitudeAmsl)
+        string BuildDroneLabel(double altitudeAmsl, double groundSpeedMetersPerSecond)
         {
             var lines = new List<string>();
             var interest = GetInterestMarker();
@@ -984,6 +986,16 @@ namespace MissionPlanner.GCSViews.SituationMarkers
 
             if (interest != null && interest.Altitude.HasValue)
                 lines.Add("Target: " + FormatRelativeAltitude(altitudeAmsl - interest.Altitude.Value));
+
+            if (interest != null && interest.HasValidPosition)
+            {
+                var target = new PointLatLng(interest.Lat.Value, interest.Lng.Value);
+                var distanceMeters = DistanceMeters(lastDronePosition, target);
+                lines.Add("Azimuth: " + FormatBearing(BearingDegrees(lastDronePosition, target)));
+                lines.Add("Speed: " + FormatDualSpeed(groundSpeedMetersPerSecond));
+                lines.Add("Dist: " + FormatDistance(distanceMeters));
+                lines.Add("ETA: " + FormatEta(distanceMeters, groundSpeedMetersPerSecond));
+            }
 
             return string.Join("\n", lines);
         }
@@ -1052,8 +1064,60 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             if (!hasDroneTerrainCache)
                 UpdateDroneTerrainCache(lastDronePosition);
 
-            droneLabelMarker.Label = BuildDroneLabel(lastDroneAltitudeAmsl);
+            droneLabelMarker.Label = BuildDroneLabel(lastDroneAltitudeAmsl, lastDroneGroundSpeedMetersPerSecond);
             map.UpdateMarkerLocalPosition(droneLabelMarker);
+        }
+
+        double BearingDegrees(PointLatLng from, PointLatLng to)
+        {
+            var lat1 = DegreesToRadians(from.Lat);
+            var lat2 = DegreesToRadians(to.Lat);
+            var dLng = DegreesToRadians(to.Lng - from.Lng);
+            var y = Math.Sin(dLng) * Math.Cos(lat2);
+            var x = Math.Cos(lat1) * Math.Sin(lat2) -
+                    Math.Sin(lat1) * Math.Cos(lat2) * Math.Cos(dLng);
+            return (RadiansToDegrees(Math.Atan2(y, x)) + 360.0) % 360.0;
+        }
+
+        static double RadiansToDegrees(double radians)
+        {
+            return radians * 180.0 / Math.PI;
+        }
+
+        string FormatBearing(double bearing)
+        {
+            return bearing.ToString("000", CultureInfo.InvariantCulture) + " deg";
+        }
+
+        string FormatDualSpeed(double metersPerSecond)
+        {
+            var kilometersPerHour = metersPerSecond * 3.6;
+            return metersPerSecond.ToString("0.0", CultureInfo.CurrentCulture) + "/" +
+                   kilometersPerHour.ToString("000", CultureInfo.InvariantCulture);
+        }
+
+        string FormatDistance(double meters)
+        {
+            if (meters >= 1000)
+                return (meters / 1000.0).ToString("0.0", CultureInfo.CurrentCulture) + " km";
+
+            return meters.ToString("0", CultureInfo.InvariantCulture) + " m";
+        }
+
+        string FormatEta(double distanceMeters, double speedMetersPerSecond)
+        {
+            if (speedMetersPerSecond < 0.5)
+                return "--:--";
+
+            var seconds = Math.Max(0, (int)Math.Round(distanceMeters / speedMetersPerSecond));
+            var time = TimeSpan.FromSeconds(seconds);
+            if (time.TotalHours >= 1)
+                return ((int)time.TotalHours).ToString(CultureInfo.InvariantCulture) + ":" +
+                       time.Minutes.ToString("00", CultureInfo.InvariantCulture) + ":" +
+                       time.Seconds.ToString("00", CultureInfo.InvariantCulture);
+
+            return time.Minutes.ToString("00", CultureInfo.InvariantCulture) + ":" +
+                   time.Seconds.ToString("00", CultureInfo.InvariantCulture);
         }
 
         ProjectionResult ProjectToSegment(PointLatLng start, PointLatLng end, PointLatLng point)
