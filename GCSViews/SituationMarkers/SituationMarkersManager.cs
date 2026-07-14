@@ -35,9 +35,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
         SituationMarker pickingMarker;
         Point pickingMouseDownLocation;
         SituationMarker draggingMarker;
-        SituationMarkerMapMarker droneLabelMarker;
-        Point droneLabelDragStartMouse;
-        Point droneLabelDragStartOffset;
+        readonly DroneInfoPanel droneInfoPanel = new DroneInfoPanel();
         PointLatLng lastDronePosition;
         double lastDroneAltitudeAmsl;
         double lastDroneGroundSpeedMetersPerSecond;
@@ -57,19 +55,12 @@ namespace MissionPlanner.GCSViews.SituationMarkers
         bool pickingDragged;
         bool suppressAutosave;
         bool markersLocked;
-        bool draggingDroneLabel;
-        bool droneLabelMoveMode;
 
         public BindingList<SituationMarker> Markers { get; } = new BindingList<SituationMarker>();
 
         public bool MarkersLocked
         {
             get { return markersLocked; }
-        }
-
-        public bool DroneLabelMoveMode
-        {
-            get { return droneLabelMoveMode; }
         }
 
         public bool MapOverlaysVisible
@@ -80,7 +71,6 @@ namespace MissionPlanner.GCSViews.SituationMarkers
         public event EventHandler MarkersChanged;
         public event EventHandler SelectedMarkerChanged;
         public event EventHandler MarkersLockChanged;
-        public event EventHandler DroneLabelMoveModeChanged;
 
         public SituationMarkersManager(myGMAP map)
         {
@@ -92,6 +82,8 @@ namespace MissionPlanner.GCSViews.SituationMarkers
 
             map.Overlays.Add(routeOverlay);
             map.Overlays.Add(markersOverlay);
+            map.Controls.Add(droneInfoPanel);
+            droneInfoPanel.BringToFront();
 
             LoadAutosave();
         }
@@ -282,8 +274,6 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             pickingMouseDown = false;
             pickingDragged = false;
             draggingMarker = null;
-            draggingDroneLabel = false;
-            SetDroneLabelMoveMode(false);
             selectedMarkerId = null;
             lastMarkerClickId = null;
             lastInsertClickSegment = null;
@@ -296,9 +286,6 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             routeSegments.Clear();
             insertMarkers.Clear();
             mapMarkers.Clear();
-
-            if (droneLabelMarker != null)
-                markersOverlay.Markers.Add(droneLabelMarker);
 
             map.Refresh();
             if (wasLocked)
@@ -451,12 +438,6 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             if (e.Button != MouseButtons.Left)
                 return false;
 
-            if (droneLabelMoveMode)
-            {
-                ResetDroneLabelOffset();
-                return true;
-            }
-
             if (currentMarker is SituationMarkerMapMarker situationMapMarker &&
                 situationMapMarker.Tag is SituationMarker marker)
             {
@@ -482,21 +463,6 @@ namespace MissionPlanner.GCSViews.SituationMarkers
         {
             if (e.Button != MouseButtons.Left)
                 return false;
-
-            if (droneLabelMoveMode)
-            {
-                if (e.Clicks > 1)
-                {
-                    ResetDroneLabelOffset();
-                    return true;
-                }
-
-                draggingDroneLabel = true;
-                droneLabelDragStartMouse = e.Location;
-                droneLabelDragStartOffset = droneLabelMarker == null ? new Point(-14, -44) : droneLabelMarker.DroneLabelOffset;
-                map.Invalidate();
-                return true;
-            }
 
             if (pickingMarker != null)
             {
@@ -631,15 +597,6 @@ namespace MissionPlanner.GCSViews.SituationMarkers
 
         public bool HandleMouseMove(MouseEventArgs e)
         {
-            if (draggingDroneLabel)
-            {
-                SetDroneLabelOffset(new Point(
-                    droneLabelDragStartOffset.X + e.X - droneLabelDragStartMouse.X,
-                    droneLabelDragStartOffset.Y + e.Y - droneLabelDragStartMouse.Y));
-                map.Invalidate();
-                return true;
-            }
-
             if (pickingMarker != null)
             {
                 if (pickingMouseDown && e.Button == MouseButtons.Left &&
@@ -667,12 +624,6 @@ namespace MissionPlanner.GCSViews.SituationMarkers
 
         public bool HandleMouseUp(MouseEventArgs e)
         {
-            if (draggingDroneLabel)
-            {
-                draggingDroneLabel = false;
-                return true;
-            }
-
             if (pickingMarker != null)
             {
                 if (e.Button != MouseButtons.Left)
@@ -706,38 +657,6 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             return true;
         }
 
-        public void SetDroneLabelMoveMode(bool enabled)
-        {
-            if (droneLabelMoveMode == enabled)
-                return;
-
-            droneLabelMoveMode = enabled;
-            draggingDroneLabel = false;
-            DroneLabelMoveModeChanged?.Invoke(this, EventArgs.Empty);
-        }
-
-        public void ToggleDroneLabelMoveMode()
-        {
-            SetDroneLabelMoveMode(!droneLabelMoveMode);
-        }
-
-        void ResetDroneLabelOffset()
-        {
-            SetDroneLabelOffset(new Point(-14, -44));
-        }
-
-        void SetDroneLabelOffset(Point offset)
-        {
-            if (droneLabelMarker == null)
-                return;
-
-            if (droneLabelMarker.DroneLabelOffset == offset)
-                return;
-
-            droneLabelMarker.DroneLabelOffset = offset;
-            map.Invalidate();
-        }
-
         bool IsMouseDrag(Point start, Point current)
         {
             var dragSize = SystemInformation.DragSize;
@@ -756,29 +675,15 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             hasDronePosition = true;
 
             var now = DateTime.UtcNow;
-            if (droneLabelMarker != null &&
-                (now - lastDroneUiUpdateUtc).TotalMilliseconds < DroneUiUpdateIntervalMs)
+            if ((now - lastDroneUiUpdateUtc).TotalMilliseconds < DroneUiUpdateIntervalMs)
             {
                 return;
             }
 
             lastDroneUiUpdateUtc = now;
 
-            if (droneLabelMarker == null)
-            {
-                droneLabelMarker = new SituationMarkerMapMarker(position)
-                {
-                    IsHitTestVisible = false,
-                    DrawPin = false
-                };
-                markersOverlay.Markers.Add(droneLabelMarker);
-            }
-
             UpdateDroneTerrainCache(position);
-            droneLabelMarker.Position = position;
-            droneLabelMarker.Label = BuildDroneLabel(altitudeAmsl, lastDroneGroundSpeedMetersPerSecond);
-            map.UpdateMarkerLocalPosition(droneLabelMarker);
-            elevationProfileForm?.RefreshDronePosition();
+            UpdateDroneUi(BuildDroneLabel(altitudeAmsl, lastDroneGroundSpeedMetersPerSecond), true);
         }
 
         public void ShowElevationProfile(IWin32Window owner)
@@ -927,6 +832,8 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             if (elevationProfileForm != null && !elevationProfileForm.IsDisposed)
                 elevationProfileForm.Close();
 
+            map.Controls.Remove(droneInfoPanel);
+            droneInfoPanel.Dispose();
             map.Overlays.Remove(markersOverlay);
             map.Overlays.Remove(routeOverlay);
         }
@@ -1147,14 +1054,37 @@ namespace MissionPlanner.GCSViews.SituationMarkers
 
         void RefreshDroneLabel()
         {
-            if (droneLabelMarker == null || !hasDronePosition)
+            if (!hasDronePosition)
                 return;
 
             if (!hasDroneTerrainCache)
                 UpdateDroneTerrainCache(lastDronePosition);
 
-            droneLabelMarker.Label = BuildDroneLabel(lastDroneAltitudeAmsl, lastDroneGroundSpeedMetersPerSecond);
-            map.UpdateMarkerLocalPosition(droneLabelMarker);
+            UpdateDroneUi(BuildDroneLabel(lastDroneAltitudeAmsl, lastDroneGroundSpeedMetersPerSecond), false);
+        }
+
+        void UpdateDroneUi(string label, bool refreshProfileDronePosition)
+        {
+            if (map.IsDisposed)
+                return;
+
+            if (map.InvokeRequired)
+            {
+                if (map.IsHandleCreated)
+                {
+                    map.BeginInvoke((MethodInvoker)delegate
+                    {
+                        UpdateDroneUi(label, refreshProfileDronePosition);
+                    });
+                }
+
+                return;
+            }
+
+            droneInfoPanel.SetInfoText(label);
+
+            if (refreshProfileDronePosition)
+                elevationProfileForm?.RefreshDronePosition();
         }
 
         double BearingDegrees(PointLatLng from, PointLatLng to)
