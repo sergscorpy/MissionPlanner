@@ -120,6 +120,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
         {
             markersOverlay.IsVisibile = visible;
             routeOverlay.IsVisibile = visible;
+            droneInfoPanel.SetPanelEnabled(visible);
             map.Refresh();
         }
 

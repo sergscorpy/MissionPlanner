@@ -17,6 +17,8 @@ namespace MissionPlanner.GCSViews.SituationMarkers
         const string DroneDistancePrefix = "DST|";
         const string DroneEtaPrefix = "ETA|";
         const int EdgeMargin = 12;
+        const int TopInterfaceInset = 42;
+        const int BottomInterfaceInset = 52;
         const int SnapDistance = 50;
 
         string infoText = "";
@@ -49,6 +51,8 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             }
         }
 
+        public bool PanelEnabled { get; set; } = true;
+
         public void SetInfoText(string value)
         {
             value = value ?? "";
@@ -57,10 +61,16 @@ namespace MissionPlanner.GCSViews.SituationMarkers
                 return;
 
             infoText = value;
-            Visible = infoText.Length > 0;
+            Visible = PanelEnabled && infoText.Length > 0;
             UpdatePanelSize();
             EnsurePosition();
             Invalidate();
+        }
+
+        public void SetPanelEnabled(bool enabled)
+        {
+            PanelEnabled = enabled;
+            Visible = PanelEnabled && infoText.Length > 0;
         }
 
         protected override void OnParentChanged(EventArgs e)
@@ -235,8 +245,8 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             if (!positionLoaded)
             {
                 positionLoaded = true;
-                Location = LoadPosition();
                 LoadSnapState();
+                Location = ApplySavedSnap(LoadPosition());
             }
         }
 
@@ -250,7 +260,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
                 return new Point(x, y);
             }
 
-            return new Point(12, 12);
+            return new Point(GetSafeLeft(), GetSafeTop());
         }
 
         void SavePosition()
@@ -290,10 +300,10 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             if (Parent == null)
                 return location;
 
-            var minX = EdgeMargin;
-            var minY = EdgeMargin;
-            var maxX = Math.Max(minX, Parent.ClientSize.Width - Width - EdgeMargin);
-            var maxY = Math.Max(minY, Parent.ClientSize.Height - Height - EdgeMargin);
+            var minX = GetSafeLeft();
+            var minY = GetSafeTop();
+            var maxX = GetSafeRight(minX);
+            var maxY = GetSafeBottom(minY);
 
             var x = location.X;
             var y = location.Y;
@@ -336,10 +346,10 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             if (Parent == null)
                 return location;
 
-            var minX = EdgeMargin;
-            var minY = EdgeMargin;
-            var maxX = Math.Max(minX, Parent.ClientSize.Width - Width - EdgeMargin);
-            var maxY = Math.Max(minY, Parent.ClientSize.Height - Height - EdgeMargin);
+            var minX = GetSafeLeft();
+            var minY = GetSafeTop();
+            var maxX = GetSafeRight(minX);
+            var maxY = GetSafeBottom(minY);
             var x = location.X;
             var y = location.Y;
 
@@ -361,14 +371,38 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             if (Parent == null)
                 return location;
 
-            var minX = EdgeMargin;
-            var minY = EdgeMargin;
-            var maxX = Math.Max(minX, Parent.ClientSize.Width - Width - EdgeMargin);
-            var maxY = Math.Max(minY, Parent.ClientSize.Height - Height - EdgeMargin);
+            var minX = GetSafeLeft();
+            var minY = GetSafeTop();
+            var maxX = GetSafeRight(minX);
+            var maxY = GetSafeBottom(minY);
 
             return new Point(
                 Math.Max(minX, Math.Min(maxX, location.X)),
                 Math.Max(minY, Math.Min(maxY, location.Y)));
+        }
+
+        int GetSafeLeft()
+        {
+            return EdgeMargin;
+        }
+
+        int GetSafeTop()
+        {
+            return Math.Max(EdgeMargin, TopInterfaceInset);
+        }
+
+        int GetSafeRight(int minX)
+        {
+            return Parent == null
+                ? minX
+                : Math.Max(minX, Parent.ClientSize.Width - Width - EdgeMargin);
+        }
+
+        int GetSafeBottom(int minY)
+        {
+            return Parent == null
+                ? minY
+                : Math.Max(minY, Parent.ClientSize.Height - Height - BottomInterfaceInset);
         }
 
         enum SnapSide
