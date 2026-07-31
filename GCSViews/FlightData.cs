@@ -9,6 +9,7 @@ using MissionPlanner.GeoRef;
 using MissionPlanner.Joystick;
 using MissionPlanner.Log;
 using MissionPlanner.Maps;
+using MissionPlanner.GCSViews.SituationMarkers;
 using MissionPlanner.Utilities;
 using MissionPlanner.Warnings;
 using System;
@@ -68,6 +69,15 @@ namespace MissionPlanner.GCSViews
         AviWriter aviwriter;
         private bool CameraOverlap;
         GMapMarker center = new GMarkerGoogle(new PointLatLng(0.0, 0.0), GMarkerGoogleType.none);
+        SituationMarkersManager situationMarkersManager;
+        Button situationMarkersButton;
+        Button elevationProfileButton;
+        Button focusSituationRouteButton;
+        Button toggleSituationRouteButton;
+        Button toggleMarkerDragButton;
+        readonly Color situationMapButtonBackColor = Color.FromArgb(148, 193, 31);
+        readonly Color situationMapButtonBorderColor = Color.FromArgb(121, 148, 41);
+        readonly Color situationMapButtonTextColor = Color.FromArgb(64, 87, 4);
         bool huddropout;
         bool huddropoutresize;
 
@@ -561,6 +571,12 @@ namespace MissionPlanner.GCSViews
 
             gMapControl1.Overlays.Add(poioverlay);
 
+            situationMarkersManager = new SituationMarkersManager(gMapControl1);
+            situationMarkersManager.MarkersLockChanged += (sender, args) => UpdateMarkerDragButton();
+            AddSituationMarkersButton();
+            situationMarkersManager.SetMapOverlaysVisible(false);
+            UpdateSituationRouteVisibilityButton();
+
             float gspeedMax = Settings.Instance.GetFloat("GspeedMAX");
             if (gspeedMax != 0)
             {
@@ -972,6 +988,12 @@ namespace MissionPlanner.GCSViews
 
         protected override void Dispose(bool disposing)
         {
+            if (situationMarkersManager != null)
+            {
+                situationMarkersManager.Dispose();
+                situationMarkersManager = null;
+            }
+
             base.Dispose(disposing);
 
             MainV2.comPort.logreadmode = false;
@@ -1012,6 +1034,10 @@ namespace MissionPlanner.GCSViews
 
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
+            if (keyData == Keys.Delete && situationMarkersManager != null &&
+                situationMarkersManager.DeleteSelectedMarker())
+                return true;
+
             if (keyData == (Keys.Control | Keys.D1))
             {
                 tabControlactions.SelectedIndex = 0;
@@ -3379,6 +3405,9 @@ namespace MissionPlanner.GCSViews
             MouseDownStart = gMapControl1.FromLocalToLatLng(e.X, e.Y);
             Console.WriteLine("gMapControl1_MouseDown " + MouseDownStart);
 
+            if (situationMarkersManager != null && situationMarkersManager.HandleMouseDown(e, CurrentGMapMarker))
+                return;
+
             if (ModifierKeys == Keys.Control)
             {
                 goHereToolStripMenuItem_Click(null, null);
@@ -3413,6 +3442,9 @@ namespace MissionPlanner.GCSViews
 
         private void gMapControl1_MouseMove(object sender, MouseEventArgs e)
         {
+            if (situationMarkersManager != null && situationMarkersManager.HandleMouseMove(e))
+                return;
+
             if (e.Button == MouseButtons.Left)
             {
                 PointLatLng point = gMapControl1.FromLocalToLatLng(e.X, e.Y);
@@ -3467,10 +3499,12 @@ namespace MissionPlanner.GCSViews
         void gMapControl1_OnMarkerEnter(GMapMarker item)
         {
             CurrentGMapMarker = item;
+            situationMarkersManager?.HandleMarkerEnter(item);
         }
 
         void gMapControl1_OnMarkerLeave(GMapMarker item)
         {
+            situationMarkersManager?.HandleMarkerLeave(item);
             CurrentGMapMarker = null;
         }
 
@@ -3484,6 +3518,141 @@ namespace MissionPlanner.GCSViews
         private void gMapControl1_Resize(object sender, EventArgs e)
         {
             gMapControl1.Zoom = gMapControl1.Zoom + 0.01;
+            PositionSituationMarkersButton();
+        }
+
+        void AddSituationMarkersButton()
+        {
+            focusSituationRouteButton = CreateSituationMarkersMapButton("Zoom", 70);
+            focusSituationRouteButton.Click += (sender, args) => situationMarkersManager?.FocusRouteOnMap();
+
+            toggleSituationRouteButton = CreateSituationMarkersMapButton("Hide Route", 96);
+            toggleSituationRouteButton.Click += (sender, args) =>
+            {
+                situationMarkersManager?.ToggleMapOverlaysVisible();
+                UpdateSituationRouteVisibilityButton();
+            };
+
+            elevationProfileButton = CreateSituationMarkersMapButton("Height Map", 98);
+            elevationProfileButton.Click += (sender, args) => situationMarkersManager?.ToggleElevationProfile(this);
+
+            toggleMarkerDragButton = CreateSituationMarkersMapButton("Lock", 70);
+            toggleMarkerDragButton.Click += (sender, args) =>
+            {
+                if (situationMarkersManager == null)
+                    return;
+
+                situationMarkersManager.SetMarkersLocked(!situationMarkersManager.MarkersLocked);
+                UpdateMarkerDragButton();
+            };
+
+            situationMarkersButton = CreateSituationMarkersMapButton("Table", 70);
+            situationMarkersButton.Click += (sender, args) => situationMarkersManager?.ToggleMarkersForm(this);
+
+            gMapControl1.Controls.Add(focusSituationRouteButton);
+            gMapControl1.Controls.Add(toggleSituationRouteButton);
+            gMapControl1.Controls.Add(elevationProfileButton);
+            gMapControl1.Controls.Add(toggleMarkerDragButton);
+            gMapControl1.Controls.Add(situationMarkersButton);
+            focusSituationRouteButton.BringToFront();
+            toggleSituationRouteButton.BringToFront();
+            elevationProfileButton.BringToFront();
+            toggleMarkerDragButton.BringToFront();
+            situationMarkersButton.BringToFront();
+            UpdateMarkerDragButton();
+            UpdateSituationRouteVisibilityButton();
+            PositionSituationMarkersButton();
+        }
+
+        Button CreateSituationMarkersMapButton(string text, int width)
+        {
+            var button = new Button
+            {
+                Text = text,
+                Width = width,
+                Height = 28,
+                Anchor = AnchorStyles.Right | AnchorStyles.Bottom,
+                BackColor = situationMapButtonBackColor,
+                ForeColor = situationMapButtonTextColor,
+                FlatStyle = FlatStyle.Flat
+            };
+            button.FlatAppearance.BorderColor = situationMapButtonBorderColor;
+            return button;
+        }
+
+        void PositionSituationMarkersButton()
+        {
+            if (situationMarkersButton == null || elevationProfileButton == null ||
+                focusSituationRouteButton == null || toggleSituationRouteButton == null ||
+                toggleMarkerDragButton == null)
+                return;
+
+            var gap = 8;
+            var bottom = Math.Max(0, gMapControl1.Height - situationMarkersButton.Height - 12);
+            var right = Math.Max(0, gMapControl1.Width - 12);
+            PositionSituationMapButton(toggleSituationRouteButton, ref right, bottom, gap);
+            PositionSituationMapButton(situationMarkersButton, ref right, bottom, gap);
+            PositionSituationMapButton(elevationProfileButton, ref right, bottom, gap);
+            PositionSituationMapButton(toggleMarkerDragButton, ref right, bottom, gap);
+            PositionSituationMapButton(focusSituationRouteButton, ref right, bottom, gap);
+
+            focusSituationRouteButton.BringToFront();
+            elevationProfileButton.BringToFront();
+            toggleMarkerDragButton.BringToFront();
+            situationMarkersButton.BringToFront();
+            toggleSituationRouteButton.BringToFront();
+        }
+
+        void PositionSituationMapButton(Button button, ref int right, int top, int gap)
+        {
+            var left = Math.Max(0, right - button.Width);
+            button.Location = new Point(left, top);
+            right = left - gap;
+        }
+
+        void UpdateSituationRouteVisibilityButton()
+        {
+            if (toggleSituationRouteButton == null || situationMarkersManager == null)
+                return;
+
+            var visible = situationMarkersManager.MapOverlaysVisible;
+            toggleSituationRouteButton.Text = visible ? "Hide Route" : "Show Route";
+            SetSituationMapActionButtonsVisible(visible);
+        }
+
+        void SetSituationMapActionButtonsVisible(bool visible)
+        {
+            if (situationMarkersButton != null)
+                situationMarkersButton.Visible = visible;
+
+            if (elevationProfileButton != null)
+                elevationProfileButton.Visible = visible;
+
+            if (focusSituationRouteButton != null)
+                focusSituationRouteButton.Visible = visible;
+
+            if (toggleMarkerDragButton != null)
+                toggleMarkerDragButton.Visible = visible;
+        }
+
+        void UpdateMarkerDragButton()
+        {
+            if (toggleMarkerDragButton == null || situationMarkersManager == null)
+                return;
+
+            toggleMarkerDragButton.Text = situationMarkersManager.MarkersLocked ? "Unlock" : "Lock";
+            if (situationMarkersManager.MarkersLocked)
+            {
+                toggleMarkerDragButton.BackColor = Color.FromArgb(210, 90, 80);
+                toggleMarkerDragButton.ForeColor = Color.Black;
+                toggleMarkerDragButton.FlatAppearance.BorderColor = Color.FromArgb(140, 45, 40);
+            }
+            else
+            {
+                toggleMarkerDragButton.BackColor = situationMapButtonBackColor;
+                toggleMarkerDragButton.ForeColor = situationMapButtonTextColor;
+                toggleMarkerDragButton.FlatAppearance.BorderColor = situationMapButtonBorderColor;
+            }
         }
 
         private void goHereToolStripMenuItem_Click(object sender, EventArgs e)
@@ -4187,6 +4356,17 @@ namespace MissionPlanner.GCSViews
                         PointLatLng currentloc = new PointLatLng(MainV2.comPort.MAV.cs.lat, MainV2.comPort.MAV.cs.lng);
 
                         gMapControl1.HoldInvalidation = true;
+
+                        if (situationMarkersManager != null &&
+                            MainV2.comPort.MAV.cs.lat != 0 &&
+                            MainV2.comPort.MAV.cs.lng != 0)
+                        {
+                            situationMarkersManager.UpdateDronePosition(currentloc,
+                                MainV2.comPort.MAV.cs.altasl / CurrentState.multiplieralt,
+                                CurrentState.multiplierspeed == 0
+                                    ? 0
+                                    : MainV2.comPort.MAV.cs.groundspeed / CurrentState.multiplierspeed);
+                        }
 
                         int numTrackLength = Settings.Instance.GetInt32("NUM_tracklength", 200);
                         // maintain route history length
@@ -6382,36 +6562,31 @@ namespace MissionPlanner.GCSViews
 
         private void flyToCoordsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var location = "";
-            InputBox.Show("Enter Fly To Coords", "Please enter the coords 'lat;long;alt' or 'lat;long'", ref location);
-
-            byte frame = (byte)MAVLink.MAV_FRAME.GLOBAL_RELATIVE_ALT;
-            if (!MainV2.comPort.MAV.GuidedMode.Equals(new MAVLink.mavlink_mission_item_int_t()))
+            using (var dialog = new FlyToCoordsForm(MouseDownStart))
             {
-                frame = MainV2.comPort.MAV.GuidedMode.frame;
-            }
-            else if (Settings.Instance.ContainsKey("guided_alt_frame"))
-            {
-                byte.TryParse(Settings.Instance["guided_alt_frame"], out frame);
-            }
+                if (dialog.ShowDialog(this) != DialogResult.OK)
+                    return;
 
-            var split = location.Split(';');
+                byte frame = (byte)MAVLink.MAV_FRAME.GLOBAL_RELATIVE_ALT;
+                if (!MainV2.comPort.MAV.GuidedMode.Equals(new MAVLink.mavlink_mission_item_int_t()))
+                {
+                    frame = MainV2.comPort.MAV.GuidedMode.frame;
+                }
+                else if (Settings.Instance.ContainsKey("guided_alt_frame"))
+                {
+                    byte.TryParse(Settings.Instance["guided_alt_frame"], out frame);
+                }
 
-            if (split.Length == 3)
-            {
-                var lat = float.Parse(split[0], CultureInfo.InvariantCulture);
-                var lng = float.Parse(split[1], CultureInfo.InvariantCulture);
-                var alt = float.Parse(split[2], CultureInfo.InvariantCulture);
-
-                var plla = new PointLatLngAlt(lat, lng, alt);
-
-                Locationwp gotohere = new Locationwp();
-
-                gotohere.id = (ushort)MAVLink.MAV_CMD.WAYPOINT;
-                gotohere.alt = (float)plla.Alt / CurrentState.multiplieralt; // back to m
-                gotohere.lat = (plla.Lat);
-                gotohere.lng = (plla.Lng);
-                gotohere.frame = frame;
+                var gotohere = new Locationwp
+                {
+                    id = (ushort)MAVLink.MAV_CMD.WAYPOINT,
+                    alt = dialog.Altitude.HasValue
+                        ? (float)(dialog.Altitude.Value / CurrentState.multiplieralt)
+                        : MainV2.comPort.MAV.GuidedMode.z,
+                    lat = dialog.Latitude,
+                    lng = dialog.Longitude,
+                    frame = frame
+                };
 
                 try
                 {
@@ -6421,35 +6596,6 @@ namespace MissionPlanner.GCSViews
                 {
                     CustomMessageBox.Show(Strings.CommandFailed + ex.Message, Strings.ERROR);
                 }
-            }
-            else if (split.Length == 2)
-            {
-                var lat = float.Parse(split[0], CultureInfo.InvariantCulture);
-                var lng = float.Parse(split[1], CultureInfo.InvariantCulture);
-                var alt = srtm.getAltitude(MouseDownStart.Lat, MouseDownStart.Lng).alt / CurrentState.multiplieralt;
-
-                var plla = new PointLatLngAlt(lat, lng, alt);
-
-                Locationwp gotohere = new Locationwp();
-
-                gotohere.id = (ushort)MAVLink.MAV_CMD.WAYPOINT;
-                gotohere.alt = MainV2.comPort.MAV.GuidedMode.z; // back to m
-                gotohere.lat = (plla.Lat);
-                gotohere.lng = (plla.Lng);
-                gotohere.frame = frame;
-
-                try
-                {
-                    MainV2.comPort.setGuidedModeWP(gotohere);
-                }
-                catch (Exception ex)
-                {
-                    CustomMessageBox.Show(Strings.CommandFailed + ex.Message, Strings.ERROR);
-                }
-            }
-            else
-            {
-                CustomMessageBox.Show(Strings.InvalidField, Strings.ERROR);
             }
         }
 
@@ -6536,6 +6682,13 @@ namespace MissionPlanner.GCSViews
             var posstart = gMapControl1.FromLatLngToLocal(MouseDownStart);
             var MouseDownEnd = gMapControl1.FromLocalToLatLng(e.X, e.Y);
             Console.WriteLine("gMapControl1_MouseUp " + MouseDownEnd);
+
+            if (e.Clicks > 1 && situationMarkersManager != null &&
+                situationMarkersManager.HandleMouseDoubleClick(e, CurrentGMapMarker))
+                return;
+
+            if (situationMarkersManager != null && situationMarkersManager.HandleMouseUp(e))
+                return;
 
             if (gMapControl1.Core.IsDragging)
                 return;
