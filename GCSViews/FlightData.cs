@@ -3871,10 +3871,19 @@ namespace MissionPlanner.GCSViews
         private void hud1_ekfclick(object sender, EventArgs e)
         {
             EKFStatus frm = new EKFStatus();
-            frm.RestoreStartupLocation();
+            RestoreFixedStartupLocation(frm);
             frm.FormClosed += (a, e2) => frm.SaveStartupLocation();
             frm.TopMost = true;
             frm.Show();
+        }
+
+        private static void RestoreFixedStartupLocation(Form frm)
+        {
+            var defaultSize = frm.Size;
+
+            frm.RestoreStartupLocation();
+            frm.WindowState = FormWindowState.Normal;
+            frm.Size = defaultSize;
         }
 
         private void hud1_Resize(object sender, EventArgs e)
@@ -3892,7 +3901,7 @@ namespace MissionPlanner.GCSViews
         private void hud1_vibeclick(object sender, EventArgs e)
         {
             Vibration frm = new Vibration();
-            frm.RestoreStartupLocation();
+            RestoreFixedStartupLocation(frm);
             frm.FormClosed += (a, e2) => frm.SaveStartupLocation();
             frm.TopMost = true;
             frm.Show();

@@ -10,6 +10,8 @@ namespace MissionPlanner.Controls
         {
             InitializeComponent();
 
+            MaximizeBox = false;
+
             Utilities.ThemeManager.ApplyThemeTo(this);
 
             timer1.Start();
