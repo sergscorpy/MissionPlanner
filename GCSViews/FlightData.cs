@@ -7635,10 +7635,20 @@ namespace MissionPlanner.GCSViews
             {
                 if (IsComPortConnected())
                 {
-                    if ((MainV2.comPort.MAV.param.ContainsKey("GPS1_TYPE")) && (GPS1 != "GPS1_TYPE")) GPS1 = "GPS1_TYPE";
-                    if ((MainV2.comPort.MAV.param.ContainsKey("GPS2_TYPE")) && (GPS2 != "GPS2_TYPE")) GPS2 = "GPS2_TYPE";
-                    if ((MainV2.comPort.MAV.param.ContainsKey("GPS_TYPE")) && (GPS1 != "GPS_TYPE")) GPS1 = "GPS_TYPE";
-                    if ((MainV2.comPort.MAV.param.ContainsKey("GPS_TYPE2")) && (GPS2 != "GPS_TYPE2")) GPS2 = "GPS_TYPE2";
+                    var gps1Param = MainV2.comPort.MAV.param[new[] { "GPS1_TYPE", "GPS_TYPE" }];
+                    var gps2Param = MainV2.comPort.MAV.param[new[] { "GPS2_TYPE", "GPS_TYPE2" }];
+
+                    if (gps1Param != null)
+                        GPS1 = gps1Param.Name;
+
+                    if (gps2Param != null)
+                        GPS2 = gps2Param.Name;
+
+                    if (key == "GPS1_TYPE" || key == "GPS_TYPE")
+                        key = GPS1;
+
+                    if (key == "GPS2_TYPE" || key == "GPS_TYPE2")
+                        key = GPS2;
                 }
 
                 if (!IsComPortConnected())
