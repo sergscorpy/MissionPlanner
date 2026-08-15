@@ -4256,10 +4256,15 @@ namespace MissionPlanner.GCSViews
         }
         public class RootObject
         {
+            public int configVersion { get; set; }
             public float RTL_ALT { get; set; }
             public string selectedDroneModel { get; set; }
-            public ModeList vampire { get; set; }
-            public ModeList petrovych { get; set; }
+            public ModeList Vampire { get; set; }
+            public ModeList Sparrow { get; set; }
+            [JsonProperty("vampire", NullValueHandling = NullValueHandling.Ignore)]
+            public ModeList LegacyVampire { get; set; }
+            [JsonProperty("petrovych", NullValueHandling = NullValueHandling.Ignore)]
+            public ModeList LegacyPetrovych { get; set; }
         }
         
         //Plane
@@ -4308,7 +4313,7 @@ namespace MissionPlanner.GCSViews
         private DataGridView dataGridView;
         private List<KeyValuePair<string, string>> _comboItems;
         private string _selectedDroneModel;
-        private ModeList _petrovychParams;
+        private ModeList _sparrowParams;
         private ModeList _vampireParams;
         private float _rtlAlt;
         private RootObject _rootObject;

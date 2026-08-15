@@ -7218,7 +7218,7 @@ namespace MissionPlanner.GCSViews
         }
         private string CollationDefaultCurrentValue(out string key)
         {
-            ModeList modeList = _selectedDroneModel == "vampire" ? _vampireParams : _petrovychParams;
+            ModeList modeList = _selectedDroneModel == "Vampire" ? _vampireParams : _sparrowParams;
             var DefaultModeList = new Dictionary<string, List<float>>();
             foreach (var mode in modeList.Modes)
             {
@@ -7287,7 +7287,7 @@ namespace MissionPlanner.GCSViews
 
             if (needToUpdate)
             {
-                ModeList modeList = _selectedDroneModel == "vampire" ? _rootObject.vampire : _rootObject.petrovych;
+                ModeList modeList = _selectedDroneModel == "Vampire" ? _rootObject.Vampire : _rootObject.Sparrow;
 
                 var customMode = modeList.Modes.Find(m => m.Name == "Custom");
                 if (customMode != null)
@@ -7297,8 +7297,7 @@ namespace MissionPlanner.GCSViews
                     customMode.Params.WPNAV_SPEED = inputParams["WPNAV_SPEED"];
                 }
 
-                var updatedJsonData = JsonConvert.SerializeObject(_rootObject, Formatting.Indented);
-                File.WriteAllText(PathCustom_params, updatedJsonData);
+                SaveCopterConfig();
             }
 
             foreach (var button in ListButtonsMods.Where(button => button.Name != name))
@@ -7335,11 +7334,99 @@ namespace MissionPlanner.GCSViews
             );
         }
 
+        private static string NormalizeCopterModelName(string modelName)
+        {
+            if (string.Equals(modelName, "Vampire", StringComparison.OrdinalIgnoreCase))
+            {
+                return "Vampire";
+            }
+
+            if (string.Equals(modelName, "Sparrow", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(modelName, "petrovych", StringComparison.OrdinalIgnoreCase))
+            {
+                return "Sparrow";
+            }
+
+            return "Sparrow";
+        }
+
+        private static void ConvertCopterModeListToModernUnits(ModeList modeList)
+        {
+            if (modeList?.Modes == null)
+            {
+                return;
+            }
+
+            foreach (var mode in modeList.Modes.Where(mode => mode?.Params != null))
+            {
+                mode.Params.ANGLE_MAX = ConvertOldCopterParamToModernUnits(mode.Params.ANGLE_MAX);
+                mode.Params.LOIT_SPEED = ConvertOldCopterParamToModernUnits(mode.Params.LOIT_SPEED);
+                mode.Params.WPNAV_SPEED = ConvertOldCopterParamToModernUnits(mode.Params.WPNAV_SPEED);
+            }
+        }
+
+        private static float ConvertOldCopterParamToModernUnits(float value)
+        {
+            return Convert.ToSingle(Math.Round(value / 100.0f, MidpointRounding.AwayFromZero));
+        }
+
+        private void SaveCopterConfig()
+        {
+            var updatedJsonData = JsonConvert.SerializeObject(_rootObject, Formatting.Indented,
+                new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
+            File.WriteAllText(PathCustom_params, updatedJsonData);
+        }
+
+        private void UpgradeCopterConfigIfNeeded()
+        {
+            var needsSave = false;
+
+            if (_rootObject.Vampire == null && _rootObject.LegacyVampire != null)
+            {
+                _rootObject.Vampire = _rootObject.LegacyVampire;
+                needsSave = true;
+            }
+
+            if (_rootObject.Sparrow == null && _rootObject.LegacyPetrovych != null)
+            {
+                _rootObject.Sparrow = _rootObject.LegacyPetrovych;
+                needsSave = true;
+            }
+
+            var normalizedModel = NormalizeCopterModelName(_rootObject.selectedDroneModel);
+            if (_rootObject.selectedDroneModel != normalizedModel)
+            {
+                _rootObject.selectedDroneModel = normalizedModel;
+                needsSave = true;
+            }
+
+            if (_rootObject.configVersion < CopterConfigVersion)
+            {
+                ConvertCopterModeListToModernUnits(_rootObject.Vampire);
+                ConvertCopterModeListToModernUnits(_rootObject.Sparrow);
+                _rootObject.configVersion = CopterConfigVersion;
+                needsSave = true;
+            }
+
+            if (_rootObject.LegacyVampire != null || _rootObject.LegacyPetrovych != null)
+            {
+                _rootObject.LegacyVampire = null;
+                _rootObject.LegacyPetrovych = null;
+                needsSave = true;
+            }
+
+            if (needsSave)
+            {
+                SaveCopterConfig();
+            }
+        }
+
         private void LoadDeafoultParameters()
         {
             //Читання масиву даних з файлу
             _jsonFileData = File.ReadAllText(PathCustom_params);
             _rootObject = JsonConvert.DeserializeObject<RootObject>(_jsonFileData);
+            UpgradeCopterConfigIfNeeded();
 
             //Читання параметру RTL_ALT з масиву даних
             _rtlAlt = _rootObject.RTL_ALT;
@@ -7348,8 +7435,8 @@ namespace MissionPlanner.GCSViews
             _selectedDroneModel = _rootObject.selectedDroneModel;
 
             //Читання параметрів за замовчуванням з масиву даних
-            _petrovychParams = _rootObject.petrovych;
-            _vampireParams = _rootObject.vampire;
+            _sparrowParams = _rootObject.Sparrow;
+            _vampireParams = _rootObject.Vampire;
 
             initParamTable();
         }
@@ -7357,7 +7444,7 @@ namespace MissionPlanner.GCSViews
         {
             _parameters.Clear();
 
-            ModeList modeList = _selectedDroneModel == "vampire" ? _vampireParams : _petrovychParams;
+            ModeList modeList = _selectedDroneModel == "Vampire" ? _vampireParams : _sparrowParams;
 
             var selectedItem = _comboItems.FirstOrDefault(i => i.Value == _selectedDroneModel);
 
@@ -7388,8 +7475,7 @@ namespace MissionPlanner.GCSViews
 
             _rootObject.selectedDroneModel = selectedItem.Value;
 
-            var updatedJsonData = JsonConvert.SerializeObject(_rootObject, Formatting.Indented);
-            File.WriteAllText(PathCustom_params, updatedJsonData);
+            SaveCopterConfig();
 
             initParamTable();
             LoadCustomParameters();
@@ -7469,13 +7555,9 @@ namespace MissionPlanner.GCSViews
 
                 if (needToUpdate)
                 {
-                    var jsonCustomData = File.ReadAllText(PathCustom_params);
-                    var rootObject = JsonConvert.DeserializeObject<RootObject>(jsonCustomData);
-
-                    rootObject.RTL_ALT = value;
-
-                    var updatedJsonData = JsonConvert.SerializeObject(rootObject, Formatting.Indented);
-                    File.WriteAllText(PathCustom_params, updatedJsonData);
+                    _rootObject.RTL_ALT = value;
+                    _rtlAlt = value;
+                    SaveCopterConfig();
                 }
 
                 SetParam(param);
@@ -7777,8 +7859,9 @@ namespace MissionPlanner.GCSViews
                     return;
                 }
 
-                var value = Convert.ToInt32(MainV2.comPort.MAV.param[paramAlias.ParamName].Value *
-                                            paramAlias.ActualToTableScale);
+                var value = Convert.ToInt32(Math.Round(
+                    MainV2.comPort.MAV.param[paramAlias.ParamName].Value * paramAlias.ActualToTableScale,
+                    MidpointRounding.AwayFromZero));
                 label.Enabled = true;
                 switch (label.Name)
                 {
@@ -7823,7 +7906,8 @@ namespace MissionPlanner.GCSViews
                         }
 
                         var actualParam = MainV2.comPort.MAV.param[paramAlias.ParamName];
-                        var paramValue = Convert.ToInt32(actualParam.Value * paramAlias.ActualToTableScale);
+                        var paramValue = Convert.ToInt32(Math.Round(actualParam.Value * paramAlias.ActualToTableScale,
+                            MidpointRounding.AwayFromZero));
 
                         if (paramValue != 0 && currentValue != paramValue)
                         {

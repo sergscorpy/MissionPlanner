@@ -43,6 +43,7 @@ namespace MissionPlanner.GCSViews
             public decimal Max { get; }
         }
 
+        private const int CopterConfigVersion = 2;
         private const int CopterColumnCount = 4;
         private const int CopterRowCount = 15;
         private const int CopterRowHeight = 32;
@@ -58,15 +59,15 @@ namespace MissionPlanner.GCSViews
 
         private static readonly CopterParamDescriptor[] CopterParamDescriptors =
         {
-            new CopterParamDescriptor("Angle Max", "ANGLE_MAX", 1000, 8000,
-                new CopterParamAlias("ATC_ANGLE_MAX", 100, 0.01f),
-                new CopterParamAlias("ANGLE_MAX")),
-            new CopterParamDescriptor("Loit Speed", "LOIT_SPEED", 20, 50000,
-                new CopterParamAlias("LOIT_SPEED_MS", 100, 0.01f),
-                new CopterParamAlias("LOIT_SPEED")),
-            new CopterParamDescriptor("Mission Speed", "WPNAV_SPEED", 10, 50000,
-                new CopterParamAlias("WP_SPD", 100, 0.01f),
-                new CopterParamAlias("WPNAV_SPEED"))
+            new CopterParamDescriptor("Angle Max, °", "ANGLE_MAX", 10, 80,
+                new CopterParamAlias("ATC_ANGLE_MAX"),
+                new CopterParamAlias("ANGLE_MAX", 0.01f, 100)),
+            new CopterParamDescriptor("Loit Speed, m/s", "LOIT_SPEED", 1, 500,
+                new CopterParamAlias("LOIT_SPEED_MS"),
+                new CopterParamAlias("LOIT_SPEED", 0.01f, 100)),
+            new CopterParamDescriptor("Mission Speed, m/s", "WPNAV_SPEED", 1, 500,
+                new CopterParamAlias("WP_SPD"),
+                new CopterParamAlias("WPNAV_SPEED", 0.01f, 100))
         };
 
         private static readonly IReadOnlyDictionary<string, CopterParamAlias[]> CopterParamAliases =
@@ -98,8 +99,8 @@ namespace MissionPlanner.GCSViews
         {
             return new List<KeyValuePair<string, string>>
             {
-                new KeyValuePair<string, string>("Вампір", "vampire"),
-                new KeyValuePair<string, string>("Воробєй", "sparrow")
+                new KeyValuePair<string, string>("Вампір", "Vampire"),
+                new KeyValuePair<string, string>("Воробєй", "Sparrow")
             };
         }
 
@@ -406,6 +407,8 @@ namespace MissionPlanner.GCSViews
                 {
                     ctl.Minimum = Minimum;
                     ctl.Maximum = Maximum;
+                    ctl.DecimalPlaces = 0;
+                    ctl.Increment = 1;
                     ctl.Value = Math.Max(ctl.Minimum, Math.Min(ctl.Maximum, Convert.ToDecimal(Value)));
                 }
             }
