@@ -7867,7 +7867,7 @@ namespace MissionPlanner.GCSViews
                 {
                     case "labelCurrRtlAlt":
                         {
-                            label.Text = ($"{(value / 100).ToString()} м");
+                            label.Text = ($"{(value / 100).ToString()} m");
                             break;
                         }
                     case "labelCurrHYaw":

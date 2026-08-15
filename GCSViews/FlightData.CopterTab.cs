@@ -24,11 +24,12 @@ namespace MissionPlanner.GCSViews
 
         private sealed class CopterParamDescriptor
         {
-            public CopterParamDescriptor(string label, string paramName, decimal min, decimal max,
+            public CopterParamDescriptor(string label, string paramName, string unit, decimal min, decimal max,
                 params CopterParamAlias[] paramAliases)
             {
                 Label = label;
                 ParamName = paramName;
+                Unit = unit;
                 Min = min;
                 Max = max;
                 ParamAliases = paramAliases.Length > 0
@@ -38,6 +39,7 @@ namespace MissionPlanner.GCSViews
 
             public string Label { get; }
             public string ParamName { get; }
+            public string Unit { get; }
             public CopterParamAlias[] ParamAliases { get; }
             public decimal Min { get; }
             public decimal Max { get; }
@@ -59,13 +61,13 @@ namespace MissionPlanner.GCSViews
 
         private static readonly CopterParamDescriptor[] CopterParamDescriptors =
         {
-            new CopterParamDescriptor("Angle Max, °", "ANGLE_MAX", 10, 80,
+            new CopterParamDescriptor("Angle Max", "ANGLE_MAX", "°", 10, 80,
                 new CopterParamAlias("ATC_ANGLE_MAX"),
                 new CopterParamAlias("ANGLE_MAX", 0.01f, 100)),
-            new CopterParamDescriptor("Loit Speed, m/s", "LOIT_SPEED", 1, 500,
+            new CopterParamDescriptor("Loit Speed", "LOIT_SPEED", "m/s", 1, 500,
                 new CopterParamAlias("LOIT_SPEED_MS"),
                 new CopterParamAlias("LOIT_SPEED", 0.01f, 100)),
-            new CopterParamDescriptor("Mission Speed, m/s", "WPNAV_SPEED", 1, 500,
+            new CopterParamDescriptor("Mission Speed", "WPNAV_SPEED", "m/s", 1, 500,
                 new CopterParamAlias("WP_SPD"),
                 new CopterParamAlias("WPNAV_SPEED", 0.01f, 100))
         };
@@ -240,7 +242,28 @@ namespace MissionPlanner.GCSViews
             }
 
             dataGridView.RowTemplate.Height = CopterDataGridRowTemplateHeight;
+            dataGridView.CellFormatting += DataGridView_CellFormatting;
             dataGridView.EditingControlShowing += DataGridView_EditingControlShowing;
+        }
+
+        private void DataGridView_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
+        {
+            var isEditingCell = dataGridView.IsCurrentCellInEditMode &&
+                                dataGridView.CurrentCell?.RowIndex == e.RowIndex &&
+                                dataGridView.CurrentCell.ColumnIndex == e.ColumnIndex;
+
+            if (e.RowIndex < 0 ||
+                e.RowIndex >= CopterParamDescriptors.Length ||
+                (e.ColumnIndex != CopterCustomColumnIndex && e.ColumnIndex != CopterCurrentColumnIndex) ||
+                isEditingCell ||
+                e.Value == null)
+            {
+                return;
+            }
+
+            var descriptor = CopterParamDescriptors[e.RowIndex];
+            e.Value = $"{e.Value} {descriptor.Unit}";
+            e.FormattingApplied = true;
         }
 
         private void UpdateCopterButtonState(Button button, bool enabled, Color backColor, bool resetAutoSize = false)
