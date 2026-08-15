@@ -8,18 +8,37 @@ namespace MissionPlanner.GCSViews
 {
     public partial class FlightData
     {
+        private sealed class CopterParamAlias
+        {
+            public CopterParamAlias(string paramName, float actualToTableScale = 1, float tableToActualScale = 1)
+            {
+                ParamName = paramName;
+                ActualToTableScale = actualToTableScale;
+                TableToActualScale = tableToActualScale;
+            }
+
+            public string ParamName { get; }
+            public float ActualToTableScale { get; }
+            public float TableToActualScale { get; }
+        }
+
         private sealed class CopterParamDescriptor
         {
-            public CopterParamDescriptor(string label, string paramName, decimal min, decimal max)
+            public CopterParamDescriptor(string label, string paramName, decimal min, decimal max,
+                params CopterParamAlias[] paramAliases)
             {
                 Label = label;
                 ParamName = paramName;
                 Min = min;
                 Max = max;
+                ParamAliases = paramAliases.Length > 0
+                    ? paramAliases
+                    : new[] { new CopterParamAlias(paramName) };
             }
 
             public string Label { get; }
             public string ParamName { get; }
+            public CopterParamAlias[] ParamAliases { get; }
             public decimal Min { get; }
             public decimal Max { get; }
         }
@@ -39,10 +58,36 @@ namespace MissionPlanner.GCSViews
 
         private static readonly CopterParamDescriptor[] CopterParamDescriptors =
         {
-            new CopterParamDescriptor("Angle Max", "ANGLE_MAX", 1000, 8000),
-            new CopterParamDescriptor("Loit Speed", "LOIT_SPEED", 20, 50000),
-            new CopterParamDescriptor("Mission Speed", "WPNAV_SPEED", 10, 50000)
+            new CopterParamDescriptor("Angle Max", "ANGLE_MAX", 1000, 8000,
+                new CopterParamAlias("ATC_ANGLE_MAX", 100, 0.01f),
+                new CopterParamAlias("ANGLE_MAX")),
+            new CopterParamDescriptor("Loit Speed", "LOIT_SPEED", 20, 50000,
+                new CopterParamAlias("LOIT_SPEED_MS", 100, 0.01f),
+                new CopterParamAlias("LOIT_SPEED")),
+            new CopterParamDescriptor("Mission Speed", "WPNAV_SPEED", 10, 50000,
+                new CopterParamAlias("WP_SPD", 100, 0.01f),
+                new CopterParamAlias("WPNAV_SPEED"))
         };
+
+        private static readonly IReadOnlyDictionary<string, CopterParamAlias[]> CopterParamAliases =
+            new Dictionary<string, CopterParamAlias[]>
+            {
+                {
+                    "RTL_ALT", new[]
+                    {
+                        new CopterParamAlias("RTL_ALT_M", 100, 0.01f),
+                        new CopterParamAlias("RTL_ALT")
+                    }
+                },
+                {
+                    "DR_HOME_YAW", new[]
+                    {
+                        new CopterParamAlias("GNGP_HOME_YAW"),
+                        new CopterParamAlias("DR_HOME_YAW"),
+                        new CopterParamAlias("DR_HOME_ANGLE")
+                    }
+                }
+            };
 
         private static readonly IReadOnlyDictionary<string, int> CopterParamRowLookup =
             CopterParamDescriptors
@@ -263,6 +308,37 @@ namespace MissionPlanner.GCSViews
             }
 
             return rowIndex;
+        }
+
+        private static CopterParamDescriptor GetCopterParamDescriptor(string paramName)
+        {
+            return CopterParamDescriptors.FirstOrDefault(descriptor => descriptor.ParamName == paramName);
+        }
+
+        private static CopterParamAlias GetCopterActualParamAlias(string paramName)
+        {
+            var descriptor = GetCopterParamDescriptor(paramName);
+            var paramAliases = descriptor != null ? descriptor.ParamAliases : null;
+
+            if (paramAliases == null && CopterParamAliases.TryGetValue(paramName, out var aliases))
+            {
+                paramAliases = aliases;
+            }
+
+            if (paramAliases == null)
+            {
+                return new CopterParamAlias(paramName);
+            }
+
+            foreach (var paramAlias in paramAliases)
+            {
+                if (MainV2.comPort.MAV.param.ContainsKey(paramAlias.ParamName))
+                {
+                    return paramAlias;
+                }
+            }
+
+            return new CopterParamAlias(paramName);
         }
 
         private decimal GetCopterCustomParamValue(string paramName)

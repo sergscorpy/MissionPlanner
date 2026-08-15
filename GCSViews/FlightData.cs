@@ -7323,11 +7323,14 @@ namespace MissionPlanner.GCSViews
         }
         private static void SetParam(KeyValuePair<string, float> param)
         {
+            var paramAlias = GetCopterActualParamAlias(param.Key);
+            var value = param.Value * paramAlias.TableToActualScale;
+
             MainV2.comPort.setParam(
                 (byte)MainV2.comPort.sysidcurrent,
                 (byte)MainV2.comPort.compidcurrent,
-                param.Key,
-                param.Value,
+                paramAlias.ParamName,
+                value,
                 true
             );
         }
@@ -7462,8 +7465,6 @@ namespace MissionPlanner.GCSViews
 
                 KeyValuePair<string, float> param = new KeyValuePair<string, float>("RTL_ALT", value);
 
-                SetParam(param);
-
                 bool needToUpdate = _rtlAlt != value;
 
                 if (needToUpdate)
@@ -7488,7 +7489,6 @@ namespace MissionPlanner.GCSViews
         {
             try
             {
-                string _key = "";
                 if (!IsComPortConnected())
                 {
                     CustomMessageBox.Show("No connection to autopilot");
@@ -7496,18 +7496,7 @@ namespace MissionPlanner.GCSViews
                 }
 
                 float value = Convert.ToSingle(numericHomeYaw.Value);
-                switch (comboBoxDronModel.Text)
-                {
-                    case "Воробєй":
-                        _key = "DR_HOME_YAW";
-                        break;
-
-                    case "Вампір":
-                        _key = "DR_HOME_ANGLE";
-                        break;
-                }
-
-                KeyValuePair<string, float> param = new KeyValuePair<string, float>(_key, value);
+                KeyValuePair<string, float> param = new KeyValuePair<string, float>("DR_HOME_YAW", value);
 
                 SetParam(param);
 
@@ -7517,7 +7506,6 @@ namespace MissionPlanner.GCSViews
                 CustomMessageBox.Show(ex.Message, "ERROR");
             }
         }
-
         private void butGPS1on_Click(object sender, EventArgs e)
         {
             Button butGPS = (Button)sender;
@@ -7782,7 +7770,15 @@ namespace MissionPlanner.GCSViews
                     //CustomMessageBox.Show("No connection to autopilot");
                     return;
                 }
-                var value = (int)MainV2.comPort.MAV.param[key];
+                var paramAlias = GetCopterActualParamAlias(key);
+                if (!MainV2.comPort.MAV.param.ContainsKey(paramAlias.ParamName))
+                {
+                    label.Enabled = false;
+                    return;
+                }
+
+                var value = Convert.ToInt32(MainV2.comPort.MAV.param[paramAlias.ParamName].Value *
+                                            paramAlias.ActualToTableScale);
                 label.Enabled = true;
                 switch (label.Name)
                 {
@@ -7819,7 +7815,15 @@ namespace MissionPlanner.GCSViews
                     {
                         var descriptor = CopterParamDescriptors[i];
                         var currentValue = Convert.ToInt32(dataGridView.Rows[i].Cells[2].Value ?? 0);
-                        var paramValue = (int)MainV2.comPort.MAV.param[descriptor.ParamName];
+                        var paramAlias = GetCopterActualParamAlias(descriptor.ParamName);
+
+                        if (!MainV2.comPort.MAV.param.ContainsKey(paramAlias.ParamName))
+                        {
+                            continue;
+                        }
+
+                        var actualParam = MainV2.comPort.MAV.param[paramAlias.ParamName];
+                        var paramValue = Convert.ToInt32(actualParam.Value * paramAlias.ActualToTableScale);
 
                         if (paramValue != 0 && currentValue != paramValue)
                         {
@@ -7952,16 +7956,7 @@ namespace MissionPlanner.GCSViews
             //CheckBoxUpdate(IsActRCVamp_1);
             //CheckBoxUpdate(IsActRCVamp_2);
             LabelUpdate(labelCurrRtlAlt, "RTL_ALT");
-            switch (comboBoxDronModel.Text)
-            {
-                case "Воробєй":
-                    LabelUpdate(labelCurrHYaw, "DR_HOME_YAW");
-                    break;
-
-                case "Вампір":
-                    LabelUpdate(labelCurrHYaw, "DR_HOME_ANGLE");
-                    break;
-            }
+            LabelUpdate(labelCurrHYaw, "DR_HOME_YAW");
             UpdateButtonModState();
             BUT_ARM_Check();
             BUT_thrustImbalance_Check();
