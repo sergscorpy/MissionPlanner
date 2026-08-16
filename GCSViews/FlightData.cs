@@ -7588,6 +7588,33 @@ namespace MissionPlanner.GCSViews
                 CustomMessageBox.Show(ex.Message, "ERROR");
             }
         }
+
+        private void numericHomeYaw_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode != Keys.Enter)
+            {
+                return;
+            }
+
+            e.Handled = true;
+            e.SuppressKeyPress = true;
+            ApplyNumericUpDownTextValue(numericHomeYaw);
+            HomeYaw_Click(setHomeYawButton, EventArgs.Empty);
+        }
+
+        private void numericRtlAlt_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode != Keys.Enter)
+            {
+                return;
+            }
+
+            e.Handled = true;
+            e.SuppressKeyPress = true;
+            ApplyNumericUpDownTextValue(numericRtlAlt);
+            RtlAltClick(butSetRtlAlt, EventArgs.Empty);
+        }
+
         private void butGPS1on_Click(object sender, EventArgs e)
         {
             Button butGPS = (Button)sender;

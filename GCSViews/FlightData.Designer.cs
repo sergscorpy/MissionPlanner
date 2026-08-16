@@ -3600,6 +3600,7 @@ namespace MissionPlanner.GCSViews
             this.numericHomeYaw.Maximum = 359;
             this.numericHomeYaw.Font = fontNuveric;
             this.numericHomeYaw.Margin = new System.Windows.Forms.Padding(3);
+            this.numericHomeYaw.KeyDown += new KeyEventHandler(this.numericHomeYaw_KeyDown);
             this.tableLayoutPanelCopter.Controls.Add(this.numericHomeYaw, 2, 3);
             
             /*
@@ -3684,6 +3685,7 @@ namespace MissionPlanner.GCSViews
             this.numericRtlAlt.Dock = DockStyle.Fill;
             this.numericRtlAlt.Font = fontNuveric;
             this.numericRtlAlt.Margin = new System.Windows.Forms.Padding(3);
+            this.numericRtlAlt.KeyDown += new KeyEventHandler(this.numericRtlAlt_KeyDown);
             
             /*
              * Button GPS1 On

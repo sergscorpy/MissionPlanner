@@ -243,6 +243,7 @@ namespace MissionPlanner.GCSViews
 
             dataGridView.RowTemplate.Height = CopterDataGridRowTemplateHeight;
             dataGridView.CellFormatting += DataGridView_CellFormatting;
+            dataGridView.KeyDown += DataGridView_KeyDown;
             dataGridView.EditingControlShowing += DataGridView_EditingControlShowing;
         }
 
@@ -383,6 +384,53 @@ namespace MissionPlanner.GCSViews
             dataGridView.Rows[rowIndex].Cells[CopterCustomColumnIndex].Value = value;
         }
 
+        private void ApplyCopterCustomParametersFromGrid()
+        {
+            if (dataGridView.EditingControl is NumericUpDown numericUpDown)
+            {
+                ApplyNumericUpDownTextValue(numericUpDown);
+            }
+
+            if (dataGridView.IsCurrentCellDirty)
+            {
+                dataGridView.CommitEdit(DataGridViewDataErrorContexts.Commit);
+            }
+
+            dataGridView.EndEdit();
+
+            var customButton = FindButtonByName("Custom");
+            if (customButton != null)
+            {
+                ModeClick(customButton, EventArgs.Empty);
+            }
+            else
+            {
+                CheckCustom("Custom");
+            }
+        }
+
+        private static void ApplyNumericUpDownTextValue(NumericUpDown numericUpDown)
+        {
+            if (!decimal.TryParse(numericUpDown.Text, out var value))
+            {
+                return;
+            }
+
+            numericUpDown.Value = Math.Max(numericUpDown.Minimum, Math.Min(numericUpDown.Maximum, value));
+        }
+
+        private void DataGridView_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode != Keys.Enter)
+            {
+                return;
+            }
+
+            e.Handled = true;
+            e.SuppressKeyPress = true;
+            ApplyCopterCustomParametersFromGrid();
+        }
+
         private void ShowCopterDataGridView()
         {
             if (!tableLayoutPanelCopter.Controls.Contains(dataGridView))
@@ -485,10 +533,23 @@ namespace MissionPlanner.GCSViews
                     case Keys.Up:
                     case Keys.Down:
                     case Keys.Right:
+                    case Keys.Enter:
                         return true;
                     default:
                         return !dataGridViewWantsInputKey;
                 }
+            }
+
+            protected override bool ProcessDialogKey(Keys keyData)
+            {
+                if ((keyData & Keys.KeyCode) == Keys.Enter)
+                {
+                    var args = new KeyEventArgs(Keys.Enter);
+                    OnKeyDown(args);
+                    return true;
+                }
+
+                return base.ProcessDialogKey(keyData);
             }
 
             public void PrepareEditingControlForEdit(bool selectAll)
@@ -525,7 +586,21 @@ namespace MissionPlanner.GCSViews
             {
                 numericUpDown.Enter -= NumericUpDown_Enter;
                 numericUpDown.Enter += NumericUpDown_Enter;
+                numericUpDown.KeyDown -= NumericUpDownEditingControl_KeyDown;
+                numericUpDown.KeyDown += NumericUpDownEditingControl_KeyDown;
             }
+        }
+
+        private void NumericUpDownEditingControl_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode != Keys.Enter)
+            {
+                return;
+            }
+
+            e.Handled = true;
+            e.SuppressKeyPress = true;
+            ApplyCopterCustomParametersFromGrid();
         }
 
         private void NumericUpDown_Enter(object sender, EventArgs e)
