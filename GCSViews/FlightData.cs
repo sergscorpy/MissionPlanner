@@ -7547,16 +7547,17 @@ namespace MissionPlanner.GCSViews
                     return;
                 }
 
-                float value = Convert.ToSingle(numericRtlAlt.Value * 100);
+                float value = Convert.ToSingle(numericRtlAlt.Value);
+                float configValue = value * 100;
 
                 KeyValuePair<string, float> param = new KeyValuePair<string, float>("RTL_ALT", value);
 
-                bool needToUpdate = _rtlAlt != value;
+                bool needToUpdate = _rtlAlt != configValue;
 
                 if (needToUpdate)
                 {
-                    _rootObject.RTL_ALT = value;
-                    _rtlAlt = value;
+                    _rootObject.RTL_ALT = configValue;
+                    _rtlAlt = configValue;
                     SaveCopterConfig();
                 }
 
@@ -7894,7 +7895,7 @@ namespace MissionPlanner.GCSViews
                 {
                     case "labelCurrRtlAlt":
                         {
-                            label.Text = ($"{(value / 100).ToString()} m");
+                            label.Text = ($"{value.ToString()} m");
                             break;
                         }
                     case "labelCurrHYaw":

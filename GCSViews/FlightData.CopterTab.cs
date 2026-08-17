@@ -78,8 +78,8 @@ namespace MissionPlanner.GCSViews
                 {
                     "RTL_ALT", new[]
                     {
-                        new CopterParamAlias("RTL_ALT_M", 100, 0.01f),
-                        new CopterParamAlias("RTL_ALT")
+                        new CopterParamAlias("RTL_ALT_M"),
+                        new CopterParamAlias("RTL_ALT", 0.01f, 100)
                     }
                 },
                 {
