@@ -255,6 +255,14 @@ namespace MissionPlanner
         public float customfield18 { get; set; }
         public float customfield19 { get; set; }
 
+        [DisplayText("RTL Alt (m)")]
+        [GroupText("NAV")]
+        public float RTL_ALT { get; set; }
+
+        [DisplayText("Home Yaw (deg)")]
+        [GroupText("NAV")]
+        public float HOME_YAW { get; set; }
+
         // orientation - rads
         [DisplayFieldName("roll.Field")]
         [DisplayText("Roll (deg)")]

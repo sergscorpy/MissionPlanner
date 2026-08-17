@@ -7912,6 +7912,37 @@ namespace MissionPlanner.GCSViews
 
         }
 
+        private void UpdateCopterDisplayParam(string key, Action<float> updateValue)
+        {
+            if (!IsComPortConnected())
+            {
+                return;
+            }
+
+            var paramAlias = GetCopterActualParamAlias(key);
+            if (!MainV2.comPort.MAV.param.ContainsKey(paramAlias.ParamName))
+            {
+                return;
+            }
+
+            var value = Convert.ToSingle(Math.Round(
+                MainV2.comPort.MAV.param[paramAlias.ParamName].Value * paramAlias.ActualToTableScale,
+                MidpointRounding.AwayFromZero));
+            updateValue(value);
+        }
+
+        private void UpdateCopterDisplayParams()
+        {
+            try
+            {
+                UpdateCopterDisplayParam("RTL_ALT", value => MainV2.comPort.MAV.cs.RTL_ALT = value);
+                UpdateCopterDisplayParam("DR_HOME_YAW", value => MainV2.comPort.MAV.cs.HOME_YAW = value);
+            }
+            catch
+            {
+            }
+        }
+
         private bool DataGridViewUpdate()
         {
             bool success = false;
@@ -8067,6 +8098,7 @@ namespace MissionPlanner.GCSViews
             //CheckBoxUpdate(IsActiveRC_Petr);
             //CheckBoxUpdate(IsActRCVamp_1);
             //CheckBoxUpdate(IsActRCVamp_2);
+            UpdateCopterDisplayParams();
             LabelUpdate(labelCurrRtlAlt, "RTL_ALT");
             LabelUpdate(labelCurrHYaw, "DR_HOME_YAW");
             UpdateButtonModState();
