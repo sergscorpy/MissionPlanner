@@ -7218,7 +7218,7 @@ namespace MissionPlanner.GCSViews
         }
         private string CollationDefaultCurrentValue(out string key)
         {
-            ModeList modeList = _selectedDroneModel == "vampire" ? _vampireParams : _petrovychParams;
+            ModeList modeList = _selectedDroneModel == "Vampire" ? _vampireParams : _sparrowParams;
             var DefaultModeList = new Dictionary<string, List<float>>();
             foreach (var mode in modeList.Modes)
             {
@@ -7287,7 +7287,7 @@ namespace MissionPlanner.GCSViews
 
             if (needToUpdate)
             {
-                ModeList modeList = _selectedDroneModel == "vampire" ? _rootObject.vampire : _rootObject.petrovych;
+                ModeList modeList = _selectedDroneModel == "Vampire" ? _rootObject.Vampire : _rootObject.Sparrow;
 
                 var customMode = modeList.Modes.Find(m => m.Name == "Custom");
                 if (customMode != null)
@@ -7297,8 +7297,7 @@ namespace MissionPlanner.GCSViews
                     customMode.Params.WPNAV_SPEED = inputParams["WPNAV_SPEED"];
                 }
 
-                var updatedJsonData = JsonConvert.SerializeObject(_rootObject, Formatting.Indented);
-                File.WriteAllText(PathCustom_params, updatedJsonData);
+                SaveCopterConfig();
             }
 
             foreach (var button in ListButtonsMods.Where(button => button.Name != name))
@@ -7323,13 +7322,103 @@ namespace MissionPlanner.GCSViews
         }
         private static void SetParam(KeyValuePair<string, float> param)
         {
+            var paramAlias = GetCopterActualParamAlias(param.Key);
+            var value = param.Value * paramAlias.TableToActualScale;
+
             MainV2.comPort.setParam(
                 (byte)MainV2.comPort.sysidcurrent,
                 (byte)MainV2.comPort.compidcurrent,
-                param.Key,
-                param.Value,
+                paramAlias.ParamName,
+                value,
                 true
             );
+        }
+
+        private static string NormalizeCopterModelName(string modelName)
+        {
+            if (string.Equals(modelName, "Vampire", StringComparison.OrdinalIgnoreCase))
+            {
+                return "Vampire";
+            }
+
+            if (string.Equals(modelName, "Sparrow", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(modelName, "petrovych", StringComparison.OrdinalIgnoreCase))
+            {
+                return "Sparrow";
+            }
+
+            return "Sparrow";
+        }
+
+        private static void ConvertCopterModeListToModernUnits(ModeList modeList)
+        {
+            if (modeList?.Modes == null)
+            {
+                return;
+            }
+
+            foreach (var mode in modeList.Modes.Where(mode => mode?.Params != null))
+            {
+                mode.Params.ANGLE_MAX = ConvertOldCopterParamToModernUnits(mode.Params.ANGLE_MAX);
+                mode.Params.LOIT_SPEED = ConvertOldCopterParamToModernUnits(mode.Params.LOIT_SPEED);
+                mode.Params.WPNAV_SPEED = ConvertOldCopterParamToModernUnits(mode.Params.WPNAV_SPEED);
+            }
+        }
+
+        private static float ConvertOldCopterParamToModernUnits(float value)
+        {
+            return Convert.ToSingle(Math.Round(value / 100.0f, MidpointRounding.AwayFromZero));
+        }
+
+        private void SaveCopterConfig()
+        {
+            var updatedJsonData = JsonConvert.SerializeObject(_rootObject, Formatting.Indented,
+                new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
+            File.WriteAllText(PathCustom_params, updatedJsonData);
+        }
+
+        private void UpgradeCopterConfigIfNeeded()
+        {
+            var needsSave = false;
+
+            if (_rootObject.Vampire == null && _rootObject.LegacyVampire != null)
+            {
+                _rootObject.Vampire = _rootObject.LegacyVampire;
+                needsSave = true;
+            }
+
+            if (_rootObject.Sparrow == null && _rootObject.LegacyPetrovych != null)
+            {
+                _rootObject.Sparrow = _rootObject.LegacyPetrovych;
+                needsSave = true;
+            }
+
+            var normalizedModel = NormalizeCopterModelName(_rootObject.selectedDroneModel);
+            if (_rootObject.selectedDroneModel != normalizedModel)
+            {
+                _rootObject.selectedDroneModel = normalizedModel;
+                needsSave = true;
+            }
+
+            if (_rootObject.configVersion < CopterConfigVersion)
+            {
+                ConvertCopterModeListToModernUnits(_rootObject.Vampire);
+                ConvertCopterModeListToModernUnits(_rootObject.Sparrow);
+                _rootObject.configVersion = CopterConfigVersion;
+                needsSave = true;
+            }
+
+            if (_rootObject.LegacyVampire != null || _rootObject.LegacyPetrovych != null)
+            {
+                _rootObject.LegacyVampire = null;
+                _rootObject.LegacyPetrovych = null;
+                needsSave = true;
+            }
+
+            if (needsSave)
+            {
+                SaveCopterConfig();
+            }
         }
 
         private void LoadDeafoultParameters()
@@ -7337,6 +7426,7 @@ namespace MissionPlanner.GCSViews
             //Читання масиву даних з файлу
             _jsonFileData = File.ReadAllText(PathCustom_params);
             _rootObject = JsonConvert.DeserializeObject<RootObject>(_jsonFileData);
+            UpgradeCopterConfigIfNeeded();
 
             //Читання параметру RTL_ALT з масиву даних
             _rtlAlt = _rootObject.RTL_ALT;
@@ -7345,8 +7435,8 @@ namespace MissionPlanner.GCSViews
             _selectedDroneModel = _rootObject.selectedDroneModel;
 
             //Читання параметрів за замовчуванням з масиву даних
-            _petrovychParams = _rootObject.petrovych;
-            _vampireParams = _rootObject.vampire;
+            _sparrowParams = _rootObject.Sparrow;
+            _vampireParams = _rootObject.Vampire;
 
             initParamTable();
         }
@@ -7354,7 +7444,7 @@ namespace MissionPlanner.GCSViews
         {
             _parameters.Clear();
 
-            ModeList modeList = _selectedDroneModel == "vampire" ? _vampireParams : _petrovychParams;
+            ModeList modeList = _selectedDroneModel == "Vampire" ? _vampireParams : _sparrowParams;
 
             var selectedItem = _comboItems.FirstOrDefault(i => i.Value == _selectedDroneModel);
 
@@ -7385,8 +7475,7 @@ namespace MissionPlanner.GCSViews
 
             _rootObject.selectedDroneModel = selectedItem.Value;
 
-            var updatedJsonData = JsonConvert.SerializeObject(_rootObject, Formatting.Indented);
-            File.WriteAllText(PathCustom_params, updatedJsonData);
+            SaveCopterConfig();
 
             initParamTable();
             LoadCustomParameters();
@@ -7458,23 +7547,18 @@ namespace MissionPlanner.GCSViews
                     return;
                 }
 
-                float value = Convert.ToSingle(numericRtlAlt.Value * 100);
+                float value = Convert.ToSingle(numericRtlAlt.Value);
+                float configValue = value * 100;
 
                 KeyValuePair<string, float> param = new KeyValuePair<string, float>("RTL_ALT", value);
 
-                SetParam(param);
-
-                bool needToUpdate = _rtlAlt != value;
+                bool needToUpdate = _rtlAlt != configValue;
 
                 if (needToUpdate)
                 {
-                    var jsonCustomData = File.ReadAllText(PathCustom_params);
-                    var rootObject = JsonConvert.DeserializeObject<RootObject>(jsonCustomData);
-
-                    rootObject.RTL_ALT = value;
-
-                    var updatedJsonData = JsonConvert.SerializeObject(rootObject, Formatting.Indented);
-                    File.WriteAllText(PathCustom_params, updatedJsonData);
+                    _rootObject.RTL_ALT = configValue;
+                    _rtlAlt = configValue;
+                    SaveCopterConfig();
                 }
 
                 SetParam(param);
@@ -7488,7 +7572,6 @@ namespace MissionPlanner.GCSViews
         {
             try
             {
-                string _key = "";
                 if (!IsComPortConnected())
                 {
                     CustomMessageBox.Show("No connection to autopilot");
@@ -7496,18 +7579,7 @@ namespace MissionPlanner.GCSViews
                 }
 
                 float value = Convert.ToSingle(numericHomeYaw.Value);
-                switch (comboBoxDronModel.Text)
-                {
-                    case "Воробєй":
-                        _key = "DR_HOME_YAW";
-                        break;
-
-                    case "Вампір":
-                        _key = "DR_HOME_ANGLE";
-                        break;
-                }
-
-                KeyValuePair<string, float> param = new KeyValuePair<string, float>(_key, value);
+                KeyValuePair<string, float> param = new KeyValuePair<string, float>("DR_HOME_YAW", value);
 
                 SetParam(param);
 
@@ -7516,6 +7588,32 @@ namespace MissionPlanner.GCSViews
             {
                 CustomMessageBox.Show(ex.Message, "ERROR");
             }
+        }
+
+        private void numericHomeYaw_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode != Keys.Enter)
+            {
+                return;
+            }
+
+            e.Handled = true;
+            e.SuppressKeyPress = true;
+            ApplyNumericUpDownTextValue(numericHomeYaw);
+            HomeYaw_Click(setHomeYawButton, EventArgs.Empty);
+        }
+
+        private void numericRtlAlt_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode != Keys.Enter)
+            {
+                return;
+            }
+
+            e.Handled = true;
+            e.SuppressKeyPress = true;
+            ApplyNumericUpDownTextValue(numericRtlAlt);
+            RtlAltClick(butSetRtlAlt, EventArgs.Empty);
         }
 
         private void butGPS1on_Click(object sender, EventArgs e)
@@ -7635,10 +7733,20 @@ namespace MissionPlanner.GCSViews
             {
                 if (IsComPortConnected())
                 {
-                    if ((MainV2.comPort.MAV.param.ContainsKey("GPS1_TYPE")) && (GPS1 != "GPS1_TYPE")) GPS1 = "GPS1_TYPE";
-                    if ((MainV2.comPort.MAV.param.ContainsKey("GPS2_TYPE")) && (GPS2 != "GPS2_TYPE")) GPS2 = "GPS2_TYPE";
-                    if ((MainV2.comPort.MAV.param.ContainsKey("GPS_TYPE")) && (GPS1 != "GPS_TYPE")) GPS1 = "GPS_TYPE";
-                    if ((MainV2.comPort.MAV.param.ContainsKey("GPS_TYPE2")) && (GPS2 != "GPS_TYPE2")) GPS2 = "GPS_TYPE2";
+                    var gps1Param = MainV2.comPort.MAV.param[new[] { "GPS1_TYPE", "GPS_TYPE" }];
+                    var gps2Param = MainV2.comPort.MAV.param[new[] { "GPS2_TYPE", "GPS_TYPE2" }];
+
+                    if (gps1Param != null)
+                        GPS1 = gps1Param.Name;
+
+                    if (gps2Param != null)
+                        GPS2 = gps2Param.Name;
+
+                    if (key == "GPS1_TYPE" || key == "GPS_TYPE")
+                        key = GPS1;
+
+                    if (key == "GPS2_TYPE" || key == "GPS_TYPE2")
+                        key = GPS2;
                 }
 
                 if (!IsComPortConnected())
@@ -7772,13 +7880,22 @@ namespace MissionPlanner.GCSViews
                     //CustomMessageBox.Show("No connection to autopilot");
                     return;
                 }
-                var value = (int)MainV2.comPort.MAV.param[key];
+                var paramAlias = GetCopterActualParamAlias(key);
+                if (!MainV2.comPort.MAV.param.ContainsKey(paramAlias.ParamName))
+                {
+                    label.Enabled = false;
+                    return;
+                }
+
+                var value = Convert.ToInt32(Math.Round(
+                    MainV2.comPort.MAV.param[paramAlias.ParamName].Value * paramAlias.ActualToTableScale,
+                    MidpointRounding.AwayFromZero));
                 label.Enabled = true;
                 switch (label.Name)
                 {
                     case "labelCurrRtlAlt":
                         {
-                            label.Text = ($"{(value / 100).ToString()} м");
+                            label.Text = ($"{value.ToString()} m");
                             break;
                         }
                     case "labelCurrHYaw":
@@ -7795,6 +7912,37 @@ namespace MissionPlanner.GCSViews
 
         }
 
+        private void UpdateCopterDisplayParam(string key, Action<float> updateValue)
+        {
+            if (!IsComPortConnected())
+            {
+                return;
+            }
+
+            var paramAlias = GetCopterActualParamAlias(key);
+            if (!MainV2.comPort.MAV.param.ContainsKey(paramAlias.ParamName))
+            {
+                return;
+            }
+
+            var value = Convert.ToSingle(Math.Round(
+                MainV2.comPort.MAV.param[paramAlias.ParamName].Value * paramAlias.ActualToTableScale,
+                MidpointRounding.AwayFromZero));
+            updateValue(value);
+        }
+
+        private void UpdateCopterDisplayParams()
+        {
+            try
+            {
+                UpdateCopterDisplayParam("RTL_ALT", value => MainV2.comPort.MAV.cs.RTL_ALT = value);
+                UpdateCopterDisplayParam("DR_HOME_YAW", value => MainV2.comPort.MAV.cs.HOME_YAW = value);
+            }
+            catch
+            {
+            }
+        }
+
         private bool DataGridViewUpdate()
         {
             bool success = false;
@@ -7809,7 +7957,16 @@ namespace MissionPlanner.GCSViews
                     {
                         var descriptor = CopterParamDescriptors[i];
                         var currentValue = Convert.ToInt32(dataGridView.Rows[i].Cells[2].Value ?? 0);
-                        var paramValue = (int)MainV2.comPort.MAV.param[descriptor.ParamName];
+                        var paramAlias = GetCopterActualParamAlias(descriptor.ParamName);
+
+                        if (!MainV2.comPort.MAV.param.ContainsKey(paramAlias.ParamName))
+                        {
+                            continue;
+                        }
+
+                        var actualParam = MainV2.comPort.MAV.param[paramAlias.ParamName];
+                        var paramValue = Convert.ToInt32(Math.Round(actualParam.Value * paramAlias.ActualToTableScale,
+                            MidpointRounding.AwayFromZero));
 
                         if (paramValue != 0 && currentValue != paramValue)
                         {
@@ -7941,17 +8098,9 @@ namespace MissionPlanner.GCSViews
             //CheckBoxUpdate(IsActiveRC_Petr);
             //CheckBoxUpdate(IsActRCVamp_1);
             //CheckBoxUpdate(IsActRCVamp_2);
+            UpdateCopterDisplayParams();
             LabelUpdate(labelCurrRtlAlt, "RTL_ALT");
-            switch (comboBoxDronModel.Text)
-            {
-                case "Воробєй":
-                    LabelUpdate(labelCurrHYaw, "DR_HOME_YAW");
-                    break;
-
-                case "Вампір":
-                    LabelUpdate(labelCurrHYaw, "DR_HOME_ANGLE");
-                    break;
-            }
+            LabelUpdate(labelCurrHYaw, "DR_HOME_YAW");
             UpdateButtonModState();
             BUT_ARM_Check();
             BUT_thrustImbalance_Check();

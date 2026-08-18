@@ -8,22 +8,44 @@ namespace MissionPlanner.GCSViews
 {
     public partial class FlightData
     {
+        private sealed class CopterParamAlias
+        {
+            public CopterParamAlias(string paramName, float actualToTableScale = 1, float tableToActualScale = 1)
+            {
+                ParamName = paramName;
+                ActualToTableScale = actualToTableScale;
+                TableToActualScale = tableToActualScale;
+            }
+
+            public string ParamName { get; }
+            public float ActualToTableScale { get; }
+            public float TableToActualScale { get; }
+        }
+
         private sealed class CopterParamDescriptor
         {
-            public CopterParamDescriptor(string label, string paramName, decimal min, decimal max)
+            public CopterParamDescriptor(string label, string paramName, string unit, decimal min, decimal max,
+                params CopterParamAlias[] paramAliases)
             {
                 Label = label;
                 ParamName = paramName;
+                Unit = unit;
                 Min = min;
                 Max = max;
+                ParamAliases = paramAliases.Length > 0
+                    ? paramAliases
+                    : new[] { new CopterParamAlias(paramName) };
             }
 
             public string Label { get; }
             public string ParamName { get; }
+            public string Unit { get; }
+            public CopterParamAlias[] ParamAliases { get; }
             public decimal Min { get; }
             public decimal Max { get; }
         }
 
+        private const int CopterConfigVersion = 2;
         private const int CopterColumnCount = 4;
         private const int CopterRowCount = 15;
         private const int CopterRowHeight = 32;
@@ -39,10 +61,36 @@ namespace MissionPlanner.GCSViews
 
         private static readonly CopterParamDescriptor[] CopterParamDescriptors =
         {
-            new CopterParamDescriptor("Angle Max", "ANGLE_MAX", 1000, 8000),
-            new CopterParamDescriptor("Loit Speed", "LOIT_SPEED", 20, 50000),
-            new CopterParamDescriptor("Mission Speed", "WPNAV_SPEED", 10, 50000)
+            new CopterParamDescriptor("Angle Max", "ANGLE_MAX", "°", 10, 80,
+                new CopterParamAlias("ATC_ANGLE_MAX"),
+                new CopterParamAlias("ANGLE_MAX", 0.01f, 100)),
+            new CopterParamDescriptor("Loit Speed", "LOIT_SPEED", "m/s", 1, 500,
+                new CopterParamAlias("LOIT_SPEED_MS"),
+                new CopterParamAlias("LOIT_SPEED", 0.01f, 100)),
+            new CopterParamDescriptor("Mission Speed", "WPNAV_SPEED", "m/s", 1, 500,
+                new CopterParamAlias("WP_SPD"),
+                new CopterParamAlias("WPNAV_SPEED", 0.01f, 100))
         };
+
+        private static readonly IReadOnlyDictionary<string, CopterParamAlias[]> CopterParamAliases =
+            new Dictionary<string, CopterParamAlias[]>
+            {
+                {
+                    "RTL_ALT", new[]
+                    {
+                        new CopterParamAlias("RTL_ALT_M"),
+                        new CopterParamAlias("RTL_ALT", 0.01f, 100)
+                    }
+                },
+                {
+                    "DR_HOME_YAW", new[]
+                    {
+                        new CopterParamAlias("GNGP_HOME_YAW"),
+                        new CopterParamAlias("DR_HOME_YAW"),
+                        new CopterParamAlias("DR_HOME_ANGLE")
+                    }
+                }
+            };
 
         private static readonly IReadOnlyDictionary<string, int> CopterParamRowLookup =
             CopterParamDescriptors
@@ -53,8 +101,8 @@ namespace MissionPlanner.GCSViews
         {
             return new List<KeyValuePair<string, string>>
             {
-                new KeyValuePair<string, string>("Вампір", "vampire"),
-                new KeyValuePair<string, string>("Воробєй", "sparrow")
+                new KeyValuePair<string, string>("Вампір", "Vampire"),
+                new KeyValuePair<string, string>("Воробєй", "Sparrow")
             };
         }
 
@@ -194,7 +242,29 @@ namespace MissionPlanner.GCSViews
             }
 
             dataGridView.RowTemplate.Height = CopterDataGridRowTemplateHeight;
+            dataGridView.CellFormatting += DataGridView_CellFormatting;
+            dataGridView.KeyDown += DataGridView_KeyDown;
             dataGridView.EditingControlShowing += DataGridView_EditingControlShowing;
+        }
+
+        private void DataGridView_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
+        {
+            var isEditingCell = dataGridView.IsCurrentCellInEditMode &&
+                                dataGridView.CurrentCell?.RowIndex == e.RowIndex &&
+                                dataGridView.CurrentCell.ColumnIndex == e.ColumnIndex;
+
+            if (e.RowIndex < 0 ||
+                e.RowIndex >= CopterParamDescriptors.Length ||
+                (e.ColumnIndex != CopterCustomColumnIndex && e.ColumnIndex != CopterCurrentColumnIndex) ||
+                isEditingCell ||
+                e.Value == null)
+            {
+                return;
+            }
+
+            var descriptor = CopterParamDescriptors[e.RowIndex];
+            e.Value = $"{e.Value} {descriptor.Unit}";
+            e.FormattingApplied = true;
         }
 
         private void UpdateCopterButtonState(Button button, bool enabled, Color backColor, bool resetAutoSize = false)
@@ -265,6 +335,37 @@ namespace MissionPlanner.GCSViews
             return rowIndex;
         }
 
+        private static CopterParamDescriptor GetCopterParamDescriptor(string paramName)
+        {
+            return CopterParamDescriptors.FirstOrDefault(descriptor => descriptor.ParamName == paramName);
+        }
+
+        private static CopterParamAlias GetCopterActualParamAlias(string paramName)
+        {
+            var descriptor = GetCopterParamDescriptor(paramName);
+            var paramAliases = descriptor != null ? descriptor.ParamAliases : null;
+
+            if (paramAliases == null && CopterParamAliases.TryGetValue(paramName, out var aliases))
+            {
+                paramAliases = aliases;
+            }
+
+            if (paramAliases == null)
+            {
+                return new CopterParamAlias(paramName);
+            }
+
+            foreach (var paramAlias in paramAliases)
+            {
+                if (MainV2.comPort.MAV.param.ContainsKey(paramAlias.ParamName))
+                {
+                    return paramAlias;
+                }
+            }
+
+            return new CopterParamAlias(paramName);
+        }
+
         private decimal GetCopterCustomParamValue(string paramName)
         {
             int rowIndex = GetCopterParamRowIndex(paramName);
@@ -281,6 +382,53 @@ namespace MissionPlanner.GCSViews
         {
             int rowIndex = GetCopterParamRowIndex(paramName);
             dataGridView.Rows[rowIndex].Cells[CopterCustomColumnIndex].Value = value;
+        }
+
+        private void ApplyCopterCustomParametersFromGrid()
+        {
+            if (dataGridView.EditingControl is NumericUpDown numericUpDown)
+            {
+                ApplyNumericUpDownTextValue(numericUpDown);
+            }
+
+            if (dataGridView.IsCurrentCellDirty)
+            {
+                dataGridView.CommitEdit(DataGridViewDataErrorContexts.Commit);
+            }
+
+            dataGridView.EndEdit();
+
+            var customButton = FindButtonByName("Custom");
+            if (customButton != null)
+            {
+                ModeClick(customButton, EventArgs.Empty);
+            }
+            else
+            {
+                CheckCustom("Custom");
+            }
+        }
+
+        private static void ApplyNumericUpDownTextValue(NumericUpDown numericUpDown)
+        {
+            if (!decimal.TryParse(numericUpDown.Text, out var value))
+            {
+                return;
+            }
+
+            numericUpDown.Value = Math.Max(numericUpDown.Minimum, Math.Min(numericUpDown.Maximum, value));
+        }
+
+        private void DataGridView_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode != Keys.Enter)
+            {
+                return;
+            }
+
+            e.Handled = true;
+            e.SuppressKeyPress = true;
+            ApplyCopterCustomParametersFromGrid();
         }
 
         private void ShowCopterDataGridView()
@@ -330,6 +478,8 @@ namespace MissionPlanner.GCSViews
                 {
                     ctl.Minimum = Minimum;
                     ctl.Maximum = Maximum;
+                    ctl.DecimalPlaces = 0;
+                    ctl.Increment = 1;
                     ctl.Value = Math.Max(ctl.Minimum, Math.Min(ctl.Maximum, Convert.ToDecimal(Value)));
                 }
             }
@@ -383,10 +533,23 @@ namespace MissionPlanner.GCSViews
                     case Keys.Up:
                     case Keys.Down:
                     case Keys.Right:
+                    case Keys.Enter:
                         return true;
                     default:
                         return !dataGridViewWantsInputKey;
                 }
+            }
+
+            protected override bool ProcessDialogKey(Keys keyData)
+            {
+                if ((keyData & Keys.KeyCode) == Keys.Enter)
+                {
+                    var args = new KeyEventArgs(Keys.Enter);
+                    OnKeyDown(args);
+                    return true;
+                }
+
+                return base.ProcessDialogKey(keyData);
             }
 
             public void PrepareEditingControlForEdit(bool selectAll)
@@ -423,7 +586,21 @@ namespace MissionPlanner.GCSViews
             {
                 numericUpDown.Enter -= NumericUpDown_Enter;
                 numericUpDown.Enter += NumericUpDown_Enter;
+                numericUpDown.KeyDown -= NumericUpDownEditingControl_KeyDown;
+                numericUpDown.KeyDown += NumericUpDownEditingControl_KeyDown;
             }
+        }
+
+        private void NumericUpDownEditingControl_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode != Keys.Enter)
+            {
+                return;
+            }
+
+            e.Handled = true;
+            e.SuppressKeyPress = true;
+            ApplyCopterCustomParametersFromGrid();
         }
 
         private void NumericUpDown_Enter(object sender, EventArgs e)

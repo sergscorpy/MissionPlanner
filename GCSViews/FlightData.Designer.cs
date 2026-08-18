@@ -3600,6 +3600,7 @@ namespace MissionPlanner.GCSViews
             this.numericHomeYaw.Maximum = 359;
             this.numericHomeYaw.Font = fontNuveric;
             this.numericHomeYaw.Margin = new System.Windows.Forms.Padding(3);
+            this.numericHomeYaw.KeyDown += new KeyEventHandler(this.numericHomeYaw_KeyDown);
             this.tableLayoutPanelCopter.Controls.Add(this.numericHomeYaw, 2, 3);
             
             /*
@@ -3684,6 +3685,7 @@ namespace MissionPlanner.GCSViews
             this.numericRtlAlt.Dock = DockStyle.Fill;
             this.numericRtlAlt.Font = fontNuveric;
             this.numericRtlAlt.Margin = new System.Windows.Forms.Padding(3);
+            this.numericRtlAlt.KeyDown += new KeyEventHandler(this.numericRtlAlt_KeyDown);
             
             /*
              * Button GPS1 On
@@ -4256,10 +4258,15 @@ namespace MissionPlanner.GCSViews
         }
         public class RootObject
         {
+            public int configVersion { get; set; }
             public float RTL_ALT { get; set; }
             public string selectedDroneModel { get; set; }
-            public ModeList vampire { get; set; }
-            public ModeList petrovych { get; set; }
+            public ModeList Vampire { get; set; }
+            public ModeList Sparrow { get; set; }
+            [JsonProperty("vampire", NullValueHandling = NullValueHandling.Ignore)]
+            public ModeList LegacyVampire { get; set; }
+            [JsonProperty("petrovych", NullValueHandling = NullValueHandling.Ignore)]
+            public ModeList LegacyPetrovych { get; set; }
         }
         
         //Plane
@@ -4308,7 +4315,7 @@ namespace MissionPlanner.GCSViews
         private DataGridView dataGridView;
         private List<KeyValuePair<string, string>> _comboItems;
         private string _selectedDroneModel;
-        private ModeList _petrovychParams;
+        private ModeList _sparrowParams;
         private ModeList _vampireParams;
         private float _rtlAlt;
         private RootObject _rootObject;
