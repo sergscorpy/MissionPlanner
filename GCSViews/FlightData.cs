@@ -7968,8 +7968,8 @@ namespace MissionPlanner.GCSViews
                     for (int i = 0; i < CopterParamDescriptors.Length; i++)
                     {
                         var descriptor = CopterParamDescriptors[i];
-                        var currentValue = Convert.ToInt32(dataGridView.Rows[i].Cells[2].Value ?? 0);
-                        var paramAlias = GetCopterActualParamAlias(descriptor.ParamName);
+                        var currentValue = Convert.ToDecimal(dataGridView.Rows[i].Cells[2].Value ?? 0);
+                        var paramAlias = GetCopterActualParamAlias(descriptor.CurrentParamName);
 
                         if (!MainV2.comPort.MAV.param.ContainsKey(paramAlias.ParamName))
                         {
@@ -7977,10 +7977,11 @@ namespace MissionPlanner.GCSViews
                         }
 
                         var actualParam = MainV2.comPort.MAV.param[paramAlias.ParamName];
-                        var paramValue = Convert.ToInt32(Math.Round(actualParam.Value * paramAlias.ActualToTableScale,
+                        var isLandSpeed = descriptor.ParamName == "LAND_SPEED";
+                        var paramValue = Convert.ToDecimal(Math.Round(actualParam.Value * paramAlias.ActualToTableScale,
                             MidpointRounding.AwayFromZero));
 
-                        if (paramValue != 0 && currentValue != paramValue)
+                        if ((isLandSpeed || paramValue != 0) && currentValue != paramValue)
                         {
                             dataGridView.Rows[i].Cells[2].Value = paramValue;
                             success = true;
