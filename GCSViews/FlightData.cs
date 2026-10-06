@@ -7225,14 +7225,16 @@ namespace MissionPlanner.GCSViews
                 var modeParams = new List<float>
                 { mode.Params.ANGLE_MAX ,
                   mode.Params.LOIT_SPEED ,
-                  mode.Params.WPNAV_SPEED };
+                  mode.Params.WPNAV_SPEED,
+                  mode.Params.RTL_SPEED };
                 DefaultModeList.Add(mode.Name, modeParams);
             }
             var currentParams = new List<float>
             {
                 {Convert.ToSingle(GetCopterCurrentParamValue("ANGLE_MAX")) },
                 {Convert.ToSingle(GetCopterCurrentParamValue("LOIT_SPEED")) },
-                {Convert.ToSingle(GetCopterCurrentParamValue("WPNAV_SPEED")) }
+                {Convert.ToSingle(GetCopterCurrentParamValue("WPNAV_SPEED")) },
+                {Convert.ToSingle(GetCopterCurrentParamValue("RTL_SPEED")) }
             };
             key = DefaultModeList.FirstOrDefault(x => x.Value.SequenceEqual(currentParams)).Key;
             return key;
@@ -7261,7 +7263,8 @@ namespace MissionPlanner.GCSViews
             {
                 { "ANGLE_MAX", Convert.ToSingle(GetCopterCustomParamValue("ANGLE_MAX")) },
                 { "LOIT_SPEED", Convert.ToSingle(GetCopterCustomParamValue("LOIT_SPEED")) },
-                { "WPNAV_SPEED", Convert.ToSingle(GetCopterCustomParamValue("WPNAV_SPEED")) }
+                { "WPNAV_SPEED", Convert.ToSingle(GetCopterCustomParamValue("WPNAV_SPEED")) },
+                { "RTL_SPEED", Convert.ToSingle(GetCopterCustomParamValue("RTL_SPEED")) }
             };
 
             bool needToUpdate = false;
@@ -7295,6 +7298,7 @@ namespace MissionPlanner.GCSViews
                     customMode.Params.ANGLE_MAX = inputParams["ANGLE_MAX"];
                     customMode.Params.LOIT_SPEED = inputParams["LOIT_SPEED"];
                     customMode.Params.WPNAV_SPEED = inputParams["WPNAV_SPEED"];
+                    customMode.Params.RTL_SPEED = inputParams["RTL_SPEED"];
                 }
 
                 SaveCopterConfig();
@@ -7359,6 +7363,8 @@ namespace MissionPlanner.GCSViews
 
             foreach (var mode in modeList.Modes.Where(mode => mode?.Params != null))
             {
+                // Read the fallback before LOIT_SPEED is converted to m/s.
+                mode.Params.RTL_SPEED = ConvertOldCopterParamToModernUnits(mode.Params.RTL_SPEED);
                 mode.Params.ANGLE_MAX = ConvertOldCopterParamToModernUnits(mode.Params.ANGLE_MAX);
                 mode.Params.LOIT_SPEED = ConvertOldCopterParamToModernUnits(mode.Params.LOIT_SPEED);
                 mode.Params.WPNAV_SPEED = ConvertOldCopterParamToModernUnits(mode.Params.WPNAV_SPEED);
@@ -7400,10 +7406,14 @@ namespace MissionPlanner.GCSViews
                 needsSave = true;
             }
 
-            if (_rootObject.configVersion < CopterConfigVersion)
+            if (_rootObject.configVersion < 2)
             {
                 ConvertCopterModeListToModernUnits(_rootObject.Vampire);
                 ConvertCopterModeListToModernUnits(_rootObject.Sparrow);
+            }
+
+            if (_rootObject.configVersion < CopterConfigVersion)
+            {
                 _rootObject.configVersion = CopterConfigVersion;
                 needsSave = true;
             }
@@ -7461,7 +7471,8 @@ namespace MissionPlanner.GCSViews
                 {
                     { "ANGLE_MAX", mode.Params.ANGLE_MAX },
                     { "LOIT_SPEED", mode.Params.LOIT_SPEED },
-                    { "WPNAV_SPEED", mode.Params.WPNAV_SPEED }
+                    { "WPNAV_SPEED", mode.Params.WPNAV_SPEED },
+                    { "RTL_SPEED", mode.Params.RTL_SPEED }
                 };
 
                 _parameters.Add(mode.Name, modeParams);
@@ -7534,6 +7545,7 @@ namespace MissionPlanner.GCSViews
             SetCopterCustomParamValue("ANGLE_MAX", Convert.ToDecimal(customParams["ANGLE_MAX"], CultureInfo.InvariantCulture));
             SetCopterCustomParamValue("LOIT_SPEED", Convert.ToDecimal(customParams["LOIT_SPEED"], CultureInfo.InvariantCulture));
             SetCopterCustomParamValue("WPNAV_SPEED", Convert.ToDecimal(customParams["WPNAV_SPEED"], CultureInfo.InvariantCulture));
+            SetCopterCustomParamValue("RTL_SPEED", Convert.ToDecimal(customParams["RTL_SPEED"], CultureInfo.InvariantCulture));
 
             numericRtlAlt.Value = Convert.ToDecimal(_rtlAlt / 100);
         }

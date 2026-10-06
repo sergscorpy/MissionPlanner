@@ -4243,9 +4243,17 @@ namespace MissionPlanner.GCSViews
 
         public class Params
         {
+            private float? _rtlSpeed;
+
             public float ANGLE_MAX { get; set; }
             public float LOIT_SPEED { get; set; }
             public float WPNAV_SPEED { get; set; }
+            public float RTL_SPEED
+            {
+                // Older profiles inherit their RTL speed from Loiter until saved.
+                get => _rtlSpeed ?? LOIT_SPEED;
+                set => _rtlSpeed = value;
+            }
         }
         public class Mode
         {

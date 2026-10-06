@@ -45,11 +45,11 @@ namespace MissionPlanner.GCSViews
             public decimal Max { get; }
         }
 
-        private const int CopterConfigVersion = 2;
+        private const int CopterConfigVersion = 3;
         private const int CopterColumnCount = 4;
         private const int CopterRowCount = 15;
         private const int CopterRowHeight = 32;
-        private const int CopterDataGridRowHeight = 96;
+        private const int CopterDataGridRowHeight = 128;
         private const int CopterTableWidth = 300;
         private const int CopterTablePadding = 4;
         private const int CopterTableMargin = 0;
@@ -61,15 +61,18 @@ namespace MissionPlanner.GCSViews
 
         private static readonly CopterParamDescriptor[] CopterParamDescriptors =
         {
-            new CopterParamDescriptor("Angle Max", "ANGLE_MAX", "°", 10, 80,
+            new CopterParamDescriptor("Angle Max", "ANGLE_MAX", "°", 1, 35,
                 new CopterParamAlias("ATC_ANGLE_MAX"),
                 new CopterParamAlias("ANGLE_MAX", 0.01f, 100)),
-            new CopterParamDescriptor("Loit Speed", "LOIT_SPEED", "m/s", 1, 500,
+            new CopterParamDescriptor("Loit Speed", "LOIT_SPEED", "m/s", 1, 40,
                 new CopterParamAlias("LOIT_SPEED_MS"),
                 new CopterParamAlias("LOIT_SPEED", 0.01f, 100)),
-            new CopterParamDescriptor("Mission Speed", "WPNAV_SPEED", "m/s", 1, 500,
+            new CopterParamDescriptor("Mission Speed", "WPNAV_SPEED", "m/s", 1, 40,
                 new CopterParamAlias("WP_SPD"),
-                new CopterParamAlias("WPNAV_SPEED", 0.01f, 100))
+                new CopterParamAlias("WPNAV_SPEED", 0.01f, 100)),
+            new CopterParamDescriptor("RTL Speed", "RTL_SPEED", "m/s", 1, 40,
+                new CopterParamAlias("RTL_SPEED_MS"),
+                new CopterParamAlias("RTL_SPEED", 0.01f, 100))
         };
 
         private static readonly IReadOnlyDictionary<string, CopterParamAlias[]> CopterParamAliases =
