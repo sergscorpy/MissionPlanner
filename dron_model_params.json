@@ -1,6 +1,7 @@
 {
-  "configVersion": 3,
+  "configVersion": 4,
   "RTL_ALT": 5000.0,
+  "LAND_SPEED": 1.0,
   "selectedDroneModel": "Sparrow",
   "Vampire": {
     "Modes": [

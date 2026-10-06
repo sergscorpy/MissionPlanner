@@ -2954,10 +2954,6 @@ namespace MissionPlanner.GCSViews
 
         private void InitializeComponentCopter()
         {
-            this.labelCurrHYaw = new System.Windows.Forms.Label();
-            this.labelCurrRtlAlt = new System.Windows.Forms.Label();
-            this.labelRtlAlt = new System.Windows.Forms.Label();
-            this.labelHomeYaw = new System.Windows.Forms.Label();
             this.labelDroneModel = new System.Windows.Forms.Label();
             this.tabCopter = new System.Windows.Forms.TabPage();
             this.tabPlane = new System.Windows.Forms.TabPage();
@@ -2968,7 +2964,6 @@ namespace MissionPlanner.GCSViews
             this.buttonsLayoutPlaneGPS = new System.Windows.Forms.TableLayoutPanel();
             this.buttonsLayoutPlaneInputs = new System.Windows.Forms.TableLayoutPanel();
             this.buttonsLayoutPlaneCommands = new System.Windows.Forms.TableLayoutPanel();
-            this.butSetRtlAlt = new System.Windows.Forms.Button();
             this.butArmDisarm = new System.Windows.Forms.Button();
             this.butPlaneArmDisarm = new System.Windows.Forms.Button();
             this.butPlaneClearTrack = new System.Windows.Forms.Button();
@@ -2980,9 +2975,6 @@ namespace MissionPlanner.GCSViews
             this.comBoBox_FlyModes = new System.Windows.Forms.ComboBox();
             this.ListButtonsMods = new List<Button>();
             this.dataGridView = new DataGridView();
-            this.numericRtlAlt = new System.Windows.Forms.NumericUpDown();
-            this.numericHomeYaw = new System.Windows.Forms.NumericUpDown();
-            this.setHomeYawButton = new System.Windows.Forms.Button();
             this.butGPS1on = new Button();
             this.butGPS2on = new Button();
             this.butGPSon = new Button();
@@ -3580,114 +3572,6 @@ namespace MissionPlanner.GCSViews
             this.but_setmode.Click += new System.EventHandler(this.but_setmode_Click);
             
             /*
-             * Label Home Yaw
-             */
-            this.labelHomeYaw.Name = "labelHomeYaw";
-            this.labelHomeYaw.Text = "Home Y";
-            this.labelHomeYaw.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.labelHomeYaw.Font = fontLabel;
-            this.labelHomeYaw.Margin = new System.Windows.Forms.Padding(0);
-            this.labelHomeYaw.TextAlign = ContentAlignment.MiddleCenter;
-            this.tableLayoutPanelCopter.Controls.Add(this.labelHomeYaw, 0, 3);
-            
-            /*
-             * Numeric Home Yaw
-             */
-            this.numericHomeYaw.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.numericHomeYaw.Enabled = true;
-            this.numericHomeYaw.BackColor = colorDis;
-            this.numericHomeYaw.Minimum = 0;
-            this.numericHomeYaw.Maximum = 359;
-            this.numericHomeYaw.Font = fontNuveric;
-            this.numericHomeYaw.Margin = new System.Windows.Forms.Padding(3);
-            this.numericHomeYaw.KeyDown += new KeyEventHandler(this.numericHomeYaw_KeyDown);
-            this.tableLayoutPanelCopter.Controls.Add(this.numericHomeYaw, 2, 3);
-            
-            /*
-             * Set Home Yaw Button
-             */
-            this.setHomeYawButton.Name = "setHomeYawButton";
-            this.setHomeYawButton.Text = "Home Yaw";
-            this.setHomeYawButton.Font = fontBut;
-            this.setHomeYawButton.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.setHomeYawButton.Enabled = true;
-            this.setHomeYawButton.UseVisualStyleBackColor = false;
-            this.setHomeYawButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.setHomeYawButton.FlatAppearance.BorderSize = 1;
-            this.setHomeYawButton.FlatAppearance.BorderColor = colorDis;
-            this.setHomeYawButton.BackColor = colorDis;
-            this.tableLayoutPanelCopter.Controls.Add(this.setHomeYawButton, 3, 3);
-            this.setHomeYawButton.Click += new System.EventHandler(this.HomeYaw_Click);
-            
-            /*
-             * Label Current Home Yaw
-             */
-            this.tableLayoutPanelCopter.Controls.Add(this.labelCurrHYaw, 1, 3);
-            this.labelCurrHYaw.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.labelCurrHYaw.Font = fontLabel;
-            this.labelCurrHYaw.Location = new System.Drawing.Point(0, 45);
-            this.labelCurrHYaw.Margin = new System.Windows.Forms.Padding(0);
-            this.labelCurrHYaw.Name = "labelCurrHYaw";
-            this.labelCurrHYaw.Size = new System.Drawing.Size(127, 45);
-            this.labelCurrHYaw.Text = "_____";
-            this.labelCurrHYaw.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            
-            /*
-             * Button Set Rtl Alt
-             */
-            this.butSetRtlAlt.Name = "butSetRtlAlt";
-            this.butSetRtlAlt.Text = "Rtl Alt";
-            this.butSetRtlAlt.Font = fontBut;
-            this.butSetRtlAlt.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.butSetRtlAlt.Enabled = true;
-            this.butSetRtlAlt.UseVisualStyleBackColor = false;
-            this.butSetRtlAlt.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.butSetRtlAlt.FlatAppearance.BorderSize = 1;
-            this.butSetRtlAlt.FlatAppearance.BorderColor = colorDis;
-            this.butSetRtlAlt.BackColor = colorDis;
-            this.tableLayoutPanelCopter.Controls.Add(this.butSetRtlAlt, 3, 4);
-            this.butSetRtlAlt.Click += new EventHandler(RtlAltClick);
-            
-            /*
-             * Label Rtl Alt
-             */
-            this.tableLayoutPanelCopter.Controls.Add(this.labelRtlAlt, 0, 4);
-            this.labelRtlAlt.AutoSize = true;
-            this.labelRtlAlt.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.labelRtlAlt.Font = fontLabel;
-            this.labelRtlAlt.Location = new System.Drawing.Point(0, 45);
-            this.labelRtlAlt.Margin = new System.Windows.Forms.Padding(0);
-            this.labelRtlAlt.Name = "labelRtlAlt";
-            this.labelRtlAlt.Size = new System.Drawing.Size(127, 45);
-            this.labelRtlAlt.TabIndex = 13;
-            this.labelRtlAlt.Text = "Rtl Alt :";
-            this.labelRtlAlt.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            
-            /*
-             * Label Current Rtl Alt
-             */
-            this.tableLayoutPanelCopter.Controls.Add(this.labelCurrRtlAlt, 1, 4);
-            this.labelCurrRtlAlt.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.labelCurrRtlAlt.Font = fontLabel;
-            this.labelCurrRtlAlt.Location = new System.Drawing.Point(0, 45);
-            this.labelCurrRtlAlt.Margin = new System.Windows.Forms.Padding(0);
-            this.labelCurrRtlAlt.Name = "labelCurrRtlAlt";
-            this.labelCurrRtlAlt.Size = new System.Drawing.Size(127, 45);
-            this.labelCurrRtlAlt.Text = "_____";
-            this.labelCurrRtlAlt.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            
-            /*
-             * Numeric Rtl Alt
-             */
-            this.tableLayoutPanelCopter.Controls.Add(this.numericRtlAlt, 2, 4);
-            this.numericRtlAlt.Minimum = 1;
-            this.numericRtlAlt.Maximum = 3000;
-            this.numericRtlAlt.Dock = DockStyle.Fill;
-            this.numericRtlAlt.Font = fontNuveric;
-            this.numericRtlAlt.Margin = new System.Windows.Forms.Padding(3);
-            this.numericRtlAlt.KeyDown += new KeyEventHandler(this.numericRtlAlt_KeyDown);
-            
-            /*
              * Button GPS1 On
              */
             this.butGPS1on.Name = "butGPS1on";
@@ -4204,7 +4088,6 @@ namespace MissionPlanner.GCSViews
         private System.Windows.Forms.Button ON_btn;
         private System.Windows.Forms.CheckedListBox Mode_clb;
         private System.Windows.Forms.NumericUpDown Squawk_nud;
-        private System.Windows.Forms.NumericUpDown numericRtlAlt;
         private System.Windows.Forms.Label Squawk_label;
         private System.Windows.Forms.Label FlightID_label;
         private System.Windows.Forms.TextBox FlightID_tb;
@@ -4268,6 +4151,7 @@ namespace MissionPlanner.GCSViews
         {
             public int configVersion { get; set; }
             public float RTL_ALT { get; set; }
+            public float LAND_SPEED { get; set; } = 1;
             public string selectedDroneModel { get; set; }
             public ModeList Vampire { get; set; }
             public ModeList Sparrow { get; set; }
@@ -4311,11 +4195,6 @@ namespace MissionPlanner.GCSViews
 
         // Copter
         private System.Windows.Forms.Label labelDroneModel;
-        private System.Windows.Forms.Label labelRtlAlt;
-        private System.Windows.Forms.Label labelCurrHYaw;
-        private System.Windows.Forms.Label labelCurrRtlAlt;
-        private System.Windows.Forms.Label labelHomeYaw;
-        private Button butSetRtlAlt;
         private Button butArmDisarm;
         private List<Button> ListButtonsMods;
         private readonly Dictionary<string, Dictionary<string, float>> _parameters =
@@ -4330,9 +4209,7 @@ namespace MissionPlanner.GCSViews
         private string _jsonFileData;
         private static readonly string PathCustom_params =
             System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "dron_model_params.json");
-        private NumericUpDown numericHomeYaw;
 
-        private Button setHomeYawButton;
 
         private Button butGPS1on;
         private Button butGPS2on;

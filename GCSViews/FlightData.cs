@@ -7151,7 +7151,7 @@ namespace MissionPlanner.GCSViews
                 if (button.Name == "Custom")
                 {
                     CheckCustom(button.Name);
-                    if (!this.tableLayoutPanelCopter.Controls.Contains(this.dataGridView))
+                    if (!CopterPresetRowsVisible)
                     {
                         ShowCopterDataGridView();
                     }
@@ -7159,7 +7159,7 @@ namespace MissionPlanner.GCSViews
                 else
                 {
                     Check(button.Name);
-                    if (this.tableLayoutPanelCopter.Controls.Contains(this.dataGridView) && !chBox_ExpMod.Checked)
+                    if (CopterPresetRowsVisible && !chBox_ExpMod.Checked)
                     {
                         HideCopterDataGridView();
                     }
@@ -7182,7 +7182,7 @@ namespace MissionPlanner.GCSViews
                     {
                         var buttTrue = FindButtonByName(key);
                         buttTrue.AutoSize = true;
-                        if (this.tableLayoutPanelCopter.Controls.Contains(this.dataGridView) && !chBox_ExpMod.Checked)
+                        if (CopterPresetRowsVisible && !chBox_ExpMod.Checked)
                         {
                             HideCopterDataGridView();
                         }
@@ -7191,7 +7191,7 @@ namespace MissionPlanner.GCSViews
                     {
                         var buttTrue = FindButtonByName("Custom");
                         //buttTrue.AutoSize = true;
-                        if (!this.tableLayoutPanelCopter.Controls.Contains(this.dataGridView))
+                        if (!CopterPresetRowsVisible)
                         {
                             ShowCopterDataGridView();
                         }
@@ -7503,7 +7503,7 @@ namespace MissionPlanner.GCSViews
             {
                 chBox_ExpMod.BackColor = Color.YellowGreen;
                 chBox_ExpMod.ForeColor = SystemColors.WindowFrame;
-                if (!this.tableLayoutPanelCopter.Controls.Contains(this.dataGridView))
+                if (!CopterPresetRowsVisible)
                 {
                     ShowCopterDataGridView();
                 }
@@ -7512,7 +7512,7 @@ namespace MissionPlanner.GCSViews
             {
                 chBox_ExpMod.BackColor = Color.FromArgb(45, 45, 45);
                 chBox_ExpMod.ForeColor = SystemColors.Window;
-                if (this.tableLayoutPanelCopter.Controls.Contains(this.dataGridView) && !buttTrue.AutoSize)
+                if (CopterPresetRowsVisible && !buttTrue.AutoSize)
                 {
                     HideCopterDataGridView();
                 }
@@ -7547,9 +7547,12 @@ namespace MissionPlanner.GCSViews
             SetCopterCustomParamValue("WPNAV_SPEED", Convert.ToDecimal(customParams["WPNAV_SPEED"], CultureInfo.InvariantCulture));
             SetCopterCustomParamValue("RTL_SPEED", Convert.ToDecimal(customParams["RTL_SPEED"], CultureInfo.InvariantCulture));
 
-            numericRtlAlt.Value = Convert.ToDecimal(_rtlAlt / 100);
+            SetCopterCustomParamValue("RTL_ALT", Convert.ToDecimal(_rtlAlt / 100));
+            var landSpeedDescriptor = GetCopterParamDescriptor("LAND_SPEED");
+            SetCopterCustomParamValue("LAND_SPEED", Math.Max(landSpeedDescriptor.Min,
+                Math.Min(landSpeedDescriptor.Max, Convert.ToDecimal(_rootObject.LAND_SPEED))));
         }
-        private void RtlAltClick(object sender, EventArgs e)
+        private void ApplyCopterRtlAltFromGrid()
         {
             try
             {
@@ -7559,7 +7562,7 @@ namespace MissionPlanner.GCSViews
                     return;
                 }
 
-                float value = Convert.ToSingle(numericRtlAlt.Value);
+                float value = Convert.ToSingle(GetCopterCustomParamValue("RTL_ALT"));
                 float configValue = value * 100;
 
                 KeyValuePair<string, float> param = new KeyValuePair<string, float>("RTL_ALT", value);
@@ -7580,7 +7583,7 @@ namespace MissionPlanner.GCSViews
                 CustomMessageBox.Show(ex.Message, "ERROR");
             }
         }
-        private void HomeYaw_Click(object sender, EventArgs e)
+        private void ApplyCopterHomeYawFromGrid()
         {
             try
             {
@@ -7590,7 +7593,7 @@ namespace MissionPlanner.GCSViews
                     return;
                 }
 
-                float value = Convert.ToSingle(numericHomeYaw.Value);
+                float value = Convert.ToSingle(GetCopterCustomParamValue("DR_HOME_YAW"));
                 KeyValuePair<string, float> param = new KeyValuePair<string, float>("DR_HOME_YAW", value);
 
                 SetParam(param);
@@ -7600,32 +7603,6 @@ namespace MissionPlanner.GCSViews
             {
                 CustomMessageBox.Show(ex.Message, "ERROR");
             }
-        }
-
-        private void numericHomeYaw_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.KeyCode != Keys.Enter)
-            {
-                return;
-            }
-
-            e.Handled = true;
-            e.SuppressKeyPress = true;
-            ApplyNumericUpDownTextValue(numericHomeYaw);
-            HomeYaw_Click(setHomeYawButton, EventArgs.Empty);
-        }
-
-        private void numericRtlAlt_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.KeyCode != Keys.Enter)
-            {
-                return;
-            }
-
-            e.Handled = true;
-            e.SuppressKeyPress = true;
-            ApplyNumericUpDownTextValue(numericRtlAlt);
-            RtlAltClick(butSetRtlAlt, EventArgs.Empty);
         }
 
         private void butGPS1on_Click(object sender, EventArgs e)
@@ -7881,49 +7858,6 @@ namespace MissionPlanner.GCSViews
             }
         }
 
-
-        private void LabelUpdate(System.Windows.Forms.Label label, string key)
-        {
-            try
-            {
-                if (!IsComPortConnected())
-                {
-                    label.Enabled = false;
-                    //CustomMessageBox.Show("No connection to autopilot");
-                    return;
-                }
-                var paramAlias = GetCopterActualParamAlias(key);
-                if (!MainV2.comPort.MAV.param.ContainsKey(paramAlias.ParamName))
-                {
-                    label.Enabled = false;
-                    return;
-                }
-
-                var value = Convert.ToInt32(Math.Round(
-                    MainV2.comPort.MAV.param[paramAlias.ParamName].Value * paramAlias.ActualToTableScale,
-                    MidpointRounding.AwayFromZero));
-                label.Enabled = true;
-                switch (label.Name)
-                {
-                    case "labelCurrRtlAlt":
-                        {
-                            label.Text = ($"{value.ToString()} m");
-                            break;
-                        }
-                    case "labelCurrHYaw":
-                        {
-                            label.Text = ($"{value.ToString()} °");
-                            break;
-                        }
-
-                }
-            }
-            catch
-            {
-            }
-
-        }
-
         private void UpdateCopterDisplayParam(string key, Action<float> updateValue)
         {
             if (!IsComPortConnected())
@@ -7977,11 +7911,11 @@ namespace MissionPlanner.GCSViews
                         }
 
                         var actualParam = MainV2.comPort.MAV.param[paramAlias.ParamName];
-                        var isLandSpeed = descriptor.ParamName == "LAND_SPEED";
+                        var acceptsZero = descriptor.ParamName == "LAND_SPEED" || descriptor.ParamName == "DR_HOME_YAW" || descriptor.ParamName == "RTL_ALT";
                         var paramValue = Convert.ToDecimal(Math.Round(actualParam.Value * paramAlias.ActualToTableScale,
                             MidpointRounding.AwayFromZero));
 
-                        if ((isLandSpeed || paramValue != 0) && currentValue != paramValue)
+                        if ((acceptsZero || paramValue != 0) && currentValue != paramValue)
                         {
                             dataGridView.Rows[i].Cells[2].Value = paramValue;
                             success = true;
@@ -8112,8 +8046,6 @@ namespace MissionPlanner.GCSViews
             //CheckBoxUpdate(IsActRCVamp_1);
             //CheckBoxUpdate(IsActRCVamp_2);
             UpdateCopterDisplayParams();
-            LabelUpdate(labelCurrRtlAlt, "RTL_ALT");
-            LabelUpdate(labelCurrHYaw, "DR_HOME_YAW");
             UpdateButtonModState();
             BUT_ARM_Check();
             BUT_thrustImbalance_Check();
