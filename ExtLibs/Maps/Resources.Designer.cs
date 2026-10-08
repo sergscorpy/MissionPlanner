@@ -1592,6 +1592,18 @@ namespace MissionPlanner.Maps {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        public static System.Drawing.Bitmap quad3 {
+            get {
+                return ((System.Drawing.Bitmap)(ResourceManager.GetObject("quad3", resourceCulture)));
+            }
+        }
+
+        public static System.Drawing.Bitmap quad4 {
+            get {
+                return ((System.Drawing.Bitmap)(ResourceManager.GetObject("quad4", resourceCulture)));
+            }
+        }
+
         public static System.Drawing.Bitmap quadicon {
             get {
                 object obj = ResourceManager.GetObject("quadicon", resourceCulture);

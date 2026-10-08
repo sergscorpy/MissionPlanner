@@ -1139,7 +1139,7 @@ namespace MissionPlanner.GCSViews
         {
             this.BeginInvokeIfRequired(() =>
             {
-                var marker = Common.getMAVMarker(MAV, routes);
+                var marker = Common.getMAVMarker(MAV, routes, gMapControl1.Zoom < 15);
 
                 if (marker == null || marker.Position.Lat == 0 && marker.Position.Lng == 0)
                     return;
@@ -3485,6 +3485,15 @@ namespace MissionPlanner.GCSViews
 
         void gMapControl1_OnMapZoomChanged()
         {
+            if (routes != null)
+            {
+                foreach (var marker in routes.Markers.OfType<GMapMarkerQuad>().ToArray())
+                {
+                    if (marker.Tag is MAVState mav)
+                        Common.getMAVMarker(mav, routes, gMapControl1.Zoom < 15);
+                }
+            }
+
             try
             {
                 // Exception System.Runtime.InteropServices.SEHException: External component has thrown an exception.

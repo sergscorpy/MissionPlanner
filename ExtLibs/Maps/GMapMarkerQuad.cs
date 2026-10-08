@@ -2,6 +2,7 @@
 using System.Drawing;
 using GMap.NET;
 using GMap.NET.WindowsForms;
+using GMap.NET.WindowsForms.Markers;
 using MissionPlanner.Utilities;
 using Org.BouncyCastle.Crypto.Signers;
 
@@ -11,6 +12,19 @@ namespace MissionPlanner.Maps
     public class GMapMarkerQuad : GMapMarkerBase
     {
         private readonly Bitmap icon = global::MissionPlanner.Maps.Resources.quadicon;
+        private Bitmap frameIcon;
+        private bool compact;
+        private readonly GMarkerGoogle pushpin = new GMarkerGoogle(PointLatLng.Empty, GMarkerGoogleType.green_pushpin);
+        private static readonly Bitmap pushpinIcon = GMap.NET.Drawing.Properties.Resources.green_pushpin.ToBitmap();
+
+        public void SetAppearance(bool compact, Bitmap frameIcon)
+        {
+            this.compact = compact;
+            this.frameIcon = frameIcon;
+            var imageSize = frameIcon == null ? icon.Size : frameIcon.Size;
+            Size = compact ? pushpin.Size : imageSize;
+            Offset = compact ? pushpin.Offset : new Point(-imageSize.Width / 2, -imageSize.Height / 2);
+        }
 
         float heading = 0;
         float cog = -1;
@@ -110,15 +124,19 @@ namespace MissionPlanner.Maps
         }
 
         public GMapMarkerQuad(PointLatLng p, float heading, float cog, float target, int sysid)
+            : this(p, heading, cog, target, sysid, null, false)
+        {
+        }
+
+        public GMapMarkerQuad(PointLatLng p, float heading, float cog, float target, int sysid,
+            Bitmap frameIcon, bool compact)
             : base(p)
         {
             this.Heading = heading;
             this.Cog = cog;
             this.Target = target;
             this.Sysid = sysid;
-            Size = icon.Size;
-            // for hitzone
-            Offset = new Point(-icon.Width / 2, -icon.Width / 2);
+            SetAppearance(compact, frameIcon);
         }
 
         public override void OnRender(IGraphics g)
@@ -126,6 +144,24 @@ namespace MissionPlanner.Maps
             if (IsHidden)
             {
                 return;
+            }
+
+            if (compact)
+            {
+                if (IsTransparent)
+                {
+                    using (var attributes = new System.Drawing.Imaging.ImageAttributes())
+                    {
+                        attributes.SetColorMatrix(new System.Drawing.Imaging.ColorMatrix { Matrix33 = 100f / 255f });
+                        g.DrawImage(pushpinIcon, new Rectangle(LocalPosition, Size),
+                            0, 0, pushpinIcon.Width, pushpinIcon.Height, GraphicsUnit.Pixel, attributes);
+                    }
+                }
+                else
+                {
+                    pushpin.LocalPosition = LocalPosition;
+                    pushpin.OnRender(g);
+                }
             }
 
             var temp = g.Transform;
@@ -165,6 +201,17 @@ namespace MissionPlanner.Maps
 
             //g.DrawImageUnscaled(icon, icon.Width / -2 + 2, icon.Height / -2);
 
+            if (!compact && frameIcon != null)
+            {
+                using (var attributes = new System.Drawing.Imaging.ImageAttributes())
+                {
+                    if (IsTransparent)
+                        attributes.SetColorMatrix(new System.Drawing.Imaging.ColorMatrix { Matrix33 = 100f / 255f });
+                    g.DrawImage(frameIcon, new Rectangle(Offset.X, Offset.Y, Size.Width, Size.Height),
+                        0, 0, frameIcon.Width, frameIcon.Height, GraphicsUnit.Pixel, attributes);
+                }
+            }
+            else if (!compact)
             {
                 g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
 

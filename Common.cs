@@ -23,6 +23,11 @@ namespace MissionPlanner
 
         public static GMapMarker getMAVMarker(MAVState MAV, GMapOverlay overlay = null)
         {
+            return getMAVMarker(MAV, overlay, false);
+        }
+
+        public static GMapMarker getMAVMarker(MAVState MAV, GMapOverlay overlay, bool compactCopter)
+        {
             PointLatLng portlocation = MAV.cs.Location;
 
             if(overlay!= null)
@@ -55,6 +60,7 @@ namespace MissionPlanner
                         itemq.Target = MAV.cs.nav_bearing;
                         itemq.Sysid = MAV.sysid;
                         itemq.IsActive = MAV == MainV2.comPort?.MAV;
+                        itemq.SetAppearance(compactCopter, GetCopterMapIcon(MAV));
                         return null;
                     }
                     else if (item is GMapMarkerRover)
@@ -192,7 +198,7 @@ namespace MissionPlanner
                         MAV.cs.yaw,
                         MAV.cs.groundcourse,
                         MAV.cs.nav_bearing,
-                        MAV.sysid)
+                        MAV.sysid, GetCopterMapIcon(MAV), compactCopter)
                     {
                         IsActive = MAV == MainV2.comPort?.MAV,
                         danger = (int)f,
@@ -206,7 +212,7 @@ namespace MissionPlanner
                     MAV.cs.yaw,
                     MAV.cs.groundcourse,
                     MAV.cs.nav_bearing,
-                    MAV.sysid)
+                    MAV.sysid, GetCopterMapIcon(MAV), compactCopter)
                 {
                     IsActive = MAV == MainV2.comPort?.MAV,
                     Tag = MAV
@@ -221,6 +227,23 @@ namespace MissionPlanner
                 };
             }
         }
+        private static Bitmap GetCopterMapIcon(MAVState mav)
+        {
+            if (!mav.param.ContainsKey("FRAME_CLASS") || !mav.param.ContainsKey("FRAME_TYPE") ||
+                mav.param["FRAME_TYPE"].Value != (int)motor_frame_type.MOTOR_FRAME_TYPE_X)
+                return null;
+
+            switch ((motor_frame_class)mav.param["FRAME_CLASS"].Value)
+            {
+                case motor_frame_class.MOTOR_FRAME_QUAD:
+                    return Maps.Resources.quad3;
+                case motor_frame_class.MOTOR_FRAME_HEXA:
+                    return Maps.Resources.quad4;
+                default:
+                    return null;
+            }
+        }
+
         public static Form LoadingBox(string title, string promptText)
         {
             Form form = new Form();
