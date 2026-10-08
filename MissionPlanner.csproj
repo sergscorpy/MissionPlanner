@@ -761,6 +761,8 @@
     <Content Include="APMotorLayout.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <EmbeddedResource Include="Controls\MotorMonitor\Assets\layouts.json" LogicalName="MotorMonitor.layouts.json" />
+    <EmbeddedResource Include="Controls\MotorMonitor\Assets\*.png" LogicalName="MotorMonitor.%(Filename)%(Extension)" />
     <Content Include="graphs\ekf3Graphs.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

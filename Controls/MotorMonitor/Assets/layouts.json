@@ -1,0 +1,170 @@
+{
+  "Geometries": {
+    "quad-x": {
+      "InnerRadius": 0.0630324,
+      "OuterRadius": 0.1243612,
+      "Positions": [
+        {
+          "X": 0.1720613,
+          "Y": 0.1895425
+        },
+        {
+          "X": 0.8279387,
+          "Y": 0.1895425
+        },
+        {
+          "X": 0.1720613,
+          "Y": 0.8186275
+        },
+        {
+          "X": 0.8279387,
+          "Y": 0.8186275
+        }
+      ],
+      "OutlineRadius": 0.1720613
+    },
+    "hexa-x": {
+      "InnerRadius": 0.0541728,
+      "OuterRadius": 0.1068814,
+      "Positions": [
+        {
+          "X": 0.3235725,
+          "Y": 0.1638418
+        },
+        {
+          "X": 0.6749634,
+          "Y": 0.1638418
+        },
+        {
+          "X": 0.147877,
+          "Y": 0.5028249
+        },
+        {
+          "X": 0.8506589,
+          "Y": 0.5028249
+        },
+        {
+          "X": 0.3235725,
+          "Y": 0.8432203
+        },
+        {
+          "X": 0.6749634,
+          "Y": 0.8432203
+        }
+      ],
+      "OutlineRadius": 0.147877
+    }
+  },
+  "Layouts": [
+    {
+      "FrameClass": 1,
+      "FrameType": 1,
+      "Name": "QUAD X",
+      "Image": "m_01_01_quad_x1.png",
+      "Geometry": "quad-x",
+      "MotorNumbers": [
+        3,
+        1,
+        2,
+        4
+      ]
+    },
+    {
+      "FrameClass": 1,
+      "FrameType": 12,
+      "Name": "QUAD BF X",
+      "Image": "m_01_12_quad_x_bf.png",
+      "Geometry": "quad-x",
+      "MotorNumbers": [
+        4,
+        2,
+        3,
+        1
+      ]
+    },
+    {
+      "FrameClass": 1,
+      "FrameType": 13,
+      "Name": "QUAD DJI X",
+      "Image": "m_01_13_quad_x_dji.png",
+      "Geometry": "quad-x",
+      "MotorNumbers": [
+        2,
+        1,
+        3,
+        4
+      ]
+    },
+    {
+      "FrameClass": 1,
+      "FrameType": 14,
+      "Name": "QUAD CW X",
+      "Image": "m_01_14_quad_x_cw.png",
+      "Geometry": "quad-x",
+      "MotorNumbers": [
+        4,
+        1,
+        3,
+        2
+      ]
+    },
+    {
+      "FrameClass": 1,
+      "FrameType": 18,
+      "Name": "QUAD X REV",
+      "Image": "m_01_18_quad_x_bf_rev.png",
+      "Geometry": "quad-x",
+      "MotorNumbers": [
+        4,
+        2,
+        3,
+        1
+      ]
+    },
+    {
+      "FrameClass": 2,
+      "FrameType": 1,
+      "Name": "HEXA X",
+      "Image": "m_02_01_hexa_x.png",
+      "Geometry": "hexa-x",
+      "MotorNumbers": [
+        3,
+        5,
+        2,
+        1,
+        6,
+        4
+      ]
+    },
+    {
+      "FrameClass": 2,
+      "FrameType": 13,
+      "Name": "HEXA DJI X",
+      "Image": "m_02_13_hexa_x_dji.png",
+      "Geometry": "hexa-x",
+      "MotorNumbers": [
+        2,
+        1,
+        3,
+        6,
+        4,
+        5
+      ]
+    },
+    {
+      "FrameClass": 2,
+      "FrameType": 14,
+      "Name": "HEXA CW X",
+      "Image": "m_02_14_hexa_x_cw.png",
+      "Geometry": "hexa-x",
+      "MotorNumbers": [
+        6,
+        1,
+        5,
+        2,
+        4,
+        3
+      ]
+    }
+  ]
+}

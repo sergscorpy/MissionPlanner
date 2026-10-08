@@ -408,6 +408,8 @@ namespace MissionPlanner.GCSViews
 
             InitializeComponent();
 
+            InitializeMotorMonitorMenu();
+
             log.Info("Components Done");
 
             instance = this;
