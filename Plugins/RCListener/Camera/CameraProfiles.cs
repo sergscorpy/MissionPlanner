@@ -8,6 +8,7 @@ namespace RCListener.Camera
     public static class CameraProfiles
     {
         public const string DefaultCameraName = "SiYi A8 mini";
+        public const string TopotekCameraName = "TOPOTEK";
 
         public static readonly IReadOnlyList<ICameraProfile> Available = new List<ICameraProfile>
         {
@@ -161,7 +162,7 @@ namespace RCListener.Camera
             };
 
             return new CameraProfile(
-                "TOPOTEK",
+                TopotekCameraName,
                 "192.168.144.108",
                 9003,
                 false,

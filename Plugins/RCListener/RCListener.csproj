@@ -97,6 +97,7 @@
     <Compile Include="Camera\CameraProfiles.cs" />
     <Compile Include="Camera\CameraSelectionService.cs" />
     <Compile Include="Camera\ICameraProfile.cs" />
+    <Compile Include="Camera\TopotekPitchControl.cs" />
     <Compile Include="Config\RcConfig.cs" />
     <Compile Include="Control\RcListenerController.cs" />
     <Compile Include="Gripper\GripperControlService.cs" />

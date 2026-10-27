@@ -253,13 +253,15 @@ namespace RCListener.Control
                 }
 
                 var result = channelProcessor.Process(frame);
+                var cameraActions = new List<string>();
                 foreach (var action in result.Actions)
                 {
                     if (gripperControl?.TryHandleAction(action) == true)
                         continue;
 
-                    gimbalSender.Send(action);
+                    cameraActions.Add(action);
                 }
+                gimbalSender.SendFrameActions(frame, cameraActions);
             }
         }
 
@@ -420,6 +422,7 @@ namespace RCListener.Control
             lastDataUtc = DateTime.MinValue;
             indefiniteHandshakeWait = false;
 
+            gimbalSender.ResetPitchControl();
             NotifyConnectionState(ConnectionState.Disconnected);
         }
 

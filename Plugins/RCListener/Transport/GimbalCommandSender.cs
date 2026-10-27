@@ -1,8 +1,12 @@
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using RCListener.Camera;
 using RCListener.Logging;
+using RCListener.Model;
 
 namespace RCListener.Transport
 {
@@ -13,6 +17,8 @@ namespace RCListener.Transport
         private readonly object sync = new object();
         private IPEndPoint endpoint;
         private ICameraProfile profile;
+        private readonly TopotekPitchControl pitchControl = new TopotekPitchControl();
+        private readonly Stopwatch pitchClock = Stopwatch.StartNew();
 
         public GimbalCommandSender(ILogger log)
         {
@@ -62,6 +68,36 @@ namespace RCListener.Transport
             catch (Exception ex) { _log.Log($"UDP send error: {ex.Message}"); }
         }
 
+        public void SendFrameActions(RcFrame frame, IEnumerable<string> actions)
+        {
+            lock (sync)
+            {
+                var pendingActions = actions.ToList();
+                byte[] pitchCommand = null;
+                bool pitchPriority = profile?.Name == CameraProfiles.TopotekCameraName &&
+                    pitchControl.Process(frame.Channels, pitchClock.ElapsedMilliseconds,
+                        pendingActions.Any(TopotekPitchControl.IsPitchAction), out pitchCommand);
+
+                foreach (var action in pendingActions)
+                {
+                    if (!pitchPriority || !TopotekPitchControl.IsPitchAction(action))
+                        Send(action);
+                }
+
+                if (pitchCommand != null && endpoint != null)
+                {
+                    try { _udpClient?.Send(pitchCommand, pitchCommand.Length, endpoint); }
+                    catch (Exception ex) { _log.Log($"UDP pitch send error: {ex.Message}"); }
+                }
+            }
+        }
+
+        public void ResetPitchControl()
+        {
+            lock (sync)
+                pitchControl.Reset();
+        }
+
         public void SetProfile(ICameraProfile newProfile)
         {
             if (newProfile == null)
@@ -70,6 +106,7 @@ namespace RCListener.Transport
             lock (sync)
             {
                 profile = newProfile;
+                pitchControl.Reset();
                 try
                 {
                     endpoint = new IPEndPoint(IPAddress.Parse(newProfile.UdpIp), newProfile.UdpPort);
