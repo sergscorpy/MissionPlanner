@@ -30,6 +30,7 @@ namespace MissionPlanner.GCSViews
                 Label = label;
                 ParamName = paramName;
                 Unit = unit;
+                CurrentParamName = paramName;
                 Min = min;
                 Max = max;
                 ParamAliases = paramAliases.Length > 0
@@ -40,20 +41,19 @@ namespace MissionPlanner.GCSViews
             public string Label { get; }
             public string ParamName { get; }
             public string Unit { get; }
+            public string CurrentParamName { get; set; }
             public CopterParamAlias[] ParamAliases { get; }
             public decimal Min { get; }
             public decimal Max { get; }
         }
 
-        private const int CopterConfigVersion = 2;
+        private const int CopterConfigVersion = 4;
         private const int CopterColumnCount = 4;
         private const int CopterRowCount = 15;
         private const int CopterRowHeight = 32;
-        private const int CopterDataGridRowHeight = 96;
         private const int CopterTableWidth = 300;
         private const int CopterTablePadding = 4;
         private const int CopterTableMargin = 0;
-        private const int CopterDataGridRowTemplateHeight = 35;
         private const int CopterDataGridRowIndex = 2;
         private const int CopterDataGridColumnSpan = 4;
         private const int CopterCustomColumnIndex = 1;
@@ -61,20 +61,43 @@ namespace MissionPlanner.GCSViews
 
         private static readonly CopterParamDescriptor[] CopterParamDescriptors =
         {
-            new CopterParamDescriptor("Angle Max", "ANGLE_MAX", "°", 10, 80,
+            new CopterParamDescriptor("Angle Max", "ANGLE_MAX", "°", 1, 35,
                 new CopterParamAlias("ATC_ANGLE_MAX"),
                 new CopterParamAlias("ANGLE_MAX", 0.01f, 100)),
-            new CopterParamDescriptor("Loit Speed", "LOIT_SPEED", "m/s", 1, 500,
+            new CopterParamDescriptor("Loit Speed", "LOIT_SPEED", "m/s", 1, 40,
                 new CopterParamAlias("LOIT_SPEED_MS"),
                 new CopterParamAlias("LOIT_SPEED", 0.01f, 100)),
-            new CopterParamDescriptor("Mission Speed", "WPNAV_SPEED", "m/s", 1, 500,
+            new CopterParamDescriptor("Mission Speed", "WPNAV_SPEED", "m/s", 1, 40,
                 new CopterParamAlias("WP_SPD"),
-                new CopterParamAlias("WPNAV_SPEED", 0.01f, 100))
+                new CopterParamAlias("WPNAV_SPEED", 0.01f, 100)),
+            new CopterParamDescriptor("RTL Speed", "RTL_SPEED", "m/s", 1, 40,
+                new CopterParamAlias("RTL_SPEED_MS"),
+                new CopterParamAlias("RTL_SPEED", 0.01f, 100)),
+            new CopterParamDescriptor("Land Speed", "LAND_SPEED", "cm/s", 1, 150,
+                new CopterParamAlias("LAND_SPD_MS", 100, 0.01f),
+                new CopterParamAlias("LAND_SPEED"))
+            {
+                CurrentParamName = "LAND_SPEED_HIGH"
+            },
+            new CopterParamDescriptor("Home Y", "DR_HOME_YAW", "°", 0, 359,
+                new CopterParamAlias("GNGP_HOME_YAW"),
+                new CopterParamAlias("DR_HOME_YAW"),
+                new CopterParamAlias("DR_HOME_ANGLE")),
+            new CopterParamDescriptor("Rtl Alt", "RTL_ALT", "m", 1, 3000,
+                new CopterParamAlias("RTL_ALT_M"),
+                new CopterParamAlias("RTL_ALT", 0.01f, 100))
         };
 
         private static readonly IReadOnlyDictionary<string, CopterParamAlias[]> CopterParamAliases =
             new Dictionary<string, CopterParamAlias[]>
             {
+                {
+                    "LAND_SPEED_HIGH", new[]
+                    {
+                        new CopterParamAlias("LAND_SPD_HIGH_MS", 100, 0.01f),
+                        new CopterParamAlias("LAND_SPEED_HIGH")
+                    }
+                },
                 {
                     "RTL_ALT", new[]
                     {
@@ -137,11 +160,9 @@ namespace MissionPlanner.GCSViews
                     new RowStyle(SizeType.Absolute, CopterRowHeight));
             }
 
-            if (tableLayoutPanelCopter.RowStyles.Count > 2)
-            {
-                tableLayoutPanelCopter.RowStyles[2].Height = CopterDataGridRowHeight;
-            }
-
+            // The former Home Y and Rtl Alt controls now occupy grid rows.
+            tableLayoutPanelCopter.RowStyles[3].Height = 0;
+            tableLayoutPanelCopter.RowStyles[4].Height = 0;
             tableLayoutPanelCopter.Location = new Point(3, 3);
             tableLayoutPanelCopter.Dock = DockStyle.Top;
             tableLayoutPanelCopter.Size = new Size(CopterTableWidth, sizeHeight);
@@ -229,7 +250,8 @@ namespace MissionPlanner.GCSViews
 
             foreach (var descriptor in CopterParamDescriptors)
             {
-                int rowIndex = dataGridView.Rows.Add(descriptor.Label, 0, 0);
+                int rowIndex = dataGridView.Rows.Add(descriptor.Label,
+                    (descriptor.ParamName == "LAND_SPEED" || descriptor.ParamName == "RTL_ALT") ? descriptor.Min : 0, 0);
 
                 var cell = new DataGridViewNumericUpDownCell
                 {
@@ -241,7 +263,9 @@ namespace MissionPlanner.GCSViews
                 dataGridView.Rows[rowIndex].Cells[1] = cell;
             }
 
-            dataGridView.RowTemplate.Height = CopterDataGridRowTemplateHeight;
+            dataGridView.ColumnHeadersHeightChanged += (sender, args) => UpdateCopterDataGridHeight();
+            dataGridView.RowHeightChanged += (sender, args) => UpdateCopterDataGridHeight();
+            UpdateCopterDataGridHeight();
             dataGridView.CellFormatting += DataGridView_CellFormatting;
             dataGridView.KeyDown += DataGridView_KeyDown;
             dataGridView.EditingControlShowing += DataGridView_EditingControlShowing;
@@ -386,6 +410,11 @@ namespace MissionPlanner.GCSViews
 
         private void ApplyCopterCustomParametersFromGrid()
         {
+            var rowIndex = dataGridView.CurrentCell?.RowIndex;
+            var paramName = rowIndex.HasValue && rowIndex.Value >= 0
+                ? CopterParamDescriptors[rowIndex.Value].ParamName
+                : null;
+
             if (dataGridView.EditingControl is NumericUpDown numericUpDown)
             {
                 ApplyNumericUpDownTextValue(numericUpDown);
@@ -398,6 +427,19 @@ namespace MissionPlanner.GCSViews
 
             dataGridView.EndEdit();
 
+            switch (paramName)
+            {
+                case "LAND_SPEED":
+                    ApplyCopterLandSpeedFromGrid();
+                    return;
+                case "DR_HOME_YAW":
+                    ApplyCopterHomeYawFromGrid();
+                    return;
+                case "RTL_ALT":
+                    ApplyCopterRtlAltFromGrid();
+                    return;
+            }
+
             var customButton = FindButtonByName("Custom");
             if (customButton != null)
             {
@@ -406,6 +448,50 @@ namespace MissionPlanner.GCSViews
             else
             {
                 CheckCustom("Custom");
+            }
+        }
+
+        private void ApplyCopterLandSpeedFromGrid()
+        {
+            try
+            {
+                if (!IsComPortConnected())
+                {
+                    CustomMessageBox.Show("No connection to autopilot");
+                    return;
+                }
+
+                var value = Convert.ToSingle(GetCopterCustomParamValue("LAND_SPEED"));
+                var paramNames = value <= 35
+                    ? new[] { "LAND_SPEED", "LAND_SPEED_HIGH" }
+                    : new[] { "LAND_SPEED_HIGH" };
+
+                // Verify all parameters that will change before sending any writes.
+                foreach (var paramName in paramNames)
+                {
+                    var paramAlias = GetCopterActualParamAlias(paramName);
+                    if (!MainV2.comPort.MAV.param.ContainsKey(paramAlias.ParamName))
+                    {
+                        CustomMessageBox.Show($"Parameter {paramName} is not available", "ERROR");
+                        return;
+                    }
+                }
+
+                foreach (var paramName in paramNames)
+                {
+                    SetParam(new KeyValuePair<string, float>(paramName, value));
+                }
+
+                // Store the standalone table value in cm/s, outside the model presets.
+                if (_rootObject.LAND_SPEED != value)
+                {
+                    _rootObject.LAND_SPEED = value;
+                    SaveCopterConfig();
+                }
+            }
+            catch (Exception ex)
+            {
+                CustomMessageBox.Show(ex.Message, "ERROR");
             }
         }
 
@@ -438,23 +524,44 @@ namespace MissionPlanner.GCSViews
                 tableLayoutPanelCopter.Controls.Add(dataGridView, 0, CopterDataGridRowIndex);
             }
 
-            if (tableLayoutPanelCopter.RowStyles.Count > CopterDataGridRowIndex)
+            foreach (DataGridViewRow row in dataGridView.Rows)
             {
-                tableLayoutPanelCopter.RowStyles[CopterDataGridRowIndex].Height = CopterDataGridRowHeight;
+                row.Visible = true;
+            }
+            UpdateCopterDataGridHeight();
+        }
+
+        private bool CopterPresetRowsVisible => dataGridView.Rows.Count > 0 && dataGridView.Rows[0].Visible;
+
+        private void UpdateCopterDataGridHeight()
+        {
+            if (tableLayoutPanelCopter.Controls.Contains(dataGridView) &&
+                tableLayoutPanelCopter.RowStyles.Count > CopterDataGridRowIndex)
+            {
+                int borderHeight = dataGridView.Height - dataGridView.ClientSize.Height;
+                tableLayoutPanelCopter.RowStyles[CopterDataGridRowIndex].Height =
+                    dataGridView.ColumnHeadersHeight +
+                    dataGridView.Rows.GetRowsHeight(DataGridViewElementStates.Visible) +
+                    borderHeight + dataGridView.Margin.Vertical;
             }
         }
 
         private void HideCopterDataGridView()
         {
-            if (tableLayoutPanelCopter.Controls.Contains(dataGridView))
+            if (dataGridView.CurrentCell != null &&
+                dataGridView.CurrentCell.RowIndex < GetCopterParamRowIndex("LAND_SPEED"))
             {
-                tableLayoutPanelCopter.Controls.Remove(dataGridView);
+                dataGridView.EndEdit();
+                dataGridView.CurrentCell = null;
             }
 
-            if (tableLayoutPanelCopter.RowStyles.Count > CopterDataGridRowIndex)
+            for (int i = 0; i < CopterParamDescriptors.Length; i++)
             {
-                tableLayoutPanelCopter.RowStyles[CopterDataGridRowIndex].Height = 0F;
+                var paramName = CopterParamDescriptors[i].ParamName;
+                dataGridView.Rows[i].Visible = paramName == "LAND_SPEED" ||
+                                              paramName == "DR_HOME_YAW" || paramName == "RTL_ALT";
             }
+            UpdateCopterDataGridHeight();
         }
 
         public class DataGridViewNumericUpDownCell : DataGridViewTextBoxCell
