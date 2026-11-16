@@ -23,10 +23,16 @@ namespace MissionPlanner
 
         public static GMapMarker getMAVMarker(MAVState MAV, GMapOverlay overlay = null)
         {
-            return getMAVMarker(MAV, overlay, false);
+            return getMAVMarker(MAV, overlay, false, false);
         }
 
-        public static GMapMarker getMAVMarker(MAVState MAV, GMapOverlay overlay, bool compactCopter)
+        public static GMapMarker getMAVMarker(MAVState MAV, GMapOverlay overlay, bool smallCopter)
+        {
+            return getMAVMarker(MAV, overlay, smallCopter, false);
+        }
+
+        public static GMapMarker getMAVMarker(MAVState MAV, GMapOverlay overlay, bool smallCopter,
+            bool showCopterSysId)
         {
             PointLatLng portlocation = MAV.cs.Location;
 
@@ -59,8 +65,9 @@ namespace MissionPlanner
                         itemq.Cog = MAV.cs.groundcourse;
                         itemq.Target = MAV.cs.nav_bearing;
                         itemq.Sysid = MAV.sysid;
+                        itemq.ShowSysId = showCopterSysId;
                         itemq.IsActive = MAV == MainV2.comPort?.MAV;
-                        itemq.SetAppearance(compactCopter, GetCopterMapIcon(MAV));
+                        itemq.SetAppearance(smallCopter, GetCopterMapIcon(MAV));
                         return null;
                     }
                     else if (item is GMapMarkerRover)
@@ -198,9 +205,10 @@ namespace MissionPlanner
                         MAV.cs.yaw,
                         MAV.cs.groundcourse,
                         MAV.cs.nav_bearing,
-                        MAV.sysid, GetCopterMapIcon(MAV), compactCopter)
+                        MAV.sysid, GetCopterMapIcon(MAV), smallCopter)
                     {
                         IsActive = MAV == MainV2.comPort?.MAV,
+                        ShowSysId = showCopterSysId,
                         danger = (int)f,
                         warn = (int)w,
                         Tag = MAV
@@ -212,9 +220,10 @@ namespace MissionPlanner
                     MAV.cs.yaw,
                     MAV.cs.groundcourse,
                     MAV.cs.nav_bearing,
-                    MAV.sysid, GetCopterMapIcon(MAV), compactCopter)
+                    MAV.sysid, GetCopterMapIcon(MAV), smallCopter)
                 {
                     IsActive = MAV == MainV2.comPort?.MAV,
+                    ShowSysId = showCopterSysId,
                     Tag = MAV
                 };
             }
@@ -229,8 +238,7 @@ namespace MissionPlanner
         }
         private static Bitmap GetCopterMapIcon(MAVState mav)
         {
-            if (!mav.param.ContainsKey("FRAME_CLASS") || !mav.param.ContainsKey("FRAME_TYPE") ||
-                mav.param["FRAME_TYPE"].Value != (int)motor_frame_type.MOTOR_FRAME_TYPE_X)
+            if (!mav.param.ContainsKey("FRAME_CLASS"))
                 return null;
 
             switch ((motor_frame_class)mav.param["FRAME_CLASS"].Value)

@@ -2,7 +2,6 @@
 using System.Drawing;
 using GMap.NET;
 using GMap.NET.WindowsForms;
-using GMap.NET.WindowsForms.Markers;
 using MissionPlanner.Utilities;
 using Org.BouncyCastle.Crypto.Signers;
 
@@ -13,17 +12,18 @@ namespace MissionPlanner.Maps
     {
         private readonly Bitmap icon = global::MissionPlanner.Maps.Resources.quadicon;
         private Bitmap frameIcon;
-        private bool compact;
-        private readonly GMarkerGoogle pushpin = new GMarkerGoogle(PointLatLng.Empty, GMarkerGoogleType.green_pushpin);
-        private static readonly Bitmap pushpinIcon = GMap.NET.Drawing.Properties.Resources.green_pushpin.ToBitmap();
+        private bool small;
 
-        public void SetAppearance(bool compact, Bitmap frameIcon)
+        public void SetAppearance(bool small, Bitmap frameIcon)
         {
-            this.compact = compact;
+            this.small = small;
             this.frameIcon = frameIcon;
             var imageSize = frameIcon == null ? icon.Size : frameIcon.Size;
-            Size = compact ? pushpin.Size : imageSize;
-            Offset = compact ? pushpin.Offset : new Point(-imageSize.Width / 2, -imageSize.Height / 2);
+            Size = small
+                ? new Size(Math.Max(1, Convert.ToInt32(imageSize.Width / 4.0)),
+                    Math.Max(1, Convert.ToInt32(imageSize.Height / 4.0)))
+                : imageSize;
+            Offset = new Point(-Size.Width / 2, -Size.Height / 2);
         }
 
         float heading = 0;
@@ -113,6 +113,7 @@ namespace MissionPlanner.Maps
         public float Cog { get => cog; set => cog = value; }
         public float Target { get => target; set => target = value; }
         public int Sysid { get => sysid; set => sysid = value; }
+        public bool ShowSysId { get; set; }
         public float framerotation { get; set; } = 0;
 
         static GMapMarkerQuad()
@@ -129,14 +130,14 @@ namespace MissionPlanner.Maps
         }
 
         public GMapMarkerQuad(PointLatLng p, float heading, float cog, float target, int sysid,
-            Bitmap frameIcon, bool compact)
+            Bitmap frameIcon, bool small)
             : base(p)
         {
             this.Heading = heading;
             this.Cog = cog;
             this.Target = target;
             this.Sysid = sysid;
-            SetAppearance(compact, frameIcon);
+            SetAppearance(small, frameIcon);
         }
 
         public override void OnRender(IGraphics g)
@@ -144,24 +145,6 @@ namespace MissionPlanner.Maps
             if (IsHidden)
             {
                 return;
-            }
-
-            if (compact)
-            {
-                if (IsTransparent)
-                {
-                    using (var attributes = new System.Drawing.Imaging.ImageAttributes())
-                    {
-                        attributes.SetColorMatrix(new System.Drawing.Imaging.ColorMatrix { Matrix33 = 100f / 255f });
-                        g.DrawImage(pushpinIcon, new Rectangle(LocalPosition, Size),
-                            0, 0, pushpinIcon.Width, pushpinIcon.Height, GraphicsUnit.Pixel, attributes);
-                    }
-                }
-                else
-                {
-                    pushpin.LocalPosition = LocalPosition;
-                    pushpin.OnRender(g);
-                }
             }
 
             var temp = g.Transform;
@@ -201,43 +184,52 @@ namespace MissionPlanner.Maps
 
             //g.DrawImageUnscaled(icon, icon.Width / -2 + 2, icon.Height / -2);
 
-            if (!compact && frameIcon != null)
+            if (frameIcon != null)
             {
                 using (var attributes = new System.Drawing.Imaging.ImageAttributes())
                 {
                     if (IsTransparent)
                         attributes.SetColorMatrix(new System.Drawing.Imaging.ColorMatrix { Matrix33 = 100f / 255f });
-                    g.DrawImage(frameIcon, new Rectangle(Offset.X, Offset.Y, Size.Width, Size.Height),
+                    g.DrawImage(frameIcon, new Rectangle(-Size.Width / 2, -Size.Height / 2, Size.Width, Size.Height),
                         0, 0, frameIcon.Width, frameIcon.Height, GraphicsUnit.Pixel, attributes);
                 }
             }
-            else if (!compact)
+            else
             {
                 g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+
+                var iconScale = small ? 0.25f : 1.0f;
+                var iconOffset = new Point(-icon.Width / 2, -icon.Height / 2);
+                g.ScaleTransform(iconScale, iconScale);
 
                 g.RotateTransform(framerotation);
 
                 //motors
-                g.DrawArc(thisgreenpen, 35f - 10 + Offset.X, 12f - 10 + Offset.Y, 20, 20, 0, 360);
-                g.DrawArc(thisgreenpen, 35f - 10 + Offset.X, 57f - 10 + Offset.Y, 20, 20, 0, 360);
-                g.DrawArc(thisgreenpen, 57f - 10 + Offset.X, 35f - 10 + Offset.Y, 20, 20, 0, 360);
-                g.DrawArc(thisgreenpen, 12f - 10 + Offset.X, 35f - 10 + Offset.Y, 20, 20, 0, 360);
+                g.DrawArc(thisgreenpen, 35f - 10 + iconOffset.X, 12f - 10 + iconOffset.Y, 20, 20, 0, 360);
+                g.DrawArc(thisgreenpen, 35f - 10 + iconOffset.X, 57f - 10 + iconOffset.Y, 20, 20, 0, 360);
+                g.DrawArc(thisgreenpen, 57f - 10 + iconOffset.X, 35f - 10 + iconOffset.Y, 20, 20, 0, 360);
+                g.DrawArc(thisgreenpen, 12f - 10 + iconOffset.X, 35f - 10 + iconOffset.Y, 20, 20, 0, 360);
 
-                g.DrawArc(thisgreenpen, 35f - 2.5f + Offset.X, 12f - 2.5f + Offset.Y, 5, 5, 0, 360);
-                g.DrawArc(thisgreenpen, 35f - 2.5f + Offset.X, 57f - 2.5f + Offset.Y, 5, 5, 0, 360);
-                g.DrawArc(thisgreenpen, 57f - 2.5f + Offset.X, 35f - 2.5f + Offset.Y, 5, 5, 0, 360);
-                g.DrawArc(thisgreenpen, 12f - 2.5f + Offset.X, 35f - 2.5f + Offset.Y, 5, 5, 0, 360);
+                g.DrawArc(thisgreenpen, 35f - 2.5f + iconOffset.X, 12f - 2.5f + iconOffset.Y, 5, 5, 0, 360);
+                g.DrawArc(thisgreenpen, 35f - 2.5f + iconOffset.X, 57f - 2.5f + iconOffset.Y, 5, 5, 0, 360);
+                g.DrawArc(thisgreenpen, 57f - 2.5f + iconOffset.X, 35f - 2.5f + iconOffset.Y, 5, 5, 0, 360);
+                g.DrawArc(thisgreenpen, 12f - 2.5f + iconOffset.X, 35f - 2.5f + iconOffset.Y, 5, 5, 0, 360);
                                 
-                g.DrawLine(thisbluepen, 35 + Offset.X, 12 + Offset.Y, 35 + Offset.X, 35 + Offset.Y);
-                g.DrawLine(thisgreenpen, 35 + Offset.X, 36 + Offset.Y, 35 + Offset.X, 57 + Offset.Y);
-                g.DrawLine(thisgreenpen, 57 + Offset.X, 35 + Offset.Y, 12 + Offset.X, 35 + Offset.Y);
+                g.DrawLine(thisbluepen, 35 + iconOffset.X, 12 + iconOffset.Y, 35 + iconOffset.X, 35 + iconOffset.Y);
+                g.DrawLine(thisgreenpen, 35 + iconOffset.X, 36 + iconOffset.Y, 35 + iconOffset.X, 57 + iconOffset.Y);
+                g.DrawLine(thisgreenpen, 57 + iconOffset.X, 35 + iconOffset.Y, 12 + iconOffset.X, 35 + iconOffset.Y);
 
-                g.FillRectangle(thisgreenbrush, 32 + Offset.X, 30 + Offset.Y, 5, 8);
+                g.FillRectangle(thisgreenbrush, 32 + iconOffset.X, 30 + iconOffset.Y, 5, 8);
 
                 g.RotateTransform(-framerotation);
+                g.ScaleTransform(1.0f / iconScale, 1.0f / iconScale);
             }
 
-            g.DrawString(Sysid.ToString(), new Font(FontFamily.GenericMonospace, 15, FontStyle.Bold), thistextbrush, -8, -8);
+            if (ShowSysId)
+            {
+                using (var font = new Font(FontFamily.GenericMonospace, 15, FontStyle.Bold))
+                    g.DrawString(Sysid.ToString(), font, thistextbrush, -8, -8);
+            }
 
             g.Transform = temp;
 

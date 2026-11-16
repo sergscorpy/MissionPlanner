@@ -1139,13 +1139,23 @@ namespace MissionPlanner.GCSViews
         {
             this.BeginInvokeIfRequired(() =>
             {
-                var marker = Common.getMAVMarker(MAV, routes, gMapControl1.Zoom < 15);
+                var marker = Common.getMAVMarker(MAV, routes, gMapControl1.Zoom < 15,
+                    HasMultipleAircraft());
 
                 if (marker == null || marker.Position.Lat == 0 && marker.Position.Lng == 0)
                     return;
 
                 addMissionRouteMarker(marker);
             });
+        }
+
+        private static bool HasMultipleAircraft()
+        {
+            return MainV2.Comports.ToArray()
+                .SelectMany(port => port.MAVlist)
+                .Where(mav => mav.compid == (byte)MAVLink.MAV_COMPONENT.MAV_COMP_ID_AUTOPILOT1)
+                .Take(2)
+                .Count() >= 2;
         }
 
         private void addMissionRouteMarker(GMapMarker marker)
@@ -3487,10 +3497,11 @@ namespace MissionPlanner.GCSViews
         {
             if (routes != null)
             {
+                var showSysId = HasMultipleAircraft();
                 foreach (var marker in routes.Markers.OfType<GMapMarkerQuad>().ToArray())
                 {
                     if (marker.Tag is MAVState mav)
-                        Common.getMAVMarker(mav, routes, gMapControl1.Zoom < 15);
+                        Common.getMAVMarker(mav, routes, gMapControl1.Zoom < 15, showSysId);
                 }
             }
 
