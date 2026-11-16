@@ -229,6 +229,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Элементы решен
 EndProject
 Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "MissionPlannerSetup", "MissionPlannerSetup\MissionPlannerSetup.wixproj", "{86099AC2-D33B-478E-9A90-34C419EBA242}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RCListener", "Plugins\RCListener\RCListener.csproj", "{C9724E36-22AB-4F9C-AAC3-4701AE4E2A14}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -908,6 +910,14 @@ Global
 		{86099AC2-D33B-478E-9A90-34C419EBA242}.Release|Any CPU.Build.0 = Release|x86
 		{86099AC2-D33B-478E-9A90-34C419EBA242}.Release|x86.ActiveCfg = Release|x86
 		{86099AC2-D33B-478E-9A90-34C419EBA242}.Release|x86.Build.0 = Release|x86
+		{C9724E36-22AB-4F9C-AAC3-4701AE4E2A14}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C9724E36-22AB-4F9C-AAC3-4701AE4E2A14}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C9724E36-22AB-4F9C-AAC3-4701AE4E2A14}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{C9724E36-22AB-4F9C-AAC3-4701AE4E2A14}.Debug|x86.Build.0 = Debug|Any CPU
+		{C9724E36-22AB-4F9C-AAC3-4701AE4E2A14}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C9724E36-22AB-4F9C-AAC3-4701AE4E2A14}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C9724E36-22AB-4F9C-AAC3-4701AE4E2A14}.Release|x86.ActiveCfg = Release|Any CPU
+		{C9724E36-22AB-4F9C-AAC3-4701AE4E2A14}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -994,6 +1004,7 @@ Global
 		{AF81C41B-06E6-4CA5-9FD4-A4E7042F1107} = {7E264F12-9EC3-4CDC-A187-6879C2B2BFCF}
 		{6D39C141-733B-4C4A-87AB-974637952D1B} = {0371886E-5A61-4626-B9E0-50A837ECE2DD}
 		{DDD2FEA8-801E-463B-8913-9CCCDA2D9429} = {9B3AC501-5FCB-4A2A-A628-BE0985DB2BD4}
+		{C9724E36-22AB-4F9C-AAC3-4701AE4E2A14} = {9B3AC501-5FCB-4A2A-A628-BE0985DB2BD4}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {FD2C9507-1A09-4F5B-98AB-B6B194A4B260}
