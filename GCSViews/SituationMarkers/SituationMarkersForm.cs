@@ -3,7 +3,6 @@ using System.Drawing;
 using System.Globalization;
 using System.Windows.Forms;
 using GeoUtility.GeoSystem;
-using GMap.NET;
 using MissionPlanner.Controls;
 using MissionPlanner.Utilities;
 
@@ -20,7 +19,9 @@ namespace MissionPlanner.GCSViews.SituationMarkers
         readonly MarkerGrid grid = new MarkerGrid();
         readonly Label statusLabel = new Label();
         readonly ComboBox coordinateSystemComboBox = new ComboBox();
+        readonly Timer telemetryStateTimer = new Timer();
         bool refreshing;
+        bool canRefreshHomeFromTelemetry;
 
         public SituationMarkersForm(SituationMarkersManager manager)
         {
@@ -32,8 +33,13 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             StartPosition = FormStartPosition.CenterParent;
             ShowInTaskbar = false;
 
+            canRefreshHomeFromTelemetry = manager.CanRefreshHomeFromTelemetry;
             BuildLayout();
             RefreshGrid();
+
+            telemetryStateTimer.Interval = 500;
+            telemetryStateTimer.Tick += TelemetryStateTimer_Tick;
+            telemetryStateTimer.Start();
         }
 
         public void RefreshGrid()
@@ -75,6 +81,9 @@ namespace MissionPlanner.GCSViews.SituationMarkers
 
         protected override void OnFormClosed(FormClosedEventArgs e)
         {
+            telemetryStateTimer.Stop();
+            telemetryStateTimer.Tick -= TelemetryStateTimer_Tick;
+            telemetryStateTimer.Dispose();
             manager.SelectedMarkerChanged -= Manager_SelectedMarkerChanged;
             base.OnFormClosed(e);
         }
@@ -102,11 +111,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             root.Controls.Add(toolbar, 0, 0);
 
             AddButton(toolbar, "Add Marker", (sender, args) => manager.AddMarker());
-            AddButton(toolbar, "Add HOME Marker", (sender, args) =>
-            {
-                var home = MainV2.comPort.MAV.cs.HomeLocation;
-                manager.AddOrUpdateHome(new PointLatLng(home.Lat, home.Lng), home.Alt);
-            });
+            AddButton(toolbar, "Add HOME Marker", (sender, args) => manager.AddHomeMarker());
             AddButton(toolbar, "Save", SaveMarkers);
             AddButton(toolbar, "Load", LoadMarkers);
             AddButton(toolbar, "Reset", ResetMarkers);
@@ -206,7 +211,7 @@ namespace MissionPlanner.GCSViews.SituationMarkers
                 HeaderText = "",
                 Name = "PickOnMap",
                 Text = "Pick on map",
-                UseColumnTextForButtonValue = true,
+                UseColumnTextForButtonValue = false,
                 Width = 95
             });
             grid.Columns.Add(new DataGridViewButtonColumn
@@ -327,6 +332,12 @@ namespace MissionPlanner.GCSViews.SituationMarkers
 
             if (column.Name == "PickOnMap")
             {
+                if (marker.IsHome && manager.CanRefreshHomeFromTelemetry)
+                {
+                    manager.RefreshHomeFromTelemetry(marker);
+                    return;
+                }
+
                 manager.BeginPickOnMap(marker);
                 return;
             }
@@ -495,6 +506,11 @@ namespace MissionPlanner.GCSViews.SituationMarkers
                 e.Value = marker.IsInterest ? "Target" : "Set";
                 e.FormattingApplied = true;
             }
+            else if (grid.Columns[e.ColumnIndex].Name == "PickOnMap")
+            {
+                e.Value = marker.IsHome && canRefreshHomeFromTelemetry ? "Refresh" : "Pick on map";
+                e.FormattingApplied = true;
+            }
             else if (grid.Columns[e.ColumnIndex].DataPropertyName == nameof(SituationMarker.Altitude) &&
                      e.Value is double altitude)
             {
@@ -562,6 +578,18 @@ namespace MissionPlanner.GCSViews.SituationMarkers
                 e.Value = value;
                 e.ParsingApplied = true;
             }
+        }
+
+        void TelemetryStateTimer_Tick(object sender, EventArgs e)
+        {
+            var canRefresh = manager.CanRefreshHomeFromTelemetry;
+            if (canRefresh == canRefreshHomeFromTelemetry)
+                return;
+
+            canRefreshHomeFromTelemetry = canRefresh;
+            var column = grid.Columns["PickOnMap"];
+            if (column != null)
+                grid.InvalidateColumn(column.Index);
         }
 
         double? ParseNullable(double? value)

@@ -166,6 +166,56 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             return marker;
         }
 
+        public SituationMarker AddHomeMarker()
+        {
+            var home = Markers.FirstOrDefault(a => a.IsHome);
+            if (home != null)
+            {
+                SelectMarker(home);
+                return home;
+            }
+
+            home = new SituationMarker
+            {
+                Name = "HOME",
+                IsHome = true
+            };
+            Markers.Insert(0, home);
+
+            if (TryGetTelemetryHome(out var homeLocation, out var homeAltitudeAmsl))
+                ApplyTelemetryHome(home, homeLocation, homeAltitudeAmsl);
+
+            RebuildMap();
+            SelectMarker(home);
+            OnMarkersChanged(true);
+            return home;
+        }
+
+        public bool CanRefreshHomeFromTelemetry
+        {
+            get
+            {
+                PointLatLng homeLocation;
+                double? homeAltitudeAmsl;
+                return TryGetTelemetryHome(out homeLocation, out homeAltitudeAmsl);
+            }
+        }
+
+        public bool RefreshHomeFromTelemetry(SituationMarker home)
+        {
+            if (home == null || !home.IsHome || !Markers.Contains(home))
+                return false;
+
+            if (!TryGetTelemetryHome(out var homeLocation, out var homeAltitudeAmsl))
+                return false;
+
+            ApplyTelemetryHome(home, homeLocation, homeAltitudeAmsl);
+            RebuildMap();
+            SelectMarker(home);
+            OnMarkersChanged(true);
+            return true;
+        }
+
         public SituationMarker InsertMarkerAtRouteDistance(double distanceMeters)
         {
             if (routeSegments.Count == 0 || distanceMeters <= 0)
@@ -209,30 +259,36 @@ namespace MissionPlanner.GCSViews.SituationMarkers
             return null;
         }
 
-        public SituationMarker AddOrUpdateHome(PointLatLng homeLocation, double? homeAltitudeAmsl)
+        bool TryGetTelemetryHome(out PointLatLng homeLocation, out double? homeAltitudeAmsl)
         {
-            if (homeLocation.Lat == 0 && homeLocation.Lng == 0)
-            {
-                CustomMessageBox.Show("HOME location is not available yet.", "Situation markers");
-                return null;
-            }
+            homeLocation = new PointLatLng();
+            homeAltitudeAmsl = null;
 
-            var home = Markers.FirstOrDefault(a => a.IsHome);
-            if (home == null)
-            {
-                home = new SituationMarker
-                {
-                    Name = "HOME",
-                    IsHome = true
-                };
-                Markers.Insert(0, home);
-            }
+            var port = MainV2.comPort;
+            if (port == null || port.BaseStream == null || !port.BaseStream.IsOpen || port.MAV == null)
+                return false;
 
+            var packetAge = DateTime.UtcNow - port.MAV.lastvalidpacket;
+            if (packetAge.TotalSeconds > 3)
+                return false;
+
+            var telemetryHome = port.MAV.cs.HomeLocation;
+            if (!IsValidPosition(telemetryHome.Lat, telemetryHome.Lng))
+                return false;
+
+            homeLocation = new PointLatLng(telemetryHome.Lat, telemetryHome.Lng);
+            homeAltitudeAmsl = telemetryHome.Alt;
+            return true;
+        }
+
+        void ApplyTelemetryHome(SituationMarker home, PointLatLng homeLocation, double? homeAltitudeAmsl)
+        {
             home.Name = "HOME";
             home.IsHome = true;
             home.Lat = homeLocation.Lat;
             home.Lng = homeLocation.Lng;
-            if (homeAltitudeAmsl.HasValue && !double.IsNaN(homeAltitudeAmsl.Value) && !double.IsInfinity(homeAltitudeAmsl.Value))
+            if (homeAltitudeAmsl.HasValue && !double.IsNaN(homeAltitudeAmsl.Value) &&
+                !double.IsInfinity(homeAltitudeAmsl.Value))
             {
                 home.Altitude = homeAltitudeAmsl.Value;
                 home.AltitudeSource = SituationMarkerAltitudeSource.Home;
@@ -242,11 +298,14 @@ namespace MissionPlanner.GCSViews.SituationMarkers
                 home.Altitude = GetSrtmAltitude(homeLocation.Lat, homeLocation.Lng);
                 home.AltitudeSource = SituationMarkerAltitudeSource.Srtm;
             }
+        }
 
-            RebuildMap();
-            SelectMarker(home);
-            OnMarkersChanged(true);
-            return home;
+        static bool IsValidPosition(double lat, double lng)
+        {
+            return !double.IsNaN(lat) && !double.IsInfinity(lat) &&
+                   !double.IsNaN(lng) && !double.IsInfinity(lng) &&
+                   Math.Abs(lat) <= 90 && Math.Abs(lng) <= 180 &&
+                   !(lat == 0 && lng == 0);
         }
 
         public void RemoveMarker(SituationMarker marker)
