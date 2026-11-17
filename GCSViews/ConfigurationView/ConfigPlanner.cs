@@ -133,6 +133,8 @@ namespace MissionPlanner.GCSViews.ConfigurationView
                 }
             }
 
+            CHK_customLogo.Checked = Settings.Instance.GetBoolean(MainV2.CustomLogoSettingKey, false);
+
             // setup up camera button states
             if (MainV2.cam != null)
             {
@@ -422,6 +424,15 @@ namespace MissionPlanner.GCSViews.ConfigurationView
 
             MainV2.instance.Close();
             //Application.Exit();
+        }
+
+        private void CHK_customLogo_CheckedChanged(object sender, EventArgs e)
+        {
+            if (startup)
+                return;
+
+            Settings.Instance[MainV2.CustomLogoSettingKey] = CHK_customLogo.Checked.ToString();
+            MainV2.instance?.ApplyBrandLogo(CHK_customLogo.Checked);
         }
 
         private void CMB_osdcolor_SelectedIndexChanged(object sender, EventArgs e)

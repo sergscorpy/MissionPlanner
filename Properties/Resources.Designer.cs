@@ -103,9 +103,9 @@ namespace MissionPlanner.Properties {
         /// <summary>
         ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap _0d92fed790a3a70170e61a86db103f399a595c70 {
+        internal static System.Drawing.Bitmap ArduPilotLogo {
             get {
-                object obj = ResourceManager.GetObject("0d92fed790a3a70170e61a86db103f399a595c70", resourceCulture);
+                object obj = ResourceManager.GetObject("ArduPilotLogo", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -213,9 +213,9 @@ namespace MissionPlanner.Properties {
         /// <summary>
         ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap APMBrandImage {
+        internal static System.Drawing.Bitmap CustomLogo {
             get {
-                object obj = ResourceManager.GetObject("APMBrandImage", resourceCulture);
+                object obj = ResourceManager.GetObject("CustomLogo", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

@@ -679,7 +679,7 @@
     <Content Include="Drivers\CubeOrangePlus.inf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <None Include="ExtLibs\Xamarin\Xamarin\Resources\APMBrandImage.png" />
+    <None Include="ExtLibs\Xamarin\Xamarin\Resources\CustomLogo.png" />
     <Content Include="mavutil.py">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

@@ -51,6 +51,9 @@ namespace MissionPlanner
 {
     public partial class MainV2 : Form
     {
+        public const string CustomLogoSettingKey = "CustomLogo";
+
+        private Image brandLogoImage;
         private static readonly ILog log =
             LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -1076,12 +1079,7 @@ namespace MissionPlanner
                 this.Icon = Icon.FromHandle(((Bitmap) Program.IconFile).GetHicon());
             }
 
-            MenuArduPilot.Image = new Bitmap(Properties.Resources.APMBrandImage,
-                (int) (250), 31);
-            MenuArduPilot.Width = MenuArduPilot.Image.Width;
-
-            if (Program.Logo2 != null)
-                MenuArduPilot.Image = Program.Logo2;
+            ApplyBrandLogo(Settings.Instance.GetBoolean(CustomLogoSettingKey, false));
 
             Application.DoEvents();
 
@@ -1091,6 +1089,22 @@ namespace MissionPlanner
 
             // save config to test we have write access
             SaveConfig();
+        }
+
+        public void ApplyBrandLogo(bool useCustomLogo)
+        {
+            var source = useCustomLogo
+                ? Properties.Resources.CustomLogo
+                : Properties.Resources.ArduPilotLogo;
+            var width = useCustomLogo ? 250 : 200;
+            var newLogo = new Bitmap(source, width, 31);
+            var previousLogo = brandLogoImage;
+
+            brandLogoImage = newLogo;
+            MenuArduPilot.Image = newLogo;
+            MenuArduPilot.Width = newLogo.Width;
+
+            previousLogo?.Dispose();
         }
 
         void cmb_sysid_Click(object sender, EventArgs e)

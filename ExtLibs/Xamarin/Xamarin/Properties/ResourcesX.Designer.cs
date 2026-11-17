@@ -113,9 +113,9 @@ namespace MissionPlanner.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static byte[] _0d92fed790a3a70170e61a86db103f399a595c70 {
+        internal static byte[] ArduPilotLogo {
             get {
-                object obj = ResourceManager.GetObject("_0d92fed790a3a70170e61a86db103f399a595c70", resourceCulture);
+                object obj = ResourceManager.GetObject("ArduPilotLogo", resourceCulture);
                 return ((byte[])(obj));
             }
         }

@@ -67,6 +67,7 @@
             this.CMB_osdcolor = new System.Windows.Forms.ComboBox();
             this.CMB_severity = new System.Windows.Forms.ComboBox();
             this.CMB_language = new System.Windows.Forms.ComboBox();
+            this.CHK_customLogo = new System.Windows.Forms.CheckBox();
             this.label93 = new System.Windows.Forms.Label();
             this.CHK_enablespeech = new System.Windows.Forms.CheckBox();
             this.CHK_hudshow = new System.Windows.Forms.CheckBox();
@@ -468,6 +469,13 @@
             this.CMB_language.FormattingEnabled = true;
             this.CMB_language.Name = "CMB_language";
             this.CMB_language.SelectedIndexChanged += new System.EventHandler(this.CMB_language_SelectedIndexChanged);
+            // 
+            // CHK_customLogo
+            // 
+            resources.ApplyResources(this.CHK_customLogo, "CHK_customLogo");
+            this.CHK_customLogo.Name = "CHK_customLogo";
+            this.CHK_customLogo.UseVisualStyleBackColor = true;
+            this.CHK_customLogo.CheckedChanged += new System.EventHandler(this.CHK_customLogo_CheckedChanged);
             // 
             // label93
             // 
@@ -967,6 +975,7 @@
             this.Controls.Add(this.CMB_osdcolor);
             this.Controls.Add(this.CMB_severity);
             this.Controls.Add(this.CMB_language);
+            this.Controls.Add(this.CHK_customLogo);
             this.Controls.Add(this.label93);
             this.Controls.Add(this.CHK_enablespeech);
             this.Controls.Add(this.CHK_hudshow);
@@ -1028,6 +1037,7 @@
         private System.Windows.Forms.ComboBox CMB_osdcolor;
         private System.Windows.Forms.ComboBox CMB_severity;
         private System.Windows.Forms.ComboBox CMB_language;
+        private System.Windows.Forms.CheckBox CHK_customLogo;
         private System.Windows.Forms.Label label93;
         private System.Windows.Forms.CheckBox CHK_enablespeech;
         private System.Windows.Forms.CheckBox CHK_hudshow;

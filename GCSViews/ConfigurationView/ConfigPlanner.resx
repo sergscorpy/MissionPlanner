@@ -2917,4 +2917,28 @@
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
+  <data name="CHK_customLogo.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="CHK_customLogo.Location" type="System.Drawing.Point, System.Drawing">
+    <value>260, 141</value>
+  </data>
+  <data name="CHK_customLogo.Size" type="System.Drawing.Size, System.Drawing">
+    <value>91, 17</value>
+  </data>
+  <data name="CHK_customLogo.TabIndex" type="System.Int32, mscorlib">
+    <value>72</value>
+  </data>
+  <data name="CHK_customLogo.Text" xml:space="preserve">
+    <value>Custom Logo</value>
+  </data>
+  <metadata name=">>CHK_customLogo.Name" xml:space="preserve">
+    <value>CHK_customLogo</value>
+  </metadata>
+  <metadata name=">>CHK_customLogo.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </metadata>
+  <metadata name=">>CHK_customLogo.Parent" xml:space="preserve">
+    <value>$this</value>
+  </metadata>
 </root>
