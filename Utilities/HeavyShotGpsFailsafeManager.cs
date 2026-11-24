@@ -174,7 +174,9 @@ namespace MissionPlanner.Utilities
             if (string.IsNullOrWhiteSpace(text))
                 return;
 
-            bool isHeavyShot = HeavyShotPattern.IsMatch(text);
+            bool isHeavyShot = HeavyShotPattern.IsMatch(text) ||
+                               (text.IndexOf("Pixhawk6X", StringComparison.OrdinalIgnoreCase) >= 0 &&
+                                text.IndexOf("Agile_UNA_AS_ENC", StringComparison.OrdinalIgnoreCase) >= 0);
             bool isFirmwareBanner = text.IndexOf("copter", StringComparison.OrdinalIgnoreCase) >= 0 ||
                                     text.IndexOf("plane", StringComparison.OrdinalIgnoreCase) >= 0 ||
                                     text.IndexOf("rover", StringComparison.OrdinalIgnoreCase) >= 0;
